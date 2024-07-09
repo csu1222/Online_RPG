@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <None Include="..\..\OnlineRPG.uproject" />
+    <Filter Include="Source">
+      <UniqueIdentifier>{F31BBDD1-B3E8-3BCC-9652-680E16935819}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Source\OnlineRPG.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\..\Source\OnlineRPGEditor.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <Filter Include="Config">
+      <UniqueIdentifier>{FA535FFB-25E1-3D20-B416-52F9BE21E06E}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Config\DefaultEditor.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultEngine.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultGame.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultInput.ini">
+      <Filter>Config</Filter>
+    </None>
+    <Filter Include="Source\OnlineRPG">
+      <UniqueIdentifier>{51A9CE1A-9969-3DCD-8160-15AE36B44FCA}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Source\OnlineRPG\OnlineRPG.Build.cs">
+      <Filter>Source\OnlineRPG</Filter>
+    </None>
+    <ClCompile Include="..\..\Source\OnlineRPG\OnlineRPG.cpp">
+      <Filter>Source\OnlineRPG</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\OnlineRPG\OnlineRPG.h">
+      <Filter>Source\OnlineRPG</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
