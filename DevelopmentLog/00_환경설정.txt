@@ -1,0 +1,195 @@
+
+서버쪽 솔루션에 GameServer 이름으로 C++ 콘솔앱 프로젝트 추가
+
+ServerCore 이름으로 정적라이브러리 앱 추가 
+
+(ServerSolutionDir)/Server/Binary 디렉터리 추가 합니다. 
+Binary 디렉터리에 GameServer, ServerCore 들의 실행파일들을 모아둘것입니다. 
+
+(ServerSolutionDir)/Server/Libraries 
+(ServerSolutionDir)/Server/Libraries/Debug
+(ServerSolutionDir)/Server/Libraries/Release 디렉터리 추가 
+말그대로 라이브러리들을 저장할 디렉터리 디버그 용도와 릴리즈 용도도 나눴습니다. 
+
+비주얼 스튜디오에서 ServerCore 속성 열기 
+상단 모든 구성, 모든 플랫폼 으로 설정 
+구성속성->일반 에서 출력 디렉터리 $(SolutionDir)Libraries\$(Configuration) 으로 수정
+
+서버에 핵심적인 코드들을 모두 ServerCore에 작성한 다음 GameServer 에서 ServerCore를 참조하도록 할 것입니다. 
+
+ServerCore 필터 정리
+기존 리소스, 소스, 헤더 필터를 다 없애고 나중에 사용할 Network, Utils 필터 추가 기존 파일들 모두 Utils 아래로 이동
+
+Utils 필터 아래의 framwork.h 파일은 
+
+#define WIN32_LEAN_AND_MEAN             // 거의 사용되지 않는 내용을 Windows 헤더에서 제외합니다.
+
+이 한줄 밖에 내용이 없으니 이 코드만 pch.h 에서 #include "framwork.h" 하는 부분에 치환 후 framwork.h 는 삭제 
+ServerCore.cpp 파일도 필요 없으니 삭제 
+
+Utils 아래에 새 클래스 추가합니다. 클래스 이름은 CorePch 
+여기서 Pch 는 Pre Compiled Header 라는 뜻으로 서버 코어에서 참조할 모든 헤더들을 CorePch에 넣어줄겁니다. 
+왜 pch.h 를 참조하지 않고 CorePch를 참조하냐면 pch.h 는 ServerCore 프로젝트안에서만 참조 할 수 있는 파일이기 때문입니다. 
+
+Utils 아래에 새 헤더를 추가합니다. 헤더 이름은 Types.h 로 여러 TypeDefine 을 넣어줄겁니다. 
+
+---- ServerCore
+--- Types.h
+#pragma once
+
+using BYTE = unsigned char;
+using int8 = __int8;
+using int16 = __int16;
+using int32 = __int32;
+using int64 = __int64;
+using uint8 = unsigned __int8;
+using uint16 = unsigned __int16;
+using uint32 = unsigned __int32;
+using uint64 = unsigned __int64;
+---
+
+타입을 조금 더 간략화 시켜서 수고를 줄입니다. 
+
+--- CorePch.h
+#pragma once
+
+#include "Types.h"
+#include <vector>
+#include <list>
+#include <queue>
+#include <stack>
+#include <map>
+#include <set>
+#include <unordered_map>
+#include <unordered_set>
+
+#include <iostream>
+using namespace std;
+
+void HelloWorld();
+---
+--- CorePch.cpp
+#include "pch.h"
+#include "CorePch.h"
+
+void HelloWorld()
+{
+	cout << "Hello Server" << endl;
+}
+---
+
+이후 GameServer와 잘 연결됐는지 확인하기 위한 HelloWorld 함수입니다. 
+
+--- pch.h
+#pragma once 
+
+#define WIN32_LEAN_AND_MEAN             // 거의 사용되지 않는 내용을 Windows 헤더에서 제외합니다.
+
+#include "CorePch.h"
+---
+----
+
+
+일단 ServerCore 의 기본 세팅은 끝났고 
+
+GameServer 에서 이 ServerCore를 참조하고 싶습니다. 
+
+GameServer는 C++ 콘솔 템플릿으로 만들어 졌는데 기본적으로는 이 프로젝트의 pch.h 가 없습니다. 
+그래서 추가합니다. 
+GameServer 도 기존 소스, 리소스, 헤더 필터를 제거하고 Main, Utils 필터를 추가합니다. GameServer.cpp 는 Main 필터로 이동
+Utils 아래에 새 클래스 추가를 합니다. pch 이름으로 추가합니다. 
+
+---- GameServer
+--- pch.h
+#pragma once
+
+#define WIN32_LEAN_AND_MEAN             // 거의 사용되지 않는 내용을 Windows 헤더에서 제외합니다.
+
+#include "CorePch.h"
+---
+----
+서버코어에 있는 pch.h 파일의 내용과 같습니다. 
+하지만 아직 여기서는 CorePch.h를 인식하지 못하는데 당연한것이 아직 GameServer와 ServerCore는 연동되지 않았습니다. 
+
+그리고 GameServer 의 pch.h 는 이름을 pch 라고 지었다고 바로 미리 컴파일된 헤더로써 동작하는게 아닙니다. 
+설정을 해야하는데 
+
+GameServer 프로젝트의 속성->C/C++->미리 컴파일된 헤더 로 가서 미리 컴파일된 헤더 사용안함을 사용으로 바꾸고 미리 컴파일된 헤더 파일을 
+pch.h 로 수정합니다.
+그리고 한가지 더 해야합니다. pch.cpp 파일의 속성->C/C++->미리 컴파일된 헤더 에서 미리 컴파일된 헤더를 만들기로 바꿔줍니다. 
+
+이제 pch.h 를 GameServer 에서 사용하도록 설정한거고 
+
+GameServer.cpp 의 상단에 
+#include "pch.h" 를 추가해줍니다. 
+
+이제 GameServer 프로젝트에서 ServerCore 프로젝트파일을 읽을 수 있도록 설정해줘야합니다. 
+
+GameServer 속성->C/C++->일반->추가 포함 디렉터리를 설정
+GameServer 속성->링커->일반->추가 라이브러리 디렉터리를 설정 해주는 방법이 있고 
+
+아니면 아예 처음에 
+GameServer 속성->VC++ 디렉터리 에서 세팅해주는 방법이 있습니다. 
+
+VC++ 디렉터리 쪽에서 하는게 더 간단하니 이쪽 방법을 사용해보겠습니다. 
+VC++ 디렉터리 옵션에서 우리가 참조할 라이브러리는 어디있고 포함할 디렉터리는 어디고 또 참조할 디렉터리는 어디있는지를 설정해줄겁니다. 
+포함 디렉터리 편집에서 $(SolutionDir)ServerCore\ 를 추가하면 ServerCore 디렉터리에 있는 소스코드들을 포함시킵니다.
+이어서 라이즈러리는 어디있는지를 세팅합니다.
+라이브러리 디렉터리 편집선택하고 $(SolutionDir)Libraries\ 를 추가합니다. 이 위치에서 라이브러리를 찾아주면된다고 알려주는겁니다. 
+
+여기까지 적용한 다음에 링커 -> 입력에 가서 추가종속성 에서 사용할 라이브러리 파일을 적어줘야 하는데 
+매번 이 작업을 하기에는 귀찮으니깐 그냥 GameServer 프로젝트의 pch.h 에 코드를 입력해 주는 방법이 있습니다. 
+
+---- GameServer
+--- pch.h
+#pragma once
+
+#define WIN32_LEAN_AND_MEAN             // 거의 사용되지 않는 내용을 Windows 헤더에서 제외합니다.
+
+#ifdef _DEBUG
+#pragma comment(lib, "Debug\\ServerCore.lib")
+#else
+#pragma comment(lib, "Release\\ServerCore.lib")
+#endif
+
+#include "CorePch.h"
+
+---
+
+#ifdef 과 #endif 사이의 명령어는 전처리기 단계에 실행되기 때문에 먼저 적용이 됩니다. 
+디버그 모드일때는 Debug 디렉터리에 있는 ServerCore.lib를 가져오고 아니라면 릴리즈 모드일테니 Release 디렉터리의 ServerCore.lib 파일을 가져오라는
+명령입니다. 
+
+GameServer 파일은 이런 상태입니다. 
+
+--- GameServer.cpp
+#include "pch.h"
+#include <iostream>
+#include "CorePch.h"
+
+int main()
+{
+    HelloWorld();
+}
+---
+
+CorePch.h 라는 ServerCore 프로젝트 헤더를 include 했기 때문에 지금 GameServer 빌드가 통과 된다면 GameServer 에서 ServerCore를 잘 가져오고 있다는겁니다. 
+
+한번 테스트 하기 위해 ServerCore 프로젝트의 CorePch.h 에 있는 HelloWorld 함수를 호출해보겠습니다. 
+
+
+마지막으로 언리얼 클라이언트에 연결하기전 임시로 사용할 더미 클라이언트 프로젝트를 만들겠습니다. 
+DummyClient 라는 이름으로 콘솔앱 프로젝트를 추가하고 GameServer 프로젝트에 해줬던 ServerCore와 연결하는 작업을 반복합니다. 
+
+시작 프로젝트로 설정하고 디버그 실행을 해보면 정상적으로 HelloWorld 함수가 호출될것입니다. 
+
+정말 마지막으로 아까 디렉터리 정리를 할때 빌드 결과물들을 솔루션 디렉터리에서 Binary 디렉터리에 모아두기로 했는데 
+x64 디렉터리 아래로 만들어 지고 있습니다. 이것을 수정하겠습니다. 
+
+프로젝트 속성 -> 일반 -> 출력 디렉터리 편집에서 $(SolutionDir)Binary\$(Configuration)\ 이걸로 수정해주면됩니다. 
+DummyClient, GameServer 에서 반복해줍니다. 
+
+다시 빌드해보면 의도한대로 Binary 디렉터리 아래로 실행파일들이 만들어 집니다. 
+
+
+이렇게 해서 서버 엔진에 해당하는 ServerCore, 서버의 GameServer, 클라이언트의 DummyClient 가 만들어 졌습니다. 
