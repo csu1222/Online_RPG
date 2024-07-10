@@ -1,84 +1,92 @@
 ﻿#include "pch.h"
 #include <iostream>
 #include "CorePch.h"
-
-// C++11 표준 쓰레드 라이브러리
 #include <thread>
 
-// 쓰레드에서 사용할 함수 1 
-void HelloThread()
+// 멀티쓰레드 환경에서 공유 메모리를 다룰때의 문제
+
+#include <atomic>
+
+int32 sum = 0;
+atomic<int32> a_sum = 0;
+
+// 일반 함수들
+void Add()
 {
-	cout << "Hello Thread" << endl;
+	for (int32 i = 0; i < 100'000; i++)
+	{
+		sum++;
+	}
 }
 
-// 쓰레드에서 사용할 함수 2
-void HelloThread_2(int32 num)
+void Sub()
 {
-	cout << num << endl;
+	for (int32 i = 0; i < 100'000; i++)
+	{
+		sum--;
+	}
+}
+
+// 아토믹 변수를 활용한 함수들
+void A_Add()
+{
+	for (int32 i = 0; i < 100'000; i++)
+	{
+		a_sum.fetch_add(1);
+	}
+}
+
+void A_Sub()
+{
+	for (int32 i = 0; i < 100'000; i++)
+	{
+		a_sum.fetch_add(-1);
+	}
 }
 
 int main()
 {
-	// 메인 쓰레드 에서 호출
-	HelloThread();
-
+	// 메인쓰레드에서 Add, Sub 을 같은 횟수 호출하면 당연히 총합 0 
 	{
-		// 쓰레드 t를 만들어 호출
-		thread t(HelloThread);
+		Add();
+		Sub();
 
-		// 쓰레드객체는 따로 만들고 이후에 함수를 넣어줄 수도 있다
-		thread t2;
-		t2 = thread(HelloThread);
+		cout << sum << endl;
+	}
 
-		t.join();								// 메인스레드가 t의 작업이 끝날때까지 기다림
+	// 쓰레드를 만들어 멀티 쓰레드 환경에서 다시 테스트
+	{
+		thread t1(Add);
+		thread t2(Sub);
+
+		t1.join();
 		t2.join();
-		int32 count = t.hardware_concurrency();	// 하드웨어 CPU 코어 개수 (정확하지 않을 수 있음)
-		auto Id_1 = t.get_id();					// 쓰레드마다 부여되는 ID
-		auto Id_2 = t2.get_id();
-		// t.detach();							// std::thread 객체에서 실제 쓰레드를 분리 분리후에는 위의 함수들 사용불가 왠만해선 잘 사용안함
-		bool result_1 = t.joinable();			// t라는 쓰레드의 유무나 아니면 .join() 가능여부를 확인 
-		bool result_2 = t2.joinable();
+
+		cout << sum << endl;
+		// 결과는 0이 아닌 엉뚱한 값이 나옵니다. 
 	}
 
+	// 왜 이상한 값이 도출될까?
+	// 공유데이터와 관련된 문제입니다. 
+	// 우선 공유데이터는 메모리중 힙영역, 데이터 영역 메모리는 모든 쓰레드가 공유하는 공유메모리 영역입니다. 
+	// 단순한 ++, -- 연산도 사실 어셈블리어로 보면 한가지 명령어로 이루어져 있지 않습니다. 
+	// ++ 을 예로 들면 sum 주소의 값을 레지스터로 가져오고, 그 값을 1증가시키고 다시 sum 위치로 가져다 놓습니다.
+	// 이 과정을 멀티쓰레드가 동시다발적으로 진행합니다. 이 동작 사이사이에 여러 쓰레드들이 접근, 수정을 하다 보니 예상치 못한 동작이 되는겁니다. 
+
+	// 멀티쓰레드 환경에서 이 문제를 해결하기 위한 몇가지 방법이 있는데 그 중 하나가 
+	// atomic 입니다. 
+	// atom 원자라는 이름 처럼 atomic 변수는 한번에 모든 코드가 진행되거나 아니면 아예 진행이 되지 않도록합니다. 
+
 	{
-		// joinable 함수는 쓰레드의 ID 가 할당이 됐는지를 체크하는 함수 
-		// 정상적으로 쓰레드가 할당되었다는 뜻이므로 보통은 아래와 같이 사용하는게 정석
-		thread t(HelloThread);
-		if (t.joinable())
-			t.join();
-	}
+		thread t1(A_Add);
+		thread t2(A_Sub);
 
-	// 쓰레드 함수를 생성당시가 아니라 이후에 넣어줄 만한 상황은 
-	// 이미 여러 쓰레드를 생성하고 이 후에 함수를 넣어주는 상황도 있습니다. 
-	{
-		vector<thread> threads;		// thread 의 벡터
-		threads.resize(10);			// 10개의 thread를 생성
+		t1.join();
+		t2.join();
 
-		threads[0] = thread(HelloThread);
+		cout << a_sum << endl;
 
-		for (auto& item : threads)
-			if (item.joinable())
-				item.join();
-			
-	}
-
-	// 인자가 있는 함수를 쓰레드에 주고 싶을때 
-	{
-		thread t(HelloThread_2, 10);	// 함수와 그 인자를 순서대로 인자로 준다 
-
-		t.join();
-
-		// 인자를 사용하는 함수의 쓰레드도 이렇게 사용가능 
-		vector<thread> v_thread;
-		
-		for (int32 i; i < 10; i++)
-		{
-			v_thread.push_back(thread(HelloThread_2, i));
-		}
-		for (int32 i; i < 10; i++)
-		{
-			if (v_thread[i].joinable())
-				v_thread[i].join();
-		}
+		// 아토믹은 멀티쓰레드에서 공유 메모리를 안전하게 수정하는 방법중 하나지만 이것은 생각보다 성능이 좋지 못합니다.
+		// 동시에 하나의 아토믹만 작업이 가능하다 보니 병목현상이 일어나고 멀티쓰레드를 사용하는 의미가 퇴색 됩니다.
 	}
 }
