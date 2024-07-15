@@ -4,112 +4,130 @@
 #include <thread>
 #include <atomic>
 #include <mutex>
+#include <windows.h>	// 이벤트를 사용하기 위해 추가
 
-// Sleep 
+// Event
 
 /*
-락의 종류중에서 이제 두번째로 랜덤으로 체크를 하는 락을 다룰겁니다. 
-그것을 위해 먼저 Sleep 을 알아야합니다.	
+이번에는 이벤트를 활용한 락입니다. 
+이벤트는 꼭 락뿐만아니라 다양한 부분에서 사용될 수 있습니다.
 
-멀티쓰레드에서는 쓰레드라는 일꾼들과 그 쓰레드에 빙의하는 코어들이 있었습니다. 
-커널모드에 있는 코어에서 유저모드에 있는 쓰레드에 하나씩 빙의되어 코드를 실행하고 있습니다. 
+이벤트라는것은 화장실의 예시에서 화장실문이 잠겼을때 다른 직원에게 문이 열리면 알려달라고 부탁하고 자신은 자리로 가서 쉬는 방식입니다. 
+여기서 직원이라고 예시들은것이 사실은 커널입니다. 
 
-또 한가지 알아야 할 개념이 스케줄링 입니다. 이게 무엇이냐면 유저모드에서 여러 일감들이 있을건데 
-일감들을 어떤 순서로 처리할건지 순서가 필요할겁니다. 어떤 프로그램이 더 중요한지 같은걸 고려해 순서를 정하게 될건데
-스케줄러가 프로그램들을 실행할때 각 프로그램을 실행하는 쓰레드에 일정 시간을 동작할 수 있도록 정해 줄 수 있습니다. 
-하나의 쓰레드에 빙의되었다고 이 쓰레드가 가진 모든 일을 다 처리한 후 다음 쓰레드에 빙의되는게 아니라 일정시간동안 처리하다가 
-다음 쓰레드로 넘어가는 식입니다. 
+이벤트를 만들때 인자에 따라 두가지 이벤트가 될 수 있습니다 
+Auto Reset Event, Manual Reset Event 입니다. 
 
-콘솔 함수같은 것은 유저모드에서 다 처리가능한게 아니라서 시스템 콜이라는것을 요청하면 커널모드로가서 콘솔에 로그를 찍어주고 다시 
-유저모드의 쓰레드로 돌아와 다음 코드를 처리하게 됩니다. 어떤 일을 하기위해 시스템콜을 호출하거나 아니면 이번에 배울 Sleep 을 사용하면 
-쓰레드의 실행권을 포기하게 됩니다. 
+이벤트는 쉽게 생각하면 불리언 타입 변수라고 볼 수 있습니다. true, false 두가지 상태를가지고 문이 잠긴다 열린다 를 표현하는 것입니다. 
 
-이 Sleep 으로 실행권을 포기하는 것이 화장실앞에서 일단 자리로 돌아가는 걸로 비유할 수 있습니다. 
+락을 잠근 쓰레드와 락이 풀리길 기다리는 쓰레드 둘다 커널쪽에 있는 이벤트라고 하는 불리언 비슷한 변수를 체크하면서 
+이 이벤트가 true인지 false 인지에 따라동작을 하는것입니다. 
 
-사실 윈도우즈 자체에서 실행하는 프로세스만 해도 한두개가 아닙니다. 
-이 많은 프로세스들을 작업 스케줄러 라고 하는 Queue 에 넣어두고 컴퓨터의 코어가 여유가 생길때 하나씩 빙의해 실행을하게됩니다. 
-실행중에 입출력또는 Sleep 같은 명령으로 대기 상태로 들어가고 일정시간이 지나던지 아니면 어떤 이벤트에 따라 다시 작업 스케줄러로 돌아가 
-코어가 할당되기를 기다리게 됩니다. 
+이벤트를 사용하는 순서를 말해보면 
+일단 이벤트를 만듭니다. 이벤트의 초기값은 false 입니다. 그러면 락을 기다리는 쓰레드에서는 이 이벤트를 참조하면서 true일때 실행하기로 하고 
+슬립에 들어갑니다. 그러면 락을 걸고 있던 쓰레드는 동작이 끝나면 이벤트의 값을 true로 바꿔주고 나갑니다. 
+그러면 이벤트를 참조하던 쓰레드가 깨어나 동작을 시작하는 개념입니다. 
 
-이번 실습에서 해볼건 단순히 sleep 함수를 사용하기 뿐이지만 그 원리는 이런 식으로 돌아갑니다. 
+밑의 예제에서 Producer 함수에서 일감을 밀어 넣고 Consumer 에서 일감을 처리하게 되는데 
+Producer는 this_thread::sleep_for(10000ms) 를 호출해 10000ms 만큼 쉬었다가 일감을 밀어넣습니다. 이것은 실제 입력이 띄엄띄엄 온다는 
+예를 들어서 만든 환경입니다. 하지만 Consumer는 매프레임마다 호출하면서 q에 일감이 있는지를 계속 체크해야합니다. 
+실제 디버깅을 해서 cpu 점유율을보면 적지만 일정부분 점유를 하고 있습니다. 점유율이 적다고 해서 그냥 놔둬서는 큰 프로그램에서 쌓인 적은 점유율들이 
+말썽을 일으킬겁니다. 
 
-이전에 만들었던 SpinLock 은 락을 기다리는 쓰레드가 계속 유저모드에 남아 시스템이 허락하는 가장 긴 시간까지 락이 풀리기를 기다리는 방식입니다. 
-락이 금방금방 풀리는 작업이라면 오히려 효율이 좋지만 그렇지 않다면 병목현상이 심한 락이었습니다. 
+그래서 Consumer 같은 경우에는 좀 다른 방법을 사용해야합니다. 
+이런 곳에 Event 를 사용해볼겁니다. 
 
-추가해볼것은 this_thread::sleep_for, this_thread::yield 입니다. 
-sleep_for는 인자로 std::chrono::milliseconds()로 슬립할 시간을 줄 수 있고 100ms 이런식으로도 표현할 수 있습니다.
-yield는 그냥 양보를 하는 함수로 0ms를 준 sleep_for 와 사실상 동일합니다. 
+::CreateEvent(bool 보안속성, bool 매뉴얼리셋여부, bool 초기값, LPCWSTR 이벤트의 이름); 
+이런 시그니처를 가진 함수로 이벤트를 만들 수 있습니다. 
+이벤트를 만드는것은 커널모드에서 만들어주는 함수이기 때문에 이런 이벤트를 커널 오브젝트라고도 부릅니다. 
+반환은 HANDLE 타입을 반환하는데 이 핸들이라는것은 int와 같은 정수들이 들어있는데 아무 의미없는 정수는 아니고 
+일종의 번호표라고 할 수 있습니다. 커널단에서 해당 번호표의 핸들을 지금 반환값을 가지고 온겁니다. 
+이벤트가 꼭 하나만 있을거라는 보장이 없으니까 그 핸들의 값을 변수로 저장하는것입니다. 마치 포인터변수를 가지고 있는것 같습니다. 
+핸들을 다 사용하면 ::CloseHandle로 닫아줘야합니다. 
 
-여기서 양보를 한다 슬립을 한다는것은 인자로 준 시간이 지나고 바로 다시 쓰레드가 동작한다는것이 아니라
-그 시간이 지나고 작업 스케줄러에 등록이 된다는 뜻입니다. 
+핸들은 커널오브젝트라고 표현했습니다. 
+커널 오브젝트는 커널모드에서 사용하는 오브젝트다 라는 뜻입니다. 말 그대로 입니다. 
+공통적으로 가지고 있는 정보는 Usage Count 라고 해서 참조 카운트 같이 이 커널 오브젝트를 몇군대에서 사용하고 있는지
+Signal / NonSignal 이라고 해서 bool 변수처럼 true, false 같은 역할을 합니다. 
+이 두가지가 커널 오브젝트가 공통적으로 가지고 있는 정보이고 
+
+지금 만든 Event 라는 커널오브젝트는 여기에 추가로 Auto Reset / Manual Reset 여부를 가지고 있습니다. 
+이벤트는 커널 오브젝트중 가벼운 객체 축에 듭니다. 
+
+Consumer 에서 이벤트를 기다릴때
+::WaitSingleEvent(handle, INFINITE);
+를 호출해줍니다. handle의 이벤트가 signal 인지를 주시하면서 signal 이 맞다면 다음 코드로 넘어갑니다. 
+이때 스핀락처럼 계속 실행권을 들고 있으면서 기다리는게 아니라 signal이 켜졌을때 작업 스케줄러로 들어가 실행권을 얻어오는겁니다.
+
+이벤트 오브젝트를 만들때 옵션으로 bManualReset 값을 FALSE 로 줬다면 AutoReset 이기 때문에 한번 WaitSingleEvent 가 통과되면 
+자동으로 NonSignal 상태가 되고 ManualReset 상태라면 직접 ResetEvent(handle); 로 NonSignal 로 수정해줘야합니다. 
+
+테스트를 해보면 동작자체가 바뀌지는 않았지만 
+CPU 점유율이 조금있던것 마저 없어졌다는걸 알 수 있습니다. 
+
+
+추가로 커널 오브젝트의 특징한가지를 더 알아보자면 
+커널 오브젝트는 다른 프로그램끼리도 동기화를 할 수 있습니다. 유저모드 오브젝트는 각 프로그램안에서만 유효한 오브젝트이지만
+커널 오브젝트는 아예 이 컴퓨터의 오브젝트이기 때문에 다수의 프로그램에서도 가져다 사용할 수 있는겁니다. 
+
 */
 
-class SpinLock
-{
-public:
-	void lock()
-	{
-		bool expected = false;
-		bool desired = true;
-
-		while (_locked.compare_exchange_strong(expected, desired) == false)
-		{
-			expected = false;
-
-			// 이 코드를 실행할때 부터 100 밀리초만큼 잠듭니다. 
-			// this_thread::sleep_for(std::chrono::milliseconds(100));
-
-			this_thread::sleep_for(100ms); // 밀리초를 이렇게 표현할 수도 있습니다. 
-
-			// yield 는 양보한다라는 의미가 있듯이 일단 이 쓰레드의 실행권을 넘기는 함수입니다. 사실상 0ms 로 sleep_for 를 호출한것과 같습니다. 
-			// this_thread::yield();
-		}
-	}
-
-	void unlock()
-	{
-		_locked.store(false);
-	}
-
-private:
-	atomic<bool> _locked = false;
-};
-
-
-int32 sum = 0;
 mutex m;
-SpinLock spinLock;
+queue<int32> q;
+HANDLE handle;
 
-void Add()
+// 무언가 일을 큐에 밀어넣는 함수 예를 들어서 게임 컨텐츠나 네트워크 패킷을 계속 JobQueue에 밀어넣는 상황
+void Producer()
 {
-	for (int32 i = 0; i < 100'000; i++)
+	while (true)
 	{
-		//lock_guard<mutex> g(m);
-		lock_guard<SpinLock> g(spinLock);
-		sum++;
+		{
+			// 공용데이터를 건드릴것이니 락을 걸고 동작
+			unique_lock<mutex> lock(m);
+
+			q.push(100);
+		}
+
+		// 이벤트 객체를 signal 상태로 수정한다는 함수
+		::SetEvent(handle);
+
+		// 데이터가 10000ms 마다 들어온다고 가정 
+		this_thread::sleep_for(10000ms);
 	}
 }
 
-void Sub()
+// Queue에 들어온 작업들을 처리하는 함수 
+// 여기서는 Queue에 얼마만에 한번씩 데이터가 들어오는지 알수 없어서 계속 시도를 합니다.
+void Consumer()
 {
-	for (int32 i = 0; i < 100'000; i++)
+	while (true)
 	{
-		//lock_guard<mutex> g(m);
-		lock_guard<SpinLock> g(spinLock);
-		sum--;
+		// 핸들의 이벤트를 주시하면서 INFINITE의 시간만큼 기다립니다. 
+		::WaitForSingleObject(handle, INFINITE);
+		// ::ResetEvent(handle);	// 이벤트를 만들때 bManualReset 값을 TRUE로 줬으면 직접 리셋해줘야합니다. 
+
+		unique_lock<mutex> lock(m);
+		if (q.empty() == false)
+		{
+			int32 item = q.front();
+			q.pop();
+
+			cout << item << endl;
+		}
 	}
 }
 
 int main()
 {
+	handle = ::CreateEvent(NULL/*보안속성*/, FALSE/*bManualReset*/, FALSE/*bInitialState*/, NULL/*Ipname*/);
 	{
-		thread t1(Add);
-		thread t2(Sub);
+		thread t1(Producer);
+		thread t2(Consumer);
 
 		t1.join();
 		t2.join();
 
-		cout << sum << endl;
+		::CloseHandle(handle);
 	}
 
 }
