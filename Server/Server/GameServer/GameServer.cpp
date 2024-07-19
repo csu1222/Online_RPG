@@ -7,55 +7,91 @@
 #include <windows.h>
 #include <future>
 
-// Thread Local Storage
+// 추가한 Lock 기반 Queue, Stack
+#include "ConcurrentQueue.h"
+#include "ConcurrentStack.h"
+
+// Lock 기반의 Stack, Queue 만들어 보기 
 
 /*
-TLS 가 뭐냐면
+기존 싱글쓰레드 환경에서 사용하던 기존 Queue, Stack 을 멀티 쓰레드환경에서 사용해보자면
+아래의 PushNormal, PopNormal 을 쓰레드 t1, t2 에 줘서 실행했습니다. 
+언젠간 공유 메모리인 q 를 동시에 접근하면서 크래시가 나게 됩니다. 
 
-지금까지 메모리를 사용할때 공용으로 사용하는 데이터는 객체를 할당하는 Heap 영역, static 변수나 함수들을 저장하는 Data 영역이 있었고 
-각 함수들마다 로컬로 인자나 내부변수를 저장하는 스택 영역이 있었는데 
-여기에 사실 TLS 라는 영역이 하나 더 있는것입니다.
+그래서 당연히 여기에 mutex로 락을 걸어 사용하는것이 멀티쓰레드 환경에서 사용법일겁니다. 
 
-이름에서 알 수 있듯이 쓰레드마다 로컬로 가지고 있는 메모리 영역입니다. 
-모든 쓰레드마다 꼭 가지고 있어야 할 데이터를 이 TLS에 저장하면 됩니다. 
+그런데 자주 사용할 Queue, Stack 이라는 컨테이너 자체를 멀티쓰레드 환경에서 동작할 수 있으면 좋겠습니다.
 
-스택과 TLS 의 차이가 별로 없어 보이는데 엄밀히 보자면 스택은 함수의 로컬 메모리 이기 때문에 함수가 중간에 리턴되거나 
-브레이크되면 그 안의 스택메모리는 다 날라가기 때문에 함수 진행이외의 용도로 사용하기는 불안정한 메모리 영역입니다. 
-그래서 좀 더 쓰레드마다 안정적으로 가지고 있을만한 데이터를 저장할 수 있습니다. 
-
-TLS 에서 가지고 있을만한 데이터는 나중에 네트워크 입출력을 할때 SendBuffer 같은걸 TLS 에 둬서 여기서 사용하는것과 쓰레드마다의 
-아이디가 필요하다면 여기서 할당받아 사용하는 것 등이 있습니다. 
+새 클래스 ConcurrentQueue, ConcurrentStack 를 추가해보겠습니다. 
+LockQueue, LockStack 의 멤버 함수의 Push, TryPop, WaitPop 자체 내부에서 각각 락을 잡아주는 방식으로 만들었습니다.
+이렇게 만들면 락을 세부적으로 잡고 풀고 하기 때문에 그만큼 데드락 상황에 빠지는 확률을 줄여줍니다. 
 */
 
-// TLS를 사용하는 방법 (C++11 에 추가된 표준 방법)
-// thread_local 타입 변수를 만들면 이 변수를 만든 쓰레드의 TLS 영역에 변수를 만들게 됩니다. 
+// 기존 큐, 스택 
+queue<int32> q;
+stack<int32> s;
 
-// 예시로 쓰레드마다 직접 아이디 번호를 부여해보겠습니다. 
-thread_local int32 LThreadId = 0;		
+// 만들어본 Lock 기반 큐, 스택
+LockQueue<int32> lockQueue;
+LockStack<int32> lockStack;
 
-void ThreadMain(int32 threadId)
+void PushNomal()
 {
-	LThreadId = threadId;
-
 	while (true)
 	{
-		cout << "Hi I am Thread " << LThreadId << endl;
-		this_thread::sleep_for(1s);
+		int32 value = rand() % 100;
+		q.push(value);
+
+		this_thread::sleep_for(10ms);
+	}
+}
+
+void PopNormal()
+{
+	while (true)
+	{
+		if (q.empty())
+			continue;
+
+		int32 data = q.front();
+
+		q.pop();
+
+		cout << data << endl;
+	}
+}
+
+// Lock 기반 테스트 함수
+void PushLock()
+{
+	while (true)
+	{
+		int32 value = rand() % 100;
+		lockQueue.Push(value);
+
+		this_thread::sleep_for(10ms);
+	}
+}
+
+void PopLock()
+{
+	while (true)
+	{
+		int32 data = 0;
+
+		if (lockQueue.TryPop(OUT data))
+			cout << data << endl;
 	}
 }
 
 int main()
 {
-	vector<thread> threads;
-
-	for (int32 i = 0; i < 10; i++)
+	// 기존 큐, 스택
 	{
-		int32 threadId = i;
-		threads.push_back(thread(ThreadMain, threadId));
-	}
+		thread t1(PushNomal);
+		thread t2(PopNormal);
 
-	for (thread& item : threads)
-	{
-		item.join();
+		t1.join();
+		t2.join();
 	}
 }
