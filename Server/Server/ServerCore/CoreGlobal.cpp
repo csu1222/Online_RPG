@@ -4,12 +4,16 @@
 
 ThreadManager* GThreadManager = nullptr;
 
-CoreGlobal::CoreGlobal()
+class CoreGlobal
 {
-	GThreadManager = new ThreadManager();
-}
+public:
+	CoreGlobal()
+	{
+		GThreadManager = new ThreadManager();
+	}
+	~CoreGlobal()
+	{
 
-CoreGlobal::~CoreGlobal()
-{
-	delete GThreadManager;
-}
+		delete GThreadManager;
+	}
+} GCoreGlobal;	// 이렇게 만든면 컨텐츠쪽에서 신경쓰지 않아도됩니다.
