@@ -493,3 +493,31 @@ int main()
 실제 라이브운영 상황에서는 이런 데드락이 수많은 유저들이 접속하게되면 디버그할때 안보이던 데드락이 실제 라이브때 발생할 수도 있는겁니다. 
 
 하지만 디버그 모드로 바꿔서 우리가 이번에 만든 데드락 프로파일러를 이용해보면 데드락이 발생할 수 있는 사이클 구조가 확인되면 바로 크래시를 내줘서 수정 할 수 있습니다.
+
+
+--------------
+
+추가 내용 
+
+수정할 내용이 있는데 DeadLockProfiler 의 _lockStack 을 클래스의 멤버변수로 사용하고 있었는데 
+이 락 스택이라는것은 각 쓰레드마다 잡고 있는 락들이 다를것이라 쓰레드마다 고유하게 가지고 있어야 합니다. 그래서 TLS 영역에 만들어줘야하는게 맞습니다.
+
+----- ServerCore
+---- CoreTLS
+--- 헤더
+#pragma once
+#include <stack>
+
+extern thread_local uint32 LThreadId;
+
+extern thread_local std::stack<int32> LLockStack;
+--- cpp
+#include "pch.h"
+#include "CoreTLS.h"
+
+thread_local uint32 LThreadId = 0;
+
+thread_local std::stack<int32> LLockStack;
+
+
+그리고나서 DeadLockProfiler 의 코드도 _lockStack 을 LLockStack 으로 치환해줘야합니다. 
