@@ -21,10 +21,10 @@ void DeadLockProfiler::PushLock(const char* name)
 	}
 
 	// 잡고 있는 락이 있었다면 
-	if (_lockStack.empty() == false)
+	if (LLockStack.empty() == false)
 	{
 		// 기존에 발견되지 않은 케이스라면 데드라 여부를 다시 확인한다.
-		const int32 prevId = _lockStack.top();
+		const int32 prevId = LLockStack.top();
 		if (lockId != prevId)	// 이미 잡힌락과 지금 락이 다르다면 
 		{
 			set<int32>& history = _lockHistory[prevId];	// 이전락의 히스토리를 가져와
@@ -38,7 +38,7 @@ void DeadLockProfiler::PushLock(const char* name)
 	}
 
 	// 잡고있는락이 없었다면
-	_lockStack.push(lockId);
+	LLockStack.push(lockId);
 }
 
 void DeadLockProfiler::PopLock(const char* name)
@@ -46,16 +46,16 @@ void DeadLockProfiler::PopLock(const char* name)
 	LockGuard guard(_lock);
 
 	// 락스택이 비어있다면 이상한 상황
-	if (_lockStack.empty())
+	if (LLockStack.empty())
 		CRASH("MUTIPLE_UNLOCK");
 
 	// 해제할 락이 락스택의 탑이 아니어도 이상한 상황
 	int32 lockId = _nameToId[name];
-	if (_lockStack.top() != lockId)
+	if (LLockStack.top() != lockId)
 		CRASH("INVALID_UNLOCK");
 
 	// 안전하면 팝
-	_lockStack.pop();
+	LLockStack.pop();
 }
 
 void DeadLockProfiler::CheckCycle()
