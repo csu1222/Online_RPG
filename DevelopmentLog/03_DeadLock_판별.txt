@@ -1,0 +1,491 @@
+
+
+
+데드락이라는것은 멀티쓰레드 환경에서 공유 데이터를 수정할때 안전하게 접근하기 위해 사용하는 락을 둘이상의 쓰레드에서 서로 락을 잡고 맞물려서 락일 풀리지 않는 상황입니다.
+
+이런 데드락을 해결하는 방법은 멀티쓰레드 프로그래밍이후로 계속 연구가 되었을겁니다. 
+
+그렇다 보니 데드락의 해결방안이 여러가지가 있는데
+
+예를 들어서 하이락 키 라는 패턴은 락마다 락번호를 부여하고 구조를 직접만들어 락번호가 큰 락에서 작은락으로만 락을 걸 수 있도록 제한을 두는 패턴입니다. 
+
+다른 방법으로 우리 프로젝트에 적용할 방법은 그래프 알고리즘을 활용해서 사이클을 판별하는것입니다. 
+
+그래프라는 것은 정점과 단선으로 이루어진 자료구조입니다. 비슷한 자료구조로는 트리가 있는데 트리는 루트 노드에서부터 아래로 자식 노드들을 뻗치는 방식이라면 
+그래프는 딱히 루트노드라고 하는것은 없고 모든 노드가 연결 될 수 있는 자료구조입니다. 
+실생활에서는 지하철 노선도나 소셜 네트워크 관계도 같은걸 그래프로 표현할 수 있을겁니다. 
+
+그래프에도 방향 그래프, 무방향 그래프 두 종류가 있는데 
+방향그래프는 정점과 단선중에 단선이 방향정보도 가지고 있는 버전입니다. 
+이 방향 그래프를 기준으로 이야기를 시작해볼건데 
+
+코드로 그래프를 표현하는 방법은 여러가지 방법이 있지만 2차 행렬로 표현할 수 있습니다. 
+
+vector<vector<int32>> adjacent = vector<vector<<int32>>(
+    {
+        { 0, 1, 0, 1, 0, 0 },
+        { 1, 0, 1, 1, 0, 0 },
+        { 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 1, 0 },
+        { 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 1, 0 },
+    }
+);
+
+이런 2차 배열이 있다면 어떻게 해석해야 하냐면 1번 정점은 2번, 4번 정점으로 가는길이 있고 2번 정점은 1번, 3번, 4번 정점으로 가는길이 있은겁니다. 
+
+그리고 또 길찾기 알고리즘도 필요합니다. 
+그 중에서 Depth First Search(DFS) 라는 길찾기 알고리즘은 깊이 우선 탐색 알고리즘으로 
+길을 찾을때 우선적으로 최단거리로 연결된 길의 끝을 먼저 찍는 방식의 길찾기 알고리즘입니다. 
+
+그래프는 길찾기를 할때 시작 노드라는것이 없으니 길찾기의 경우의 수가 많을 겁니다. 그래서 길찾기를 할때도 재귀적으로 호출해 연결된 정점들 끼리의 길찾기 알고리즘을 실행합니다. 
+그런데 DFS를 한바퀴 돌린다고 해도 모든 정점이 발견된다고는 할 수 없습니다. 다른 정점들에서 향하지 않는 정점도 있을 수 있는데 DFS가 연결된 간선들을 따라가며 길을 찾기 때문에 
+고립된 정점은 DFS만 돌리는걸로는 발견되지 않습니다. 그래서 따로 정점들을 관리해 각 정점마다 DFS를 돌려야합니다. 
+
+기본적인 그래프, DFS 에 대한 내용을 훑어봤고 
+이번에 그래프를 이용해 데드락 판별을 알아볼것입니다. 
+
+그래프에 사이클 상황이라는것이 있는데 이 사이클 상황을 판별할것입니다. 
+어떤 그래프가 쓰레드 사이의 락을 잡고있는 관계도라고 해보겠습니다. 그런상황에서 두 쓰레드의 간선이 서로를 향하고 있는 상황을 사이클이라고 하는데 
+이것을 데드락상황에 대입할 수 있습니다.
+
+그러면 그래프 사이클을 어떻게 판별 할 수 있는가 하면 
+DFS를 활용하면 됩니다. 
+
+알아야할 용어 3가지가 있습니다. 
+순방향 간선 : DFS를 시작했을때 어떤 정점으로 부터 가까운 순서대로 정점들을 발견하는 것
+교차 간선 : 어떤 정점을 시작으로 DFS를 실행했을때 간선이 이어진 정점이 이미 다른 DFS에 의해 발견되어 있을 경우 
+역방향 간선 : 어떤 정점을 시작을 DFS를 실행했고 다른 정점에서도 DFS를 실행했는데 자신이 이미 다른 DFS에 의해 발견이 되었는데 자신도 역으로 그 정점을 향한 간선이 있을경우 
+
+이중에 역방향 간선이 나타나면 이것을 사이클이 생겼다 데드락 상황이다 라고 볼 수 있습니다. 
+
+코드로 다시 보면 이해에 도움이 될것입니다. 
+
+----- ServerCore
+---- DeadLockProfiler
+ServerCore 프로젝트의 thread 필터아래로 새 클래스를 추가하겠습니다. 
+--- 헤더 
+#pragma once
+#include <stack>
+#include <map>
+#include <vector>
+
+// WriteLock, WriteUnlock 을 할때 이 클래스를 끼워 넣어서 사이클이 일어나는지를 체크할것입니다. 
+class DeadLockProfiler
+{
+public:
+	void PushLock(const char* name);
+	void PopLock(const char* name);
+	void CheckCycle();
+
+private:
+	void Dfs(int32 index);
+
+private:
+	unordered_map<const char*, int32>	_nameToId;
+	unordered_map<int32, const char*>	_idToName;
+	stack<int32>						_lockStack;
+	map<int32, set<int32>>				_lockHistory;
+
+	Mutex _lock;
+
+private:
+	vector<int32> _discoveredOrder; // 노드가 발견된 순서를 기록하는 배역
+	int32 _discoveredCount = 0; // 노드가 발견된 순서 
+	vector<bool> finished;	// Dfs(i) 가 종료되었는지 여부
+	vector<int32> _parent;
+};
+
+--- cpp 
+#include "pch.h"
+#include "DeadLockProfiler.h"
+
+void DeadLockProfiler::PushLock(const char* name)
+{
+	LockGuard guard(_lock);
+
+	// 아이디를 찾거나 발급한다
+	int32 lockId = 0;
+
+	auto findIt = _nameToId.find(name);
+	if (findIt == _nameToId.end())	// name으로 검색 결과가 없다면 
+	{
+		lockId = static_cast<int32>(_nameToId.size());	// _nameToId의 최대크기가 아이디 
+		_nameToId[name] = lockId;
+		_idToName[lockId] = name;
+	}
+	else // name이 발견이 된다면 
+	{
+		lockId = findIt->second;
+	}
+
+	// 잡고 있는 락이 있었다면 
+	if (_lockStack.empty() == false)
+	{
+		// 기존에 발견되지 않은 케이스라면 데드라 여부를 다시 확인한다.
+		const int32 prevId = _lockStack.top();
+		if (lockId != prevId)	// 이미 잡힌락과 지금 락이 다르다면 
+		{
+			set<int32>& history = _lockHistory[prevId];	// 이전락의 히스토리를 가져와
+			if (history.find(lockId) == history.end())	// 이전락의 히스토리에 현재락이 이미 있는지를체크
+			{
+				// 없다면 히스토리에 추가하고 사이클체크 
+				history.insert(lockId);
+				CheckCycle();
+			}
+		}
+	}
+
+	// 잡고있는락이 없었다면
+	_lockStack.push(lockId);
+}
+
+void DeadLockProfiler::PopLock(const char* name)
+{
+	LockGuard guard(_lock);
+
+	// 락스택이 비어있다면 이상한 상황
+	if (_lockStack.empty())
+		CRASH("MUTIPLE_UNLOCK");
+
+	// 해제할 락이 락스택의 탑이 아니어도 이상한 상황
+	int32 lockId = _nameToId[name];
+	if (_lockStack.top() != lockId)
+		CRASH("INVALID_UNLOCK");
+
+	// 안전하면 팝
+	_lockStack.pop();
+}
+
+void DeadLockProfiler::CheckCycle()
+{
+	// 호출될 시점까지 추가된 락들의 수
+	const int32 lockCount = static_cast<int32>(_nameToId.size());
+	// lockCount의 크기로 Dfs 에 사용될 컨테이너들을 초기화 
+	_discoveredOrder = vector<int32>(lockCount, -1);
+	_discoveredCount = 0;
+	_finished = vector<bool>(lockCount, false);
+	_parent = vector<int32>(lockCount, -1);
+
+	for (int32 lockId = 0; lockId < lockCount; lockId++)
+		Dfs(lockId);
+
+	// 연산이 끝났으면 정리한다 
+	_discoveredOrder.clear();
+	_finished.clear();
+	_parent.clear();
+}
+
+void DeadLockProfiler::Dfs(int32 here)
+{
+	// 이미 발견된 락이라면 바로 리턴
+	if (_discoveredOrder[here] != -1)
+		return;
+
+	// 처음 방문하면 방문하고 있는 락의 순번을 매깁니다.
+	_discoveredOrder[here] = _discoveredCount++;
+
+	// 모든 인접한 정점을 순회
+	// 이 락의 히스토리를 가져옵니다.
+	auto findIt = _lockHistory.find(here);
+	// 만약 이 락의 히스토리가 없다면 
+	if (findIt == _lockHistory.end())	
+	{
+		// 아직까지 락을 잡은 상태에서 다른 락을 잡은적이 없는것 
+		_finished[here] = true;
+		return;
+	}
+	
+	// 중첩락을 잡은 적이 있다면 사이클 판별 
+	set<int32>& nextSet = findIt->second;
+	for (int32 there : nextSet)
+	{
+		// 아직 방문한적이 없다면 방문한다
+		if (_discoveredOrder[there] == -1)
+		{
+			_parent[there] = here;
+			Dfs(there);
+			continue;
+		}
+		// 방문한 적이 있다면 사이클 판별 
+
+		// here가 there보다 먼저 발견 되었다면 there는 here의 후손이다. (순방향 간선)
+		if (_discoveredOrder[here] < _discoveredOrder[there])
+			continue;
+
+		// 순방향이 아니고. Dfs(there) 가 아직 종료하지 않았다면, there는 here의 선조이다. (역방향 간선)
+		if (_finished[there] == false)
+		{
+			printf("%s -> %s\n", _idToName[here], _idToName[there]);
+
+			int32 now = here;
+			while (true)
+			{
+
+				printf("%s -> %s\n", _idToName[_parent[now]], _idToName[now]);
+				now = _parent[now];
+				if (now == there)
+					break;
+			}
+			CRASH("DEADLOCK_DETECTED");
+		}
+	}
+
+	_finished[here] = true;
+}
+
+처음 보면 복잡해 보이지만 테스트를 하면서 보면 좀 더 쉽게 이해가 갈것입니다. 이후에 한번 분석을 해보면 좋습니다. 
+
+---- CoreGlobal
+
+먼저 이번에 만든 DeadLockProfiler 를 CoreGlobal 에 추가해 전역으로 사용할 수 있게 합니다.
+
+--- 헤더
+#pragma once
+
+extern class ThreadManager* GThreadManager;
+extern class DeadLockProfiler* GDeadLockProfiler;
+--- cpp
+#include "pch.h"
+#include "CoreGlobal.h"
+#include "ThreadManager.h"
+#include "DeadLockProfiler.h"
+
+ThreadManager* GThreadManager = nullptr;
+DeadLockProfiler* GDeadLockProfiler = nullptr;
+
+class CoreGlobal
+{
+public:
+	CoreGlobal()
+	{
+		GThreadManager = new ThreadManager();
+		GDeadLockProfiler = new DeadLockProfiler();
+	}
+
+	~CoreGlobal()
+	{
+		delete GThreadManager;
+		delete GDeadLockProfiler;
+	}
+} GCoreGlobal;	// 이렇게 만든면 컨텐츠쪽에서 신경쓰지 않아도됩니다.
+ 
+
+---- Lock
+테스트는 이전에 만들었던 Lock 클래스에서 합니다.
+
+--- 헤더
+	void WriteLock(const char* name);
+	void WriteUnlock(const char* name);
+	void ReadLock(const char* name);
+	void ReadUnlock(const char* name);
+
+이 함수들에서 name 을 받아주도록 바꿀 겁니다. 
+
+--- cpp
+기존 코드에서 추가된 부분만 보자면 
+
+#include "DeadLockProfiler.h"
+
+void Lock::WriteLock(const char* name)
+{
+	// 디버그 모드일때만 사이클 체크
+#if _DEBUG
+	GDeadLockProfiler->PushLock(name);
+#endif
+
+    // ...
+}
+
+
+void Lock::WriteUnlock(const char* name)
+{
+	// 디버그 모드일때만 사이클 체크
+#if _DEBUG
+	GDeadLockProfiler->PopLock(name);
+#endif
+
+    // ...
+}
+
+
+void Lock::ReadLock(const char* name)
+{
+	// 디버그 모드일때만 사이클 체크
+#if _DEBUG
+	GDeadLockProfiler->PushLock(name);
+#endif
+
+    // ...
+}
+
+void Lock::ReadUnlock(const char* name)
+{
+	// 디버그 모드일때만 사이클 체크
+#if _DEBUG
+	GDeadLockProfiler->PopLock(name);
+#endif
+
+    // ...
+}
+
+이러면 이제 락을 사용하는 모든곳에서 디버그 모드에서는 데드락 프로파일러를 호출합니다. 
+
+여기서 끝이 아니라 락을 래핑해 사용하던 클래스인 LockGuard 도 수정해야합니다 
+
+---- ReadLockGuard
+class ReadLockGuard
+{
+public:
+	ReadLockGuard(Lock& lock, const char* name) : _lock(lock), _name(name)
+	{
+		_lock.ReadLock(name);
+	}
+
+	~ReadLockGuard() { _lock.ReadUnlock(_name); }
+
+private:
+	Lock& _lock;
+	const char* _name;
+};
+---- WriteLockGuard 
+class WriteLockGuard
+{
+public:
+	WriteLockGuard(Lock& lock, const char* name) : _lock(lock), _name(name)
+	{
+		_lock.WriteLock(name);
+	}
+
+	~WriteLockGuard() { _lock.WriteUnlock(_name); }
+
+private:
+	Lock& _lock;
+	const char* _name;
+};
+
+이제 락 가드에서 이름을 받아주게 됩니다. 
+또 이 락가드를 편하게 사용하기 위해서 CoreMacro 에 매크로를 만들었었습니다
+---- CoreMacro
+/*
+		Lock
+*/
+#define USE_MANY_LOCKS(count)	Lock _locks[count];
+#define USE_LOCK				USE_MANY_LOCKS(1)
+#define READ_LOCK_IDX(idx)		ReadLockGuard readLockGuard_##idx(_locks[idx], typeid(this).name());
+#define READ_LOCK				READ_LOCK_IDX(0)
+#define WRITE_LOCK_IDX(idx)		WriteLockGuard writeLockGuard_##idx(_locks[idx], typeid(this).name());
+#define WRITE_LOCK				WRITE_LOCK_IDX(0)
+
+락가드를 생성할때 두번째 인자로 typeid(this).name() 이런걸 주고 있는데 이 함수는 간편하게 클래스의 이름을 가져오는 함수입니다.
+
+
+이제 테스트를 해보겠습니다.
+----- GameServer
+---- AccountManager
+--- 헤더 
+#pragma once
+
+class AccountManager
+{
+	USE_LOCK;
+public:
+	void AccountThenPlayer();
+	void Lock();
+};
+
+extern AccountManager GAccountManager;
+
+--- cpp
+#include "pch.h"
+#include "AccountManager.h"
+#include "PlayerManager.h"
+
+AccountManager GAccountManager;
+
+void AccountManager::AccountThenPlayer()
+{
+	WRITE_LOCK;
+	GPlayerManager.Lock();
+}
+
+void AccountManager::Lock()
+{
+	WRITE_LOCK;
+}
+
+---- PlayerManager
+
+--- 헤더 
+#pragma once
+
+class PlayerManager
+{
+	USE_LOCK;
+public:
+	void PlayerThenAccount();
+	void Lock();
+};
+
+extern PlayerManager GPlayerManager;
+
+--- cpp
+#include "pch.h"
+#include "PlayerManager.h"
+#include "AccountManager.h"
+
+PlayerManager GPlayerManager;
+
+void PlayerManager::PlayerThenAccount()
+{
+	WRITE_LOCK;
+	GAccountManager.Lock();
+}
+
+void PlayerManager::Lock()
+{
+	WRITE_LOCK;
+
+}
+
+
+이번 테스트를 할때 잠깐 사용할 클래스 두개 AccountManager, PlayerManager 를 만들었습니다. 각 클래스의 함수에서는 자신의 락을 먼저 잡고 서로의 락을 잡습니다. 
+이 두함수를 쓰레드 두개에 실행해줄겁니다.
+
+---- GameServer
+
+// 테스트 
+#include "AccountManager.h"
+#include "PlayerManager.h"
+
+int main()
+{
+	GThreadManager->Launch([=]()
+		{
+			while (true)
+			{
+				cout << "PlayerThenAccount" << endl;
+				GPlayerManager.PlayerThenAccount();
+
+				this_thread::sleep_for(100ms);
+			}
+		});
+
+	GThreadManager->Launch([=]()
+		{
+			while (true)
+			{
+				cout << "AccountThenPlayer" << endl;
+				GAccountManager.AccountThenPlayer();
+
+				this_thread::sleep_for(100ms);
+			}
+		});
+
+	GThreadManager->Join();
+}
+
+이렇게 테스트를 합니다. 일부러 릴리즈 모드로 실행해보면 서로 양쪽의 락을 잡기때문에 한쪽의 로그출력이 멈춰야합니다.
+하지만 실제 결과는 생각보다 잘 실행됩니다. 
+왜 그러냐면 PlayerThenAccount 나 AccountThenPlayer 함수에서 자신의 락을 잡고 상대의 락을 잡는 이 사이가 생각보다 시간이 짧기 때문에 
+그냥 통과가 되는겁니다. 일부러 1초를 슬립시켜보면 의도한대로 로그가 출력되다 멈추는걸 볼 수 있습니다. 

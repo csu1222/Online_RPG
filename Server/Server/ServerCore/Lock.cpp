@@ -1,21 +1,14 @@
 #include "pch.h"
 #include "Lock.h"
 #include "CoreTLS.h"
+#include "DeadLockProfiler.h"
 
-void Lock::WriteLock()
+void Lock::WriteLock(const char* name)
 {
-	// 아무도 소유 및 공유하고 있지 않을 대. 경합해서 소유권을 얻는다 
-	// 즉 이 락의 _lockFlag 가 EMPTY_FLAG 상태라면 가장 먼저 도착한 쓰레드의 쓰레드 아이디를 상위 16비트에 작성합니다.
-	/*
-	의사 코드로 만들어 보면 
-	if (_lockFlag == EMPTY_FLAG)
-	{
-		const uint32 desired = ((LThreadId << 16) & WRITE_THREAD_MASK);
-		_lockFlag = desired;
-	}
-
-	하지만 이 작업을 멀티쓰레드 환경에서 하면 위험하기 때문에 원자적으로 동작해야합니다.
-	*/
+	// 디버그 모드일때만 사이클 체크
+#if _DEBUG
+	GDeadLockProfiler->PushLock(name);
+#endif
 
 	// 동일한 쓰레드가 소유하고 있다면 무조건 성공
 	const uint32 lockThreadId = (_lockFlag.load() & WRITE_THREAD_MASK) >> 16;
@@ -50,8 +43,13 @@ void Lock::WriteLock()
 	}
 }
 
-void Lock::WriteUnlock()
+void Lock::WriteUnlock(const char* name)
 {
+	// 디버그 모드일때만 사이클 체크
+#if _DEBUG
+	GDeadLockProfiler->PopLock(name);
+#endif
+
 	// ReadLock 다 풀기 전에 WriteUnlock 불가능
 	if ((_lockFlag.load() & READ_COUNT_MASK) != 0)
 		CRASH("INVALID_UNLOCK_ORDER");
@@ -61,8 +59,13 @@ void Lock::WriteUnlock()
 		_lockFlag.store(EMPTY_FLAG);
 }
 
-void Lock::ReadLock()
+void Lock::ReadLock(const char* name)
 {
+	// 디버그 모드일때만 사이클 체크
+#if _DEBUG
+	GDeadLockProfiler->PushLock(name);
+#endif
+
 	// 동일한 쓰레드가 소유하고 있다면 무조건 성공
 	const uint32 lockThreadId = (_lockFlag.load() & WRITE_THREAD_MASK) >> 16;
 	if (LThreadId == lockThreadId)
@@ -92,8 +95,13 @@ void Lock::ReadLock()
 	}
 }
 
-void Lock::ReadUnlock()
+void Lock::ReadUnlock(const char* name)
 {
+	// 디버그 모드일때만 사이클 체크
+#if _DEBUG
+	GDeadLockProfiler->PopLock(name);
+#endif
+
 	if ((_lockFlag.fetch_sub(1) & READ_COUNT_MASK) == 0)
 	{
 		// 여기로 들어왔다면 ReadUnlock 하기 전부터 Read Count 가 0이었다
