@@ -1,7 +1,10 @@
+D:\CPP_Game\Portfolio\Server\Server\ServerCore\Allocator.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\Allocator.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\CoreGlobal.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\CoreGlobal.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\CorePch.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\CorePch.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\CoreTLS.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\CoreTLS.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\DeadLockProfiler.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\DeadLockProfiler.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\Lock.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\Lock.obj
+D:\CPP_Game\Portfolio\Server\Server\ServerCore\Memory.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\Memory.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\pch.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\pch.obj
+D:\CPP_Game\Portfolio\Server\Server\ServerCore\RefCounting.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\RefCounting.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\ThreadManager.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\ThreadManager.obj
