@@ -311,3 +311,134 @@ address % PAGE_SIZE 의 값은 전체 주소를 PAGE_SIZE 단위로 할당하기
 #define x_alloc(size)		BaseAllocator::Alloc(size)
 #define x_release(ptr)		BaseAllocator::Release(ptr)
 #endif
+
+
+---------------------------------------------
+
+STL Allocator
+
+지금까지 만든 얼로케이터로는 기본적인 타입만 사용할 수 있는데 앞으로 vector 나 queue, map 같은 STL 컨테이너를 안쓸 수 는 없기 때문에 이 컨테이너들에게도 적용가능한 
+얼로케이터를 만들어 줘야 합니다. 
+표준 vector 같은 클래스를 F12 로 타고 들어가보면 템플릿으로 첫번째 인자가 아이템의 타입을 받아주고 두번째 인자로 allocator 를 받아주는데 아무것도 안주면 기본 얼로케이터를 
+사용하게끔 되어있습니다. 이 것을 이용해 커스텀한 얼로케이터를 사용할 수 있습니다. 
+
+그러면 그냥 표준 vector에 두번째 인자로 커스텀한 얼로케이터인 BaseAllocator 를 사용하면 끝인가 싶습니다. 
+하지만 이 상태면 vector 에서 기본적으로 사용하고 있는 함수들의 인터페이스를 맞춰줘야합니다. 
+가장 처음으로는 얼로케이터의 value_type 이라는것을 찾는데 BaseAllocator 에는 이런것이 없습니다. 
+
+---- Allocator
+--- 헤더
+
+/*-------------------
+	STL Allocator
+-------------------*/
+
+template<typename T>
+class StlAllocator
+{
+public:
+	using value_type = T;
+
+	StlAllocator() { }
+
+	template<typename Other>
+	StlAllocator(const StlAllocator<Other>&) { }
+
+	T* allocate(size_t count)
+	{
+		const int32 size = static_cast<int32>(count * sizeof(T));
+		return static_cast<T*>(x_alloc(size));
+	}
+
+	void deallocate(T* ptr, size_t count)
+	{
+		x_release(ptr);
+	}
+};
+
+표준 인터페이스를 맞춰 주기위해 value_type을 템플릿 T로 주었습니다. 
+인자로 StlAllocator의 참조를 받아 주는 생성자와 allocate, deallocate 는 표준 인터페이스이기 때문에 저런 시그니처가 필요합니다.
+
+그러면 인터페이스를 맞췄으니 테스트를 해보면 
+
+----- GameServer
+	vector<Knight, StlAllocator<Knight>> v(100);
+
+중단점을 걸어 확인해보면 제대로 동작하는걸 알 수 있습니다. 
+
+그런데 매번 두번째 인자를 직접 넣어주는것 보다는 더욱 간평히 사용하도록 매크로를 만들면 좋을겁니다. 
+기존 CoreMacro 말고 컨테이너를 관리하는 헤더를 따로 만들겠습니다.
+
+----- ServerCore
+---- Container
+--- 헤더 
+#pragma once
+#include "Types.h"
+#include "Allocator.h"
+#include <vector>
+#include <list>
+#include <queue>
+#include <stack>
+#include <map>
+#include <set>
+#include <unordered_map>
+#include <unordered_set>
+using namespace std;
+
+template<typename Type>
+using Vector = vector<Type, StlAllocator<Type>>;
+
+template<typename Type>
+using List = list<Type, StlAllocator<Type>>;
+
+template<typename Key, typename Type, typename Pred = less<Key>>
+using Map = map<Key, Type, Pred, StlAllocator<pair<const Key, Type>>>;
+
+template<typename Key, typename Pred = less<Key>>
+using Set = set<Key, Pred, StlAllocator<Key>>;
+
+template<typename Type>
+using Deque = deque<Type, StlAllocator<Type>>;
+
+template<typename Type, typename Container = Deque<Type>>
+using Queue = queue<Type, Container>;
+
+template<typename Type, typename Container = Deque<Type>>
+using Stack = stack<Type, Container>;
+
+template<typename Type, typename Container = Vector<Type>, typename Pred = less<typename Container::value_type>>
+using PriorityQueue = priority_queue<Type, Container, Pred>;
+
+using String = basic_string<char, char_traits<char>, StlAllocator<char>>;
+
+using WString = basic_string<wchar_t, char_traits<wchar_t>, StlAllocator<wchar_t>>;
+
+template<typename Key, typename Type, typename Hasher = hash<Key>, typename KeyEq = equal_to<Key>>
+using HashMap = unordered_map<Key, Type, Hasher, KeyEq, StlAllocator<pair<const Key, Type>>>;
+
+template<typename Key, typename Hasher = hash<Key>, typename KeyEq = equal_to<Key>>
+using HashSet = unordered_set<Key, Hasher, KeyEq, StlAllocator<Key>>;
+
+내용을 길지만 다 반복되는 코드로 사용할만한 컨테이너를 다 정의 했습니다. 
+
+이 Container 헤더가 서버코어 전체에 적용되도록 CorePch 에 추가해야합니다. 
+
+---- CorePch
+--- 헤더 
+#pragma once
+
+#include "Types.h"
+#include "CoreTLS.h"
+#include "CoreMacro.h"
+#include "CoreGlobal.h"
+#include "Container.h"
+
+#include <Windows.h>
+#include <iostream>
+using namespace std;
+
+#include "Lock.h"
+
+여기 있던 기존 컨테이너 헤더는 Container.h 로 옮겼으니 없애도 됩니다. 
+
+이제 StlAllocator 를 통해 STL 컨테이너를 사용할때 StlAllocator 클래스의 내용만 수정하면 이후에 사용할 메모리 풀도 바로 적용이 가능해집니다. 
