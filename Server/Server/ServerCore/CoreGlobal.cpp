@@ -1,10 +1,12 @@
 #include "pch.h"
 #include "CoreGlobal.h"
 #include "ThreadManager.h"
+#include "Memory.h"
 #include "DeadLockProfiler.h"
 
-ThreadManager* GThreadManager = nullptr;
-DeadLockProfiler* GDeadLockProfiler = nullptr;
+ThreadManager*		GThreadManager = nullptr;
+Memory*				GMemory = nullptr;
+DeadLockProfiler*	GDeadLockProfiler = nullptr;
 
 class CoreGlobal
 {
@@ -12,13 +14,14 @@ public:
 	CoreGlobal()
 	{
 		GThreadManager = new ThreadManager();
+		GMemory = new Memory();
 		GDeadLockProfiler = new DeadLockProfiler();
 	}
 
 	~CoreGlobal()
 	{
 		delete GThreadManager;
+		delete GMemory;
 		delete GDeadLockProfiler;
 	}
-} GCoreGlobal;	// 이렇게 만든면 컨텐츠쪽에서 신경쓰지 않아도됩니다.
- 
+} GCoreGlobal;

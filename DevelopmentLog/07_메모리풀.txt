@@ -1,0 +1,676 @@
+
+
+메모리 풀링을 적용해보겠습니다. 
+
+메모리 풀링이라는것은 메모리를 할당할때 그때 그때 할당을 하게되면 컨텍스트 스위칭이 너무 빈번하게 일어나면서 성능이 떨어지기때문에 
+한번 메모리를 할당받을때 크게 할당받고 이 큰 메모리를 적당히 나눠서 사용하는걸 메모리 풀링이라고 합니다. 
+
+그리고 메모리크기가 변동하는 컨테이너의 경우도 메모리풀이 있으면 효용이 좋습니다. 
+
+하지만 현재는 윈도우의 기본적인 메모리관리 효율이 좋아지면서 굳이 따로 메모리풀을 사용하지는 않는다고 합니다. 
+이 시간은 메모리풀의 개념을 알아보는 시간이 될겁니다. 
+
+메모리풀을 만들 정책은 이런것입니다. 
+여러 크기의 메모리풀을 만들어줄건데 각각의 메모리풀의 크기가 다를겁니다. 
+예를 들어서 첫번째 메모리풀은 0~32 바이트 까지의 데이터에게 할당해줄 메모리풀, 두번째 메모리풀은 32바이트에서 64바이트까지 크기의 데이터를 할당할 메모리풀 이런식입니다. 
+
+그런데 이때 메모리풀을 만들때 한가지 방법만 있는것은 아닙니다. 
+위에서 말했듯이 메모리풀을 처음에 여러개 만들어 사용할 데이터의 크기에 맞추어 사용을 하는 방식이 있고 
+아니면 그냥 커다란 하나의 메모리풀만 만들어서 여기서 그때 그때 사용할 메모리를 가져다 사용하는 방법이 있습니다. 
+
+보통은 첫번째 방식을 많이 사용하는데 그 이유는 새로 할당할 데이터의 크기에 따라 사용할 메모리풀을 골라서 바로 사용할 수 있기 때문입니다. 
+
+그런데 각각 크기의 메모리풀이 자신의 정보를 알고 있어야 하기 때문에 실제 메모리 앞에 붙힐 메모리 헤더를 같이 사용할 수 있습니다. 
+
+/*-----------------
+	MemoryHeader
+------------------*/
+
+struct MemoryHeader
+{
+	// [MemoryHeader][Data]
+	MemoryHeader(int32 size) : allocSize(size) { }
+
+	static void* AttachHeader(MemoryHeader* header, int32 size)
+	{
+		new(header)MemoryHeader(size); // placement new
+		return reinterpret_cast<void*>(++header);
+	}
+
+	static MemoryHeader* DetachHeader(void* ptr)
+	{
+		MemoryHeader* header = reinterpret_cast<MemoryHeader*>(ptr) - 1;
+		return header;
+	}
+
+	int32 allocSize;
+	// TODO : 필요한 추가 정보
+};
+
+이 메모리헤더 방식은 사실 표준 할당, 삭제 에서도 사용하고 있습니다. 
+
+예를 들어서 
+
+TestClass* tc = new TestClass();
+
+delete tc;
+
+이렇게 tc 라는 객체를 삭제할때 delete 는 어떻게 tc의 크기를 알아서 그만큼의 메모리를 해제하는걸까요 
+코드를 까보면 사실 tc에는 이 객체의 크기와 이 객체가 힙영역에 할당된 주소같은것이 포함되어 있습니다. 
+
+AttachHeader 에서는 인자로 받은 header의 주소가 메모리 헤더의 시작 위치입니다. 헤더뒤에는 실제 객체가 있을것입니다. 
+new(header)MemoryHeader(size); 라는 문법은 메모리를할당할때 시작 주소를 지정하고 size는 뒤에올 객체의 크기를 멤버 변수 allocSize 로 들고 있게끔합니다. 
+그리고 반환하는 주소는 header 의 사이즈 만큼 뒤로가면 다음 객체의 시작주소가 됩니다. 
+
+DetachHeader는 인자로 받는 포인터주소는 객체의 시작주소고 MemoryHeader 의 크기만큼 1빼주면 메모리 헤더의 위치가 나옵니다. 이 주소를 반환합니다. 
+
+
+다음은 본격적인 메모리풀 클래스입니다. 
+
+/*-----------------
+	MemoryPool
+------------------*/
+
+class MemoryPool
+{
+public:
+	MemoryPool(int32 allocSize);
+	~MemoryPool();
+
+	void			Push(MemoryHeader* ptr);
+	MemoryHeader* Pop();
+
+private:
+	int32 _allocSize = 0;
+	atomic<int32> _allocCount = 0;
+
+	USE_LOCK;
+	queue<MemoryHeader*> _queue;
+};
+
+멤버 변수를 보면 _allocSize 가 있습니다. 이 멤버변수는 이 메모리풀이 담당하고 있는 메모리 사이즈입니다. 메모리풀을 여러개 만들어 각각 담당 사이즈를 나눌것이다 보니 
+이렇게 들고 있습니다. 
+_allocCount 는 해당메모리에서 뱉어준 메모리의 갯수를 의미합니다. 
+그리고 락을 사용하는 방식을 취할것이고, 메모리 헤더를 아이템으로 하는 큐를 들고 있습니다. 
+
+구현부를 보겠습니다. 
+
+/*-----------------
+	MemoryPool
+------------------*/
+
+MemoryPool::MemoryPool(int32 allocSize) : _allocSize(allocSize)
+{
+}
+생성자는 그냥 생성하면서 _allocSize의 값을 초기화 해줍니다. 
+
+MemoryPool::~MemoryPool()
+{
+	while (_queue.empty() == false)
+	{
+		MemoryHeader* header = _queue.front();
+		_queue.pop();
+		::free(header);
+	}
+}
+소멸자는 들고 있던 메모리풀을 순회하면서 메모리를 해제해줍니다. 
+
+void MemoryPool::Push(MemoryHeader* ptr)
+{
+	WRITE_LOCK;
+	ptr->allocSize = 0;
+
+	// Pool에 메모리 반납
+	_queue.push(ptr);
+
+	_allocCount.fetch_sub(1);
+}
+메모리를 사용하다 다 사용하고 메모리풀에 반납합니다. 
+
+MemoryHeader* MemoryPool::Pop()
+{
+	MemoryHeader* header = nullptr;
+
+	{
+		WRITE_LOCK;
+		// Pool에 여분이 있는지?
+		if (_queue.empty() == false)
+		{
+			// 있으면 하나 꺼내온다
+			header = _queue.front();
+			_queue.pop();
+		}
+	}
+
+	// 없으면 새로 만들다
+	if (header == nullptr)
+	{
+		header = reinterpret_cast<MemoryHeader*>(::malloc(_allocSize));
+	}
+	else
+	{
+		ASSERT_CRASH(header->allocSize == 0);
+	}
+
+	_allocCount.fetch_add(1);
+
+	return header;
+}
+Pop 은 메모리풀에서 메모리가 필요해 가져가는 함수입니다. 반환할 header라는 변수를 만들고 현재 _queue에 여분이 있는지를 체크 여분이 있다면 
+하나를 꺼내 건내줍니다. 
+그게 아니라면 이제 _queue 에 여분의 메모리가 없다면 새로 만들어 header 변수에 담습니다. 
+else 문에서는 _queue에 여분이 있어서 header에게 메모리를 꺼내 주었는데도 header의 allocSize 가 0이 아닌지를 체크합니다. 
+그리고 _allocCount 를 1 증가시키고 header를 반환합니다. 
+
+
+
+이제 이 메모리풀을 총괄하는 매니저를 만들어주면 됩니다. 
+Memory 파일에서 해주겠습니다. 
+
+class MemoryPool;
+
+/*-------------
+	Memory
+---------------*/
+
+class Memory
+{
+	enum
+	{
+		// ~1024까지 32단위, ~2048까지 128단위, ~4096까지 256단위
+		POOL_COUNT = (1024 / 32) + (1024 / 128) + (2048 / 256),
+		MAX_ALLOC_SIZE = 4096
+	};
+
+public:
+	Memory();
+	~Memory();
+
+	void* Allocate(int32 size);
+	void	Release(void* ptr);
+
+private:
+	vector<MemoryPool*> _pools;
+
+	// 메모리 크기 <-> 메모리 풀
+	// O(1) 빠르게 찾기 위한 테이블
+	MemoryPool* _poolTable[MAX_ALLOC_SIZE + 1];
+};
+
+enum에서 메모리풀의 정책을 정할 수 있습니다. 보통 작은 크기의 메모리는 여러군데에서 사용하고 큰 메모리는 사용처가 적습니다. 
+총 4096의 크기의 메모리를 할당받아 메모리풀들로 사용할것인데 32 바이트 단위, 128 바이트 단위, 256 바이트 단위 크기들로 만들겁니다. 
+4096 크기 이상의 데이터라면 굳이 메모리풀을 사용할 필요없이 직접 할당 받아 사용하게끔 할것입니다. 
+
+멤버 변수는 메모리풀들을 담은 벡터와 메모리풀을 빠르게 찾기위한 풀 테이블을 가지고 있습니다. 
+
+풀 테이블은 사용할 메모리의 크기를 인덱스로 주면 알아서 알맞는 사이즈의 메모리풀을 연결시켜줍니다. 
+
+구현부는 이렇습니다. 
+
+#include "MemoryPool.h"
+
+/*-------------
+	Memory
+---------------*/
+
+Memory::Memory()
+{
+	int32 size = 0;
+	int32 tableIndex = 0;
+
+	for (size = 32; size <= 1024; size += 32)
+	{
+		MemoryPool* pool = new MemoryPool(size);
+		_pools.push_back(pool);
+
+		while (tableIndex <= size)
+		{
+			_poolTable[tableIndex] = pool;
+			tableIndex++;
+		}
+	}
+
+	for (; size <= 2048; size += 128)
+	{
+		MemoryPool* pool = new MemoryPool(size);
+		_pools.push_back(pool);
+
+		while (tableIndex <= size)
+		{
+			_poolTable[tableIndex] = pool;
+			tableIndex++;
+		}
+	}
+
+	for (; size <= 4096; size += 256)
+	{
+		MemoryPool* pool = new MemoryPool(size);
+		_pools.push_back(pool);
+
+		while (tableIndex <= size)
+		{
+			_poolTable[tableIndex] = pool;
+			tableIndex++;
+		}
+	}
+}
+생성자에서 메모리풀들을 전부 만들어 줄것입니다. 
+
+Memory::~Memory()
+{
+	for (MemoryPool* pool : _pools)
+		delete pool;
+
+	_pools.clear();
+}
+소멸자에서는 메모리풀들을 다 삭제해줍니다. 이 경우는 사실 프로그램에 종료되는 시점이라 딱히 안해줘도 되긴하는데 
+일부러 한번 해줍니다. 
+
+void* Memory::Allocate(int32 size)
+{
+	MemoryHeader* header = nullptr;
+	const int32 allocSize = size + sizeof(MemoryHeader);
+
+	if (allocSize > MAX_ALLOC_SIZE)
+	{
+		// 메모리 풀링 최대 크기를 벗어나면 일반 할당
+		header = reinterpret_cast<MemoryHeader*>(::malloc(allocSize));
+	}
+	else
+	{
+		// 메모리 풀에서 꺼내온다
+		header = _poolTable[allocSize]->Pop();
+	}
+
+	return MemoryHeader::AttachHeader(header, allocSize);
+}
+할당하고 싶은 사이즈를 인자로 주면 그 사이즈에 맞는 메모리풀을 골라 줍니다.
+객체의 크기에 메모리 헤더의 크기만큼을 더한 값으로 찾습니다. 반환할때는 메모리헤더를 붙여서 반환합니다. 
+
+void Memory::Release(void* ptr)
+{
+	MemoryHeader* header = MemoryHeader::DetachHeader(ptr);
+
+	const int32 allocSize = header->allocSize;
+	ASSERT_CRASH(allocSize > 0);
+
+	if (allocSize > MAX_ALLOC_SIZE)
+	{
+		// 메모리 풀링 최대 크기를 벗어나면 일반 해제
+		::free(header);
+	}
+	else
+	{
+		// 메모리 풀에 반납한다
+		_poolTable[allocSize]->Push(header);
+	}
+}
+여기서는 꺼꾸로 메모리헤더를 때어줍니다. 때낸 헤더의 정보를 가지고 예외체크와 프리를 해줍니다.
+
+
+
+그런데 메모리풀에서는 이전 만들었던 StompAllocator 를 사용하지 않습니다. 둘의 궁합이 좋지 않기 때문인데 
+메모리풀은 할당받은 메모리를 재사용하는것이 컨샙이고 StompAllocator는 메모리를 다 사용하면 직접 운영체제에 바로 메모리해제를 부탁하는 방식이기때문에 둘은 같이 사용하기 어렵습니다. 
+
+만든 메모리풀을 사용하려면 이 메모리풀을 사용하는 Allocator 를 만들어 주겠습니다. 
+Allocator 파일들에서 추가합니다. 
+
+/*-------------------
+	PoolAllocator
+-------------------*/
+
+class PoolAllocator
+{
+public:
+	static void* Alloc(int32 size);
+	static void		Release(void* ptr);
+};
+
+/*-------------------
+	PoolAllocator
+-------------------*/
+
+void* PoolAllocator::Alloc(int32 size)
+{
+	return GMemory->Allocate(size);
+}
+
+void PoolAllocator::Release(void* ptr)
+{
+	GMemory->Release(ptr);
+}
+
+여기서 GMemory 는 CoreGlobal에 추가될 전역 메모리풀 매니저입니다. 
+
+#pragma once
+
+extern class ThreadManager* GThreadManager;
+extern class Memory* GMemory;
+
+extern class DeadLockProfiler* GDeadLockProfiler;
+
+#include "pch.h"
+#include "CoreGlobal.h"
+#include "ThreadManager.h"
+#include "Memory.h"
+#include "DeadLockProfiler.h"
+
+ThreadManager* GThreadManager = nullptr;
+Memory* GMemory = nullptr;
+DeadLockProfiler* GDeadLockProfiler = nullptr;
+
+class CoreGlobal
+{
+public:
+	CoreGlobal()
+	{
+		GThreadManager = new ThreadManager();
+		GMemory = new Memory();
+		GDeadLockProfiler = new DeadLockProfiler();
+	}
+
+	~CoreGlobal()
+	{
+		delete GThreadManager;
+		delete GMemory;
+		delete GDeadLockProfiler;
+	}
+} GCoreGlobal;
+
+
+그리고 사용할때는 CoreMacro 에서 _DEBUG 모드일때는 StompAllocator 를 사용하도록했는데 이 부분을 PoolAllocator 로 바꿔서 테스트하면됩니다. 
+
+
+이렇게 메모리풀을 간단하게 구현을 해봤는데 굳이 개선해볼 부분을 보자면 먼저 락을 걸어서 동작을 하는 부분이 조금 걸립니다. 
+그리고 두번째로는 메모리들을 저장하는 컨테이너로 Queue를 사용하고 있습니다. 
+
+메모리풀의 컨테이너를 Queue로 사용하는게 왜 문제냐면 동적배열방식이기 때문인데 메모리풀에서 많은 아이템들을 만들면 또 그때 메모리할당이 일어나긴 할겁니다. 
+
+이 문제들을 락 프리 스택을 통해 해결해볼것입니다. 
+락프리 스택은 그 난이도에 비해 그렇게 성능이 좋은것이 아니라고는 했지만 이번에는 조금 다른 방법으로 메모리풀에 적용해보겠습니다. 
+
+테스트 코드를 위해 LockFreeStack 클래스 추가를 합니다. 
+
+이전에 실습했던 락프리 스택의 구조는 노드라는 구조체를 만들어서 그 노드를 CAS를 통해 데이터를 관리했었습니다. 
+노드는 또 템플릿문법으로 실제 데이터를 받고 자신 다음에 올 노드를 포인터로 들고 있어 헤더노드만 알고 있으면 스택의 모든 데이터를 컨트롤할 수 있었습니다. 
+
+이것보다 더 나은 방법이 하나 더 있습니다. 
+노드의 데이터와 넥스트 노드라는 정보가 나뉜것을 데이터 자체에 한번에 관리하는것입니다. 
+
+struct SListEntry
+{
+	SListEntry* next;
+};
+
+이런 구조체를 만들고 
+
+class Data : public SListEntry
+{
+	public:
+	// 데이터 
+}
+이렇게 Data 클래스를 만들때 SListEntry 를 상속을 받거나 아니면 
+
+class Data 
+{
+	public:
+	SListEntry next;
+
+	// 데이터
+	int32 _hp;
+	int32 _mp;
+}
+이렇게 첫번째 멤버 변수로 SListEntry를 들고 있을 수 있습니다. 
+
+그런데 이 방법에도 문제가 있는데 처음의 노드를 만드는 방식은 템플릿 문법으로 아무 타입의 데이터나 사용할 수 있지만
+지금처럼 SListEntry 를 상속받거나 멤버변수로 들고 있는 방법은 아예 데이터라는것을 설계할때 도입할 수 있기때문에 임의로 수정을 못하는 외부라이브러리의 
+데이터 타입은 사용하지 못합니다. 다만 지금처럼 메모리풀같이 직접 클래스를 만들어야 하는경우는 사용할 수 있습니다. 
+
+struct SListHeader
+{
+	SListEntry* next = nullptr;
+}
+이런 헤더를 하나 만들어서 가장 앞의 데이터를 가리키도록 하는 구조체를 하나 더 만들겠습니다. 
+
+의사코드로 만들어 보겠습니다.
+
+void InitializedHead(SListHeader* header)
+{
+	header->next = nullptr;
+}
+
+void PushEntrySList(SListHeader* header, SListEntry* entry)
+{
+	entry->next = header->next;
+	header->next = entry;
+}
+
+SListEntry* PopEntrySList(SListHeader* header)
+{
+	SListEntry* first = header->next;
+
+	if (first != nullptr)
+	{
+		header->next = first->next;
+	}
+
+	return first;
+}
+
+이런식이 될겁니다. 이 코드는 멀티스레드는 고려하지 않고 만들었지만 노드방식과 비슷하지만 다음 노드를 가리키는 방법이 데이터에 내장되어 있는 방법이었습니다. 
+
+테스트는 이런식으로 하면 될겁니다. 
+
+void main()
+{
+	SListHeader header;
+	InitializedHead(&header);
+
+	Data* data = new Data();
+	data->_hp = 10;
+	data->_mp = 20;
+	PushEntrySList(%header, (SListEntry*)data);
+
+	Data* popData = PopEntrySList(&header);
+}
+
+이 테스트 코드중에 data 를 SListEntry* 로 캐스팅 할 수 있는 이유는 Data 클래스의 첫번째 멤버 변수가 SListEntry포인터 이기 때문에 캐스팅을 해도 괜찮습니다. 
+
+간단하게 싱글스레드 기준으로 만들어 본거고 멀티쓰레드 환경에서도 동작하게끔 만들어 볼겁니다. 
+
+
+struct SListEntry
+{
+	SListEntry* next;
+};
+
+struct SListHeader
+{
+	SListEntry* next = nullptr;
+};
+
+void InitializeHead(SListHeader* header);
+void PushEntrySList(SListHeader* header, SListEntry* entry);
+SListEntry* PopEntrySList(SListHeader* header);
+
+
+void InitializeHead(SListHeader* header)
+{
+	header->next = nullptr;
+}
+이 초기화 함수는 말그대로 초기화를 하는 부분이니깐 다른 쓰레드가 접근할일이 없기 때문에 싱글스레드에서의 방법 그대로 사용합니다. 
+
+void PushEntrySList(SListHeader* header, SListEntry* entry)
+{
+	entry->next = header->next;
+	while (::InterlockedCompareExchange64((int64*)&header->next, (int64)entry, (int64)entry->next) == 0)
+	{
+
+	}
+}
+Push 함수입니다. 이전에 알아봤던 CAS 연산을 알아봤었는데 여기서는 InterlockedCompareExchange64 함수를 사용합니다. 
+첫번째 주소로 들어간것은 비교를 할 대상입니다. 여기서는 header->next의 주소를 int64*로 캐스팅해서 넘겨줍니다. 
+두번째 인자는 Desired에 해당하는 값입니다. 아토믹 CAS 와 순서가 좀 다릅니다. 
+세번째가 expected 값입니다. 그리고 이 연산이 성공하면 header->next에 두번째 인자값이 들어갈것이고 실패하면 0을 리턴할것입니다. 
+즉 이 코드의 뜻은 header->next의 주소값이 entry->next와 같은지를 확인하고 같다면 header->next 에 entry 를 넣어줄겁니다. 
+
+// [][]
+// Header[ next ]
+SListEntry* PopEntrySList(SListHeader* header)
+{
+	SListEntry* expected = header->next;
+
+	// ABA Problem
+	while (expected && ::InterlockedCompareExchange64((int64*)&header->next, (int64)expected->next, (int64)expected) == 0)
+	{
+
+	}
+
+	return expected;
+}
+Pop 함수도 위와 마찬가지입니다. expected 변수를 하나 만들고 header의 next 값을 넣습니다. 이어서 원자적으로 header->next 와 expected 를 비교해 
+같다면 header->next는 expected->next 를 받아줍니다. 
+
+그런데 Pop 할때 주의해야할점이 있었습니다. 
+expected를 header->next 로 저장하고 while문에 입장하기전에 다른쓰레드에서 CAS 를 하려던 객체를 삭제했다면 CAS연산중에 크래시가 나게 될겁니다. 
+이 문제를 use after free 라고하는데 이것을 보완하기 위해서 레퍼런스 카운트를 사용하거나 스마트 포인터로 다른 누군가 객체를 참조하고 있으면 
+삭제되지 않도록 했었습니다. 
+
+노드방식을 사용할때는 노드라는 객체가 LockFreeStack 안에 포함이 되어 있었기 때문인데 지금은 SListEntry 라는 구조체끼리 서로 물고 있으면서 락프리스택 구조를 이루고 있습니다. 
+
+일단 먼저 use after free 상황이 안일어 났다고 가정을 해보겠습니다.
+이 문제가 없다고 해도 이 코드가 안전한지를 다시 보겠습니다. 
+
+ABA 문제라고 합니다. 
+문제의 이름이 내용을 설명합니다. A 에서 B상태로 갔다가 다시 A상태로 온다는 이야기입니다. 
+무슨말이냐면 CAS 를 할때 비교하려고 했던 변수의 값이 expected 의 값과 같다면 desired 값으로 바뀝니다. 
+여기서 어떤 문제가 발생한다고 하면 예를 들어서 
+
+3가지 데이터가 있다고 하겠습니다. 이 데이터의 메모리 주소가 아래와 같이 있다고 하겠습니다. 그리고 헤더가 있을겁니다. 
+[5000] -> [6000] -> [7000]
+[header]
+이 상태에서 위의 코드의 CAS 가 하는것은 header 가 가리키는 5000번 주소를 가진 데이터를 6000번 주소를 가진 데이터를 가리키게 하고 5000번 데이터는 뽑아내겠다라고 하는것입니다. 
+
+이 로직을 실행하려고 하는 찰나 다른 쓰레드가 접근해서 Pop 을 두번해서 7000번 데이터만 남았다가 그 다음에 우연히도 다시 5000번 주소에 다른 데이터가 push 되어 들어왓다고 하겠습니다. 
+그러면 실질적으로 데이터는 두 데이터는 다르지만 주소가 같습니다. 
+물론 실제로 메모리 해제와 할당을 할때 똑같은 주소가 할당될 수 있냐면 거의 그런일은 없지만 반대로 절대로 그런일은 없다고 보장도 못합니다. 
+ 
+다시 표현해보자면 
+[5000(new)]->[7000]
+[header]
+이런상황입니다. 하지만 이미 CAS를 호출했을때는 header가 가리키는 데이터의 주소가 5000이면 6000주소를 가리키도록 실행했기때문에 
+이제는 메모리 해제된 6000 번 주소를 가리키게 됩니다. 
+
+그러면 이 ABA 문제를 어떻게 해결해야할까요 
+일단 첫번째 해결 방안은 비교하는 기준을 그냥 포인터 주소만 사용하는게 아니라 다른 정보도 같이 비교하는것입니다. 
+주소와 함께 각 데이터가 고유한 값을 발급받아서 CAS를 실행해야 합니다. 
+
+이전 노드를 사용하는 락프리스택에서는 애초에 참조 카운트를 도입해 참조하고 있는 쓰레드가 있으면 그 객체를 삭제하지 않는 방법을 사용했기 때문에
+ABA 문제를 고려하지 않아도 되었습니다. 
+
+ABA 문제도 해결한 버전의 코드입니다. 
+
+
+DECLSPEC_ALIGN(16)
+struct SListEntry
+{
+	SListEntry* next;
+};
+
+DECLSPEC_ALIGN(16)	//  16 바이트 정렬을 해주는 매크로입니다. 
+struct SListHeader
+{
+	// alignment, region 만 0으로 초기화해도 depth, sequence, reserved, next 모두 0으로 밀립니다. 
+	SListHeader()
+	{
+		alignment = 0;
+		region = 0;
+	}
+
+	// DUMMYSTRUCTNAME 라는 이름과 HeaderX64 라는 이름의 두가지 시각으로 이 데이터를 보겠다라는 것입니다. 
+	// DUMMYSTRUCTNAME 라는 이름으로 접근하면 alignment, region 이라는 64비트 두개의 int로 인식하고 
+	// HeaderX64 로 접근하면 depth, sequence, reserved, next 합쳐서 128 비트의 크기의 구조체로 인식하게 됩니다. 
+	union
+	{
+		struct
+		{
+			uint64 alignment;
+			uint64 region;
+		} DUMMYSTRUCTNAME;
+		struct
+		{
+			uint64 depth : 16;
+			uint64 sequence : 48;
+			uint64 reserved : 4;
+			uint64 next : 60;
+		} HeaderX64;
+	};
+};
+
+void InitializeHead(SListHeader* header);
+void PushEntrySList(SListHeader* header, SListEntry* entry);
+SListEntry* PopEntrySList(SListHeader* header);
+
+
+void InitializeHead(SListHeader* header)
+{
+	header->alignment = 0;
+	header->region = 0;
+}
+
+void PushEntrySList(SListHeader* header, SListEntry* entry)
+{
+	
+	SListHeader expected = {};
+	SListHeader desired = {};
+
+	// 16 바이트 정렬
+	// 최하위 4비트는 0000 이 되는것 4비트를 비워두면 따로 데이터의 구분을 할 수 있는 여분을 남겨두는것입니다. 
+	desired.HeaderX64.next = (((uint64)entry) >> 4);
+
+	while (true)
+	{
+		expected = *header;
+
+		// 이 사이에 변경될 수 있다
+
+		entry->next = (SListEntry*)(((uint64)expected.HeaderX64.next) << 4);
+		desired.HeaderX64.depth = expected.HeaderX64.depth + 1;
+		desired.HeaderX64.sequence = expected.HeaderX64.sequence + 1;
+
+		if (::InterlockedCompareExchange128((int64*)header, desired.region, desired.alignment, (int64*)&expected) == 1)
+			break;
+	}
+}
+
+SListEntry* PopEntrySList(SListHeader* header)
+{
+	SListHeader expected = {};
+	SListHeader desired = {};
+	SListEntry* entry = nullptr;
+
+	while (true)
+	{
+		expected = *header;
+
+		entry = (SListEntry*)(((uint64)expected.HeaderX64.next) << 4);
+		if (entry == nullptr)
+			break;
+
+		// Use-After-Free
+		desired.HeaderX64.next = ((uint64)entry->next) >> 4;
+		desired.HeaderX64.depth = expected.HeaderX64.depth - 1;
+		desired.HeaderX64.sequence = expected.HeaderX64.sequence + 1;
+
+		if (::InterlockedCompareExchange128((int64*)header, desired.region, desired.alignment, (int64*)&expected) == 1)
+			break;
+	}
+
+	return entry;
+}
+
+결국 이 내용을 알아본 이유가 무엇이냐면 락프리프로그래밍을 하기 위해서는 지금처럼 하나의 객체를 비트 단위로 나누어 써서 같은 객체인지를 확인해야합니다. 
+또 이 방식이 완벽히 멀티쓰레드환경에서 안전한것은 아니고 여전히 use after free 문제는 남아 있습니다. 
+
+이렇게 락프리프로그래밍을 직접 만들어 사용하는것은 추천하지 않는 방법입니다. 최대한 버그가 날 부분을 줄인다고 해도 예상치 못한곳에서 버그가 생기기 때문에 
+사용하려면 표준에서 지원하는 라이브러리를 사용하는것이 좋겠습니다. 
