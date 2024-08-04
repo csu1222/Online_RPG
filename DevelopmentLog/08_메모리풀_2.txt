@@ -1,0 +1,242 @@
+
+
+
+이전까지 만든 락프리 스택을 다 날려줄겁니다. 
+
+대신에 마이크로소프트에서 제공하는 SList를 가져와 사용할것입니다. 
+
+
+SLIST_HEADER 라는 타입으로 사용하면 됩니다. 
+
+
+
+DECLSPEC_ALIGN(16)
+class Data
+{
+public:
+	SLIST_ENTRY _entry;
+	int64 _rand = rand() % 1000;
+
+};
+
+SLIST_HEADER* GHeader;
+
+int main()
+{
+	GHeader = new SLIST_HEADER();
+	
+	ASSERT_CRASH(((uint64)GHeader % 16) == 0);
+	::InitializeSListHead(GHeader);
+
+	for (int32 i = 0; i < 3; i++)
+	{
+		GThreadManager->Launch([]()
+			{
+				while (true)
+				{
+					Data* data = new Data();
+
+					ASSERT_CRASH(((uint64)data % 16) == 0);
+
+					::InterlockedPushEntrySList(GHeader, (SLIST_ENTRY*)data);
+					this_thread::sleep_for(10ms);
+				}
+			});
+	}
+
+	for (int32 i = 0; i < 2; i++)
+	{
+		GThreadManager->Launch([]()
+			{
+				while (true)
+				{
+					Data* pop = nullptr;
+
+					pop = (Data*)::InterlockedPopEntrySList(GHeader);
+
+					if (pop)
+					{
+						cout << pop->_rand << endl;
+						delete pop;
+					}
+					else
+					{
+						cout << "None" << endl;
+					}
+
+					this_thread::sleep_for(10ms);
+				}
+			});
+	}
+}
+
+이런 코드가 동작을 합니다. 
+
+SLIST_ENTRY, SLIST_HEADER 가 어떤 구조인지 따라가 보면 이전에 만들었듯이 128바이트의 크기의 데이터를 여러 타입으로 나누어 관리를 하고 있습니다.
+그리고 구조체를 만들고 난 후 뒤에 SLIST_ENTRY , *PSLIST_ENTRY 라고 이름을 지어놨습니다. 
+SLIST_ENTRY 로 쓸수도 있고 포인터 형태로 사용하려면 PSLIST_ENTRY 라고 사용해도 되는것입니다. 
+
+Data 가 SLIST_ENTRY 를 사용할 수 있는 이유가 첫번째 변수로 SLIST_ENTRY 를 가지고 있기 때문입니다. 아니면 SLIST_ENTRY를 상속받는것도 가능합니다. 
+
+이제 이 내용을 메모리 풀에 적용해보겠습니다. 
+
+---- MemoryPool
+--- 헤더 
+#pragma once
+
+// 16바이트 정렬을 enum으로 관리 
+enum
+{
+	SLIST_ALIGNMENT = 16
+};
+
+/*-----------------
+	MemoryHeader
+------------------*/
+
+// 16바이트 정렬과 SLIST_ENTRY 를 상속받았습니다. 
+DECLSPEC_ALIGN(SLIST_ALIGNMENT)
+struct MemoryHeader	: public SLIST_ENTRY
+{
+	// [MemoryHeader][Data]
+	MemoryHeader(int32 size) : allocSize(size) { }
+
+	static void* AttachHeader(MemoryHeader* header, int32 size)
+	{
+		new(header)MemoryHeader(size); // placement new
+		return reinterpret_cast<void*>(++header);
+	}
+
+	static MemoryHeader* DetachHeader(void* ptr)
+	{
+		MemoryHeader* header = reinterpret_cast<MemoryHeader*>(ptr) - 1;
+		return header;
+	}
+
+	int32 allocSize;
+	// TODO : 필요한 추가 정보
+};
+
+/*-----------------
+	MemoryPool
+------------------*/
+
+// 16바이트 정렬과 첫번째 변수로 SLIST_HEADER 를 만들었습니다. 
+DECLSPEC_ALIGN(SLIST_ALIGNMENT)
+class MemoryPool
+{
+public:
+	MemoryPool(int32 allocSize);
+	~MemoryPool();
+
+	void			Push(MemoryHeader* ptr);
+	MemoryHeader* Pop();
+
+private:
+	SLIST_HEADER _header;
+	int32 _allocSize = 0;
+	atomic<int32> _allocCount = 0;
+
+};
+
+
+--- cpp
+
+// 생성자에서 초기화를 해줍니다. 
+MemoryPool::MemoryPool(int32 allocSize) : _allocSize(allocSize)
+{
+	::InitializeSListHead(&_header);
+}
+
+MemoryPool::~MemoryPool()
+{
+	// 소멸할때 Pop을 해서 그 값이 nullptr 이 아닐때 까지 반복 
+	while (MemoryHeader* memory = static_cast<MemoryHeader*>(::InterlockedPopEntrySList(&_header)))
+	{
+		// 아직 값이 있다면 16바이트 정렬하면서 삭제
+		::_aligned_free(memory);
+	}
+}
+
+// _queue를 사용하던 부분을 InterlockedPushEntrySList로 대체합니다. 
+void MemoryPool::Push(MemoryHeader* ptr)
+{
+	ptr->allocSize = 0;
+
+	::InterlockedPushEntrySList(&_header, static_cast<PSLIST_ENTRY>(ptr));
+
+	_allocCount.fetch_sub(1);
+}
+
+MemoryHeader* MemoryPool::Pop()
+{
+	// 곧바로 Pop 을 합니다. 
+	MemoryHeader* memory = static_cast<MemoryHeader*>(::InterlockedPopEntrySList(&_header));
+
+	// 없으면 새로 만들다
+	if (memory == nullptr)
+	{
+		// 기존 malloc 은 16바이트 정렬이 된다는 보장이 없기때문에 _aligned_malloc 사용
+		memory = reinterpret_cast<MemoryHeader*>(::_aligned_malloc(_allocSize, SLIST_ALIGNMENT));
+	}
+	else
+	{
+		ASSERT_CRASH(memory->allocSize == 0);
+	}
+
+	_allocCount.fetch_add(1);
+
+	return memory;
+}
+
+
+---- Memory
+--- cpp
+
+그리고 Memory 클래스에서도 Allocate에서 malloc 을 하는데 16바이트 정렬을 하는 버전으로 바꿔줘야 합니다. 
+
+void* Memory::Allocate(int32 size)
+{
+	MemoryHeader* header = nullptr;
+	const int32 allocSize = size + sizeof(MemoryHeader);
+
+	if (allocSize > MAX_ALLOC_SIZE)
+	{
+		// 메모리 풀링 최대 크기를 벗어나면 일반 할당
+		header = reinterpret_cast<MemoryHeader*>(::_aligned_malloc(allocSize, SLIST_ALIGNMENT));
+	}
+	else
+	{
+		// 메모리 풀에서 꺼내온다
+		header = _poolTable[allocSize]->Pop();
+	}
+
+	return MemoryHeader::AttachHeader(header, allocSize);
+}
+
+// 프리할때도 _aligned_free 로 바꿔주겠습니다. 
+void Memory::Release(void* ptr)
+{
+	MemoryHeader* header = MemoryHeader::DetachHeader(ptr);
+
+	const int32 allocSize = header->allocSize;
+	ASSERT_CRASH(allocSize > 0);
+
+	if (allocSize > MAX_ALLOC_SIZE)
+	{
+		// 메모리 풀링 최대 크기를 벗어나면 일반 해제
+		::_aligned_free(header);
+	}
+	else
+	{
+		// 메모리 풀에 반납한다
+		_poolTable[allocSize]->Push(header);
+	}
+}
+
+
+
+메모리풀이 성능상 효율이 매우 좋습니다. 
+메모리가 필요할때 매번 컨텍스트 스위칭을 거치면 너무 비효율적인것을 보완해주는 방법이기 때문인데 
+
+사실 최근에는 알아서 메모리풀의 역할을 해준다고 합니다. 그래서 이제와서 굳이 사용할 필요는 없긴합니다. 

@@ -7,55 +7,45 @@
 
 MemoryPool::MemoryPool(int32 allocSize) : _allocSize(allocSize)
 {
+	::InitializeSListHead(&_header);
 }
 
 MemoryPool::~MemoryPool()
 {
-	while (_queue.empty() == false)
+	// 소멸할때 Pop을 해서 그 값이 nullptr 이 아닐때 까지 반복 
+	while (MemoryHeader* memory = static_cast<MemoryHeader*>(::InterlockedPopEntrySList(&_header)))
 	{
-		MemoryHeader* header = _queue.front();
-		_queue.pop();
-		::free(header);
+		// 아직 값이 있다면 16바이트 정렬하면서 삭제
+		::_aligned_free(memory);
 	}
 }
 
 void MemoryPool::Push(MemoryHeader* ptr)
 {
-	WRITE_LOCK;
 	ptr->allocSize = 0;
 
-	// Pool에 메모리 반납
-	_queue.push(ptr);
+	::InterlockedPushEntrySList(&_header, static_cast<PSLIST_ENTRY>(ptr));
 
 	_allocCount.fetch_sub(1);
 }
 
 MemoryHeader* MemoryPool::Pop()
 {
-	MemoryHeader* header = nullptr;
-
-	{
-		WRITE_LOCK;
-		// Pool에 여분이 있는지?
-		if (_queue.empty() == false)
-		{
-			// 있으면 하나 꺼내온다
-			header = _queue.front();
-			_queue.pop();
-		}
-	}
+	// 곧바로 Pop 을 합니다. 
+	MemoryHeader* memory = static_cast<MemoryHeader*>(::InterlockedPopEntrySList(&_header));
 
 	// 없으면 새로 만들다
-	if (header == nullptr)
+	if (memory == nullptr)
 	{
-		header = reinterpret_cast<MemoryHeader*>(::malloc(_allocSize));
+		// 기존 malloc 은 16바이트 정렬이 된다는 보장이 없기때문에 _aligned_malloc 사용
+		memory = reinterpret_cast<MemoryHeader*>(::_aligned_malloc(_allocSize, SLIST_ALIGNMENT));
 	}
 	else
 	{
-		ASSERT_CRASH(header->allocSize == 0);
+		ASSERT_CRASH(memory->allocSize == 0);
 	}
 
 	_allocCount.fetch_add(1);
 
-	return header;
+	return memory;
 }
