@@ -1,0 +1,226 @@
+
+
+메모리풀에도 아쉬운 점이 있습니다. 
+
+메모리풀의 메모리 크기 정책을 비슷한 크기의 데이터들끼리 하나의 풀에서 공용으로 사용합니다. 
+
+그런데 메모리풀을 사용할때 메모리 오염문제가 생긴다면 메모리를 사용한 후 해제를 하는게아닌 메모리풀에 반납을 하기때문에 
+아주 나중에 버그가 터지게 되면 이 버그의 원인을 찾기 매우 어렵다는것입니다. 
+
+그래서 이런 문제가 일어날수 있는 클래스들을 따로 메모리를 할당해 관리하게되면 문제가 생긴 클래스를 바로 알 수 있을겁니다. 
+
+이번에 알아볼 내용은 오브젝트 풀입니다. 
+
+오브젝트 풀은 어떻게 보면 메모리풀에 포함된 개념이라고 할 수 있습니다. 
+
+오브젝트 풀은 헤더만 추가해서 만들어 볼겁니다. 
+기본적으로는 메모리풀과 비슷하게 만들어집니다. 
+
+----- ServerCore
+---- ObjectPool
+--- header
+
+#pragma once
+#include "Types.h"          // Types 와 MemoryPool 을 include 
+#include "MemoryPool.h"
+
+template<typename Type>
+class ObjectPool
+{
+public:
+	template<typename... Args>
+	static Type* Pop(Args&&... args)
+	{
+#ifdef _STOMP
+		MemoryHeader* ptr = reinterpret_cast<MemoryHeader*>(StompAllocator::Alloc(s_allocSize));
+		Type* memory = static_cast<Type*>(MemoryHeader::AttachHeader(ptr, s_allocSize));
+#else
+        // s_pool 에서 메모리를 pop 하여 메모리헤더를 붙임과 동시에 Type* memory 에 저장을 합니다. 
+		Type* memory = static_cast<Type*>(MemoryHeader::AttachHeader(s_pool.Pop(), s_allocSize));
+#endif		
+        // placement new 를 통해 이 메모리 주소에 생성자와 그 인자들을 건내주면서 객체를 만듭니다. 그리고 그 객체를 반환합니다. 
+		new(memory)Type(forward<Args>(args)...); // placement new
+		return memory;
+	}
+
+	static void Push(Type* obj)
+	{
+        // 메모리를 반납하는것이니 객체의 소멸자를 호출하고 
+		obj->~Type();
+#ifdef _STOMP
+		StompAllocator::Release(MemoryHeader::DetachHeader(obj));
+#else
+        // DetachHeader 를 하면서 s_pool에 반납합니다. 
+		s_pool.Push(MemoryHeader::DetachHeader(obj));
+#endif
+	}
+
+	static shared_ptr<Type> MakeShared()
+	{
+		shared_ptr<Type> ptr = { Pop(), Push };
+		return ptr;
+	}
+
+// 멤버 변수 오브젝트 풀은 다 static으로 만들어 줄것입니다. 
+private:
+	static int32		s_allocSize;    
+	static MemoryPool	s_pool;
+};
+
+// static 으로 사용하니 멤버 변수를 여기서 초기화 해줘야합니다.  
+template<typename Type>
+int32 ObjectPool<Type>::s_allocSize = sizeof(Type) + sizeof(MemoryHeader);
+
+template<typename Type>
+MemoryPool ObjectPool<Type>::s_pool{ s_allocSize };
+
+
+그리고 이 오브젝트 풀은 왠만하면 사용할것 같으니 
+CorePch에 추가하면 좋겠습니다. 
+
+
+테스트를 할때는 이렇게 됩니다. 
+
+// 테스트용 두가지 클래스가 있다고 하겠습니다. 
+class Knight
+{
+public:
+	int32 _hp = rand() % 1000;
+};
+
+class Monster
+{
+public:
+	int64 _id = 0;
+};
+
+int main()
+{
+    // 이렇게 오브젝트를 생성
+	Knight* k = ObjectPool<Knight>::Pop();
+
+    // 오브젝트 릴리즈는 이렇게 
+	ObjectPool<Knight>::Push(k);
+}
+
+
+이때 생기는 아쉬움이 이렇게 매번 Pop, Push 짝을 맞춰서 사용해야 할지 하는 아쉬움이 생깁니다. 
+코드가 복잡해지면서 메모리 누수가 일어날 수도 있습니다. 이 말도 맏는 이야기이므로 이것을 자동으로 관리해주는것이 스마트포인터 였는데 
+스마트 포인터 객체를 생성할때 사용하는 make_shared 가 기본 new, delete를 사용합니다. 
+사실은 이 make_shared 에는 인자를 입력하면 new, deleter 를 골라 줄 수 있습니다.  
+그것이 MakeShared 입니다. 
+
+다시 이 내용을 추가한 테스트를 해보겠습니다. 
+
+
+int main()
+{
+	Knight* knights[100];
+
+	for (int32 i = 0; i < 100; i++)
+	{
+		knights[i] = ObjectPool<Knight>::Pop();
+	}
+
+	for (int32 i = 0; i < 100; i++)
+	{
+		ObjectPool<Knight>::Push(knights[i]);
+		knights[i] = nullptr;
+	}
+    
+	shared_ptr<Knight> sptr = ObjectPool<Knight>::MakeShared();
+}
+
+knights 라고 100 개의 Knight 를 담은 배열을 Pop 과 Push로 생성 소멸하고 
+그 아래에서 ObjectPool::MakeShared를 통해 스마트포인터로 관리되는 Knight 객체를 만들었습니다. 
+
+그리고 당연하게도 Monster 객체를 ObjectPool 로 만들게 되면 Knight 의 오브젝트풀과 별개의 객체가 생성되어서 따로 관리가 됩니다.
+
+
+또 지금 메모리풀의 얼로케이터를 사용하고 디버그에 이점이 있는 스톰프얼로케이터도 만들었었습니다. 지금은 코어매크로 파일에 풀 얼로케이터를 사용하겠다고 하였는데 
+상황에 따라 골라 사용하도록 작업을 해보겠습니다. 
+먼저 기존 CoreMacro의 x_alloc, x_delete 를 날리고 시작합니다. 
+
+---- Memory
+--- header
+
+template<typename Type, typename... Args>
+Type* xnew(Args&&... args)
+{
+	Type* memory = static_cast<Type*>(PoolAllocator::Alloc(sizeof(Type)));  // 이부분이 매크로로 사용하던 x_alloc 대신 풀 얼로케이터를 사용합니다.
+	new(memory)Type(forward<Args>(args)...); // placement new
+	return memory;
+}
+
+template<typename Type>
+void xdelete(Type* obj)
+{
+	obj->~Type();
+	PoolAllocator::Release(obj);        // 여기도 마찬가지로 풀얼로케이터를 사용 
+}
+
+// 이것은 새로 추가되었는데 오브젝트 풀의 MakeShared와 비슷한 동작을 하는데 대닛 메모리풀의 xnew, xdelete를 사용하는 make_shared 입니다. 
+template<typename Type>
+shared_ptr<Type> MakeShared()
+{
+	return make_shared<Type>{ xnew<Type>(), xdelete<Type> };
+}
+--- cpp
+
+void* Memory::Allocate(int32 size)
+{
+	MemoryHeader* header = nullptr;
+	const int32 allocSize = size + sizeof(MemoryHeader);
+
+    // 여기서 _STOMP 가 정의 되어있는지 아닌지에 따라 사용하는 얼로케이터를 달리해주고 있습니다. 
+#ifdef _STOMP
+	header = reinterpret_cast<MemoryHeader*>(StompAllocator::Alloc(allocSize));
+#else
+	if (allocSize > MAX_ALLOC_SIZE)
+	{
+		// 메모리 풀링 최대 크기를 벗어나면 일반 할당
+		header = reinterpret_cast<MemoryHeader*>(::_aligned_malloc(allocSize, SLIST_ALIGNMENT));
+	}
+	else
+	{
+		// 메모리 풀에서 꺼내온다
+		header = _poolTable[allocSize]->Pop();
+	}
+#endif
+
+	return MemoryHeader::AttachHeader(header, allocSize);
+}
+
+void Memory::Release(void* ptr)
+{
+	MemoryHeader* header = MemoryHeader::DetachHeader(ptr);
+
+	const int32 allocSize = header->allocSize;
+	ASSERT_CRASH(allocSize > 0);
+
+    // 여기도 마찬가지 
+#ifdef _STOMP
+	StompAllocator::Release(header);
+#else
+	if (allocSize > MAX_ALLOC_SIZE)
+	{
+		// 메모리 풀링 최대 크기를 벗어나면 일반 해제
+		::_aligned_free(header);
+	}
+	else
+	{
+		// 메모리 풀에 반납한다
+		_poolTable[allocSize]->Push(header);
+	}
+#endif	
+}
+
+
+---- Types.h
+이 파일 가장 아래에 
+
+#define _STOMP 
+
+를 정의하면 스톰프 얼로케이터를 사용하겠다 이 부분을 주석처리하면 메모리풀의 얼로케이터를 사용하겠다라고 고를 수 있습니다. 
+꼭 Types 에서 해야하는것은 아니고 가장 범용적으로 사용될 헤더라서 여기에 작성했습니다. 
+
