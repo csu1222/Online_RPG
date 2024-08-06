@@ -1,0 +1,504 @@
+
+
+
+보통 게임을 만들고 클래스끼리 상속 구조를 만들어서 사용하게 됩니다. 
+
+예를 들어서 Object 라는 최상위 클래스를 두고 그 아래로 사물인지, 생명체인지를 나누고 또 생명체에서는 플레이어인지 몬스터인지 동물인지 npc 인지도 나뉩니다. 
+이런식으로 많이들 관리를 합니다. 
+
+왜냐하면 상위 클래스로 관리하면 한번에 같은 컨테이너에서 관리할 수 있기 때문입니다. 
+
+하지만 직접 그 클래스를 사용하게 되면 본래의 클래스로 타입 캐스팅을 해서 사용해야합니다. 
+
+캐스팅을 (Class*)test  이런식으로 하면 C 타입의 캐스팅 
+static_cast<Class*>(test); 이런것은 C++ 타입의 캐스팅일겁니다. 
+
+그런데 직접 캐스팅을 하는것은 위험한 행위입니다. 캐스팅하는 타입이 본래 클래스와 다른 타입이었다면 메모리를 엉뚱하게 사용하게 될 수도 있습니다.
+
+이걸 dynamic_cast 를 사용하는 방법도 있지만 이 방법은 속도가 느립니다. 
+그래서 static_cast 을 활용하고 싶다면 자식 클래스들에 자신의 타입을 enum 같은걸로 들고 있게 한 다음 그 값을 가지고 자신의 클래스로 캐스팅을 하는 방법이 있는데 
+하지만 이런 방식을 사용하다 보면 프로젝트가 커졌을때 실수를 할 가능성이 늘어 납니다. 
+
+
+여기서 시작해 언리얼엔진에서 내부적으로 안전하고 성능 좋은 캐스팅을 지원합니다. 
+
+ServerCore 프로젝트의 Memory 필터아래로 TypeCast.h 를 추가하고 여기에 템플릿을 이용한 캐스팅 코드들을 넣어보겠습니다. 
+
+먼저 TypeList 라는것을 만들어보겠습니다. 
+보통 list 는 템플릿으로 이 안의 원소가 어떤 타입인지 지정해줬습니다. 
+
+list<int32> li;
+
+그런데 이 것이 아니라 원소를 여러 클래스의 타입을 넣어주는 기능을 만들고 싶다고 해보겠습니다. 
+
+list li = { Object, Creature, Player }; 
+
+이런 문법은 없지만 템플릿으로 구현해보겠습니다. 
+
+#pragma region TypeList
+template<typename... T>
+struct TypeList;
+
+template<typename T, typename U>
+struct TypeList<T, U>
+{
+	using Head = T;
+	using Tail = U;
+};
+
+template<typename T, typename... U>
+struct TypeList<T, U...>
+{
+	using Head = T;
+	using Tail = TypeList<U...>;
+};
+#pragma endregion
+
+이 코드가 어떤 의미인지 한번에 이해가기가 어렵울겁니다. 
+
+Knight, Mage 라는 클래스가 있다고 하겠습니다. 
+
+TypeList<Mage, Knight>::Head whoAmI;
+TypeList<Mage, Knight>::Tail whoAmI2;
+
+이런 코드가 있자면 whoAmI 는 Mage 를 뜻하게되고 whoAmI2는 Knight를 뜻하게 됩니다.
+
+그 다음으로 다른 클래스 Archer 가 있다고 하면 
+
+TypeList<Mage, TypeList<Knight, Archer>>::Head whoAmI3;
+TypeList<Mage, TypeList<Knight, Archer>>::Tail::Head whoAmI4;
+TypeList<Mage, TypeList<Knight, Archer>>::Tail::Tail whoAmI5;
+
+이렇게 whoAmI3 는 Mage, whoAmI4는 Knight, whoAmI5 는 Archer 를 뜻하게 됩니다. 
+
+이런 원리를 알고 나서는 이 TypeList 의 코드를 보면 첫번째 TypeList를 만들때 템플릿으로 
+template<typename... T> 라고 주고 있는건 이 TypeList 에 몇개의 인자를 주더라도 괜찮다고 열어주는것이고 
+두번째의 템플릿은 템플릿 인자로 준 순서대로 Head Tail 이라고 이름을 짓겠다고 하는것입니다. 
+세번째 템플릿은 이 TypeList 를 재귀적으로 동작하게끔해서 이후 더 많은 인자를 넣어도 되게끔 만들어준것입니다. 
+
+
+다음으로 만들어 볼것은 Length 기능을 만들어보겠습니다. TypeList 의 길이를 알아내기위한 기능입니다. 
+
+#pragma region Length
+template<typename T>
+struct Length;
+
+template<>
+struct Length<TypeList<>>
+{
+	enum { value = 0 };
+};
+
+template<typename T, typename... U>
+struct Length<TypeList<T, U...>>
+{
+	enum { value = 1 + Length<TypeList<U...>>::value };
+};
+#pragma endregion
+
+vector 같은 컨테이너의 length 와 비슷한 기능입니다. 하지만 TypeList 같이 만든것은 컴파일타임에 모든것이 결정됩니다. 
+기본적인 STL 컨테이너들은 런타임에 정해지는데 컴파일타임은 그보다 앞서서 컴파일러가 코드를 해석할때 정해지는것입니다. 
+
+코드를 해석해보면 일단 Length 라는 스트럭트가 T 라는 타입을 받아줄 수 있도록 열어놨습니다. 
+두번째 코드를 보면 받은 타입이 TypeList<> 라면 TypeList 가 비어 있는것입니다. 그렇다면 value 가 0입니다. 
+세번째 코드를 보면 TypeList 를 사용할 수 있도록 typename T, typename U를 열어주고 Length의 인자도 TypeList를 넣었습니다. 
+여기로 들어왔다면 일단 TypeList 에 내용물이 1개 이상은 된다는것인데 그래서 1 + Length<TypeList<U...>>::value 를 사용해 재귀적으로 
+TypeList의 가장 끝에 있는 아이템부터 1씩 더해와서 그 결과물을 value 에 받습니다. 
+
+
+다음기능은 TypeAt 입니다. 이건 어떤 기능이냐면 TypeList에 수많은 원소들을 담았을때 그 원소들의 인덱스로 그 위치의 원소를 가져오는 기능입니다. 
+[] 접근같은 것입니다. 
+
+#pragma region TypeAt
+template<typename TL, int32 index>
+struct TypeAt;
+
+template<typename Head, typename... Tail>
+struct TypeAt<TypeList<Head, Tail...>, 0>
+{
+	using Result = Head;
+};
+
+template<typename Head, typename... Tail, int32 index>
+struct TypeAt<TypeList<Head, Tail...>, index>
+{
+	using Result = typename TypeAt<TypeList<Tail...>, index - 1>::Result;
+};
+#pragma endregion
+
+코드를 보자면 첫번째코드는 TypeList와 인덱스를 템플릿으로 받아줄 수 있도록 열어주었습니다. 
+두번째 코드는 TypeList를 받아주도록 Head, ...Tail을 받아주고 있습니다. 그런데 접근할 인덱스를 0으로 고정해놨으니 
+TypeList의 가장 앞에 있는 원소를 꺼내줍니다. 
+세번째 코드를 보면 TypeList 와 index를 다 받아주고 있습니다. 
+TypeList에서 Head를 하나씩 빼고 또 index 도 1씩 빼면서 재귀적으로 호출하고 있는데 이러면 결국 index 가 0이되는 순간의 Head가 찾던 원소입니다. 
+
+
+다음 기능운 IndexOf 입니다. TypeList에서 어떤 원소가 몇번째 인덱스인지 인덱스 값을 찾는 기능입니다. 
+
+#pragma  region IndexOf
+template<typename TL, typename T>
+struct IndexOf;
+
+template<typename... Tail, typename T>
+struct IndexOf<TypeList<T, Tail...>, T>
+{
+	enum { value = 0 };
+};
+
+template<typename T>
+struct IndexOf<TypeList<>, T>
+{
+	enum { value = -1 };
+};
+
+template<typename Head, typename... Tail, typename T>
+struct IndexOf<TypeList<Head, Tail...>, T>
+{
+private:
+	enum { temp = IndexOf<TypeList<Tail...>, T>::value };
+
+public:
+	enum { value = (temp == -1) ? -1 : temp + 1 };
+};
+#pragma endregion
+
+첫번째 코드는 TypeList 와 찾는 원소를 템플릿으로 받아주고 있습니다. 
+두번째 코드는 TypeList의 첫번째 원소가 T 일경우 0번 인덱스를 value에 담아 주고 있습니다. 
+세번째 코드는 만약 TypeList 가 비어 있는데 T라는 원소를 찾는다고 하면 -1을 value 로 담는것입니다. 
+네번째 코드는 제대로 TypeList도 원소가 있고 찾고자 하는 T 도 입력했을때 입니다. 
+이 네번째 경우는 private와 public 으로 나뉘는데 먼저 private 에서 temp 라는 것을 찾아주고 있습니다. 
+temp 는 TypeList에서 head를 빼면서 재귀적으로 IndexOf를 호출해주고 있습니다. 그 value를 얻고자 하는데 value 는 public 에서 구할 수 있는데 
+value는 temp가 -1 이면 value도 -1 로 뱉어주는데 이 경우는 TypeList가 비어있을 경우입니다. 그게 아니라면 temp에 1을 더해주는데 
+가장 끝가지 가면 결국 최후미의 tail 만 남아 value는 0 이고 여기에 1을 더해주니깐 찾던 타입의 인덱스를 찾을 수 있습니다. 
+
+
+다음 기능은 Conversion 입니다. 이 기능은 From 에서 To 으로 변환이 가능한지를 체크해주는 기능입니다. 
+
+#pragma region Conversion
+template<typename From, typename To>
+class Conversion
+{
+private:
+	using Small = __int8;
+	using Big = __int32;
+
+	static Small Test(const To&) { return 0; }
+	static Big Test(...) { return 0; }
+	static From MakeFrom() { return 0; }
+
+public:
+	enum
+	{
+		exists = sizeof(Test(MakeFrom())) == sizeof(Small)
+	};
+};
+#pragma endregion
+
+__int8 을 Small 이라고 이름 짓고 __int32 를 Big 이라고 이름 지었습니다. 
+그리고 세가지 함수와  public 으로 열어놓은 enum 이 있습니다. 
+
+이 코드가 무슨의미냐하면 컴파일러가 여러 옵션을 줬을때 가장 그럴듯한것을 고른다는 특징을 이용한 코드입니다. 
+
+우선 enum 의 exists 를 계산하기 위해 MakeFrom을 호출하는데 이 함수는 우선 From 이라는 템플릿 타입을 반환합니다. 그런데 그 반환값 From 이 
+To 로 변환이 가능하면 컴파일러는 Small 을 반환하는 Test를 사용할것이기 때문에 exists 값이 ture 가 나올것이고 그게 아니라 
+From이 To로 변환되지 않을 것이라면 Big을 반환하는 버전의 Test를 사용할것이기 때문에 exists 값이 false 가 나올겁니다. 
+
+즉, 같은이름의 여러개의 함수를 오버로딩을 한 후 컴파일러가 먼저 연산하는 결과에 따라 반환값을 다르게 해서 판단을 하느것입니다. 
+컴파일 타임에 결정되는것이다 보니 런타임의 성능은 영향이 없습니다. 
+
+
+
+이어서 만들어줄 기능은 TypeCast 입니다. 
+TypeCast는 어떤 TypeList 를 넘겨 줬을때 각 원소끼리 변환이 되는지를 테이블을 만들어 관리해줄겁니다. 
+
+
+#pragma region TypeCast
+
+// 컴파일타임에 템플릿으로 준 int를 해당 타입의 클래스로 변환
+template<int32 v>
+struct Int2Type
+{
+	enum { value = v };
+};
+
+template<typename TL>
+class TypeConversion
+{
+public:
+	// 먼저 타입리스트의 길이를 가져올수 있도록 Length 기능을 만들었었습니다. 
+	enum
+	{
+		length = Length<TL>::value
+	};
+
+	// 생성자에서는 보통의 코드였으면 for 루프를 두번 돌면서 s_convert 테이블의 내용을 채우고 싶습니다. 
+	/*
+	유사 코드로는 이렇게 테이블을 만들고 싶습니다. 
+	for (int i =0 ; i < length; i++)
+	{
+		for (int j = 0; j < length; j++)
+		{
+			using FromType = typename TypeAt<TL, i>::Result;
+			using ToType = typename TypeAt<TL, j>::Result;
+
+			if (Conversion<const FromType*, const ToType*>::exists)
+				s_convert[i][j] = true;
+			else
+				s_convert[i][j] = false;
+		}
+	}
+	그런데 여기서 문제는 위의 기능들이 컴파일타임에 동작하다 보니 런타임에 변화하는 i, j 라는 값은 사용하지 못합니다.
+	그래서 Int2Type 이라는 구조체를 통해 숫자를 클래스로 변환해 사용합니다. 
+	*/
+	TypeConversion()
+	{
+		// 테이블을 만드는 함수를 따로 만들고 그 시작 지점으 0, 0 부터 호출합니다. 
+		MakeTable(Int2Type<0>(), Int2Type<0>());
+	}
+
+	template<int32 i, int32 j>
+	static void MakeTable(Int2Type<i>, Int2Type<j>)
+	{
+		// 이제는 i, j 가 런타임에 변동하는 int가 아니라 컴파일타임에 결정되는 클래스로 인식이 됩니다. 
+		using FromType = typename TypeAt<TL, i>::Result;
+		using ToType = typename TypeAt<TL, j>::Result;
+
+		if (Conversion<const FromType*, const ToType*>::exists)
+			s_convert[i][j] = true;
+		else
+			s_convert[i][j] = false;
+
+		// 그런데 컴파일타임에 이뤄지는 코드다 보니 for 문을 돌 수 없어서 재귀 호출로 그 기능을 구현 
+		MakeTable(Int2Type<i>(), Int2Type<j + 1>());
+	}
+
+	// j 가 length 에 도달했으면 i를 1늘려서 줄바꿈
+	template<int32 i>
+	static void MakeTable(Int2Type<i>, Int2Type<length>)
+	{
+		MakeTable(Int2Type<i + 1>(), Int2Type<0>());
+	}
+
+	// i 가 length 에 도달했으면 함수에 아무 내용을 안 넣어 멈춤 
+	template<int j>
+	static void MakeTable(Int2Type<length>, Int2Type<j>)
+	{
+	}
+
+	// TypeConversion 을 사용하기 쉽게 CanConvert 를 호출하면 static 으로 한번 conversion 을 생성하고 동시에 만들어진 s_convert 의 원소를 가져옵니다. 
+	static inline bool CanConvert(int32 from, int32 to)
+	{
+		static TypeConversion conversion;
+		return s_convert[from][to];
+	}
+
+public:
+	// 멤버 변수는 템플릿으로 받은 타입리스트의 변환 결과 테이블입니다. 
+	static bool s_convert[length][length];
+};
+
+// static 타입이다 보니 바로 정의를 해줘야합니다. 
+template<typename TL>
+bool TypeConversion<TL>::s_convert[length][length];
+
+// 좀더 쉽게 사용하기 위한 함수 
+template<typename To, typename From>
+To TypeCast(From* ptr)
+{
+	// 예외 체크 
+	if (ptr == nullptr)
+		return nullptr;
+
+	// 이 부분은 아래에서 추가해줄 예정
+	using TL = typename From::TL;
+
+	// remove_pointer_t 라는 템플릿 문법은 To에서 포인터를 때고 입력
+	if (TypeConversion<TL>::CanConvert(ptr->_typeId, IndexOf<TL, remove_pointer_t<To>>::value))
+		return static_cast<To>(ptr);	// true 라면 변환해서 반환
+
+	// false 라면 nullptr 반환 
+	return nullptr;
+}
+
+
+template<typename To, typename From>
+shared_ptr<To> TypeCast(shared_ptr<From> ptr)
+{
+	if (ptr == nullptr)
+		return nullptr;
+
+	using TL = typename From::TL;
+
+	if (TypeConversion<TL>::CanConvert(ptr->_typeId, IndexOf<TL, remove_pointer_t<To>>::value))
+		return static_pointer_cast<To>(ptr);
+
+	return nullptr;
+}
+
+// 캐스팅이 되는지 여부만 알고 싶을때 
+template<typename To, typename From>
+bool CanCast(From* ptr)
+{
+	if (ptr == nullptr)
+		return false;
+
+	using TL = typename From::TL;
+	return TypeConversion<TL>::CanConvert(ptr->_typeId, IndexOf<TL, remove_pointer_t<To>>::value);
+}
+
+
+template<typename To, typename From>
+bool CanCast(shared_ptr<From> ptr)
+{
+	if (ptr == nullptr)
+		return false;
+
+	using TL = typename From::TL;
+	return TypeConversion<TL>::CanConvert(ptr->_typeId, IndexOf<TL, remove_pointer_t<To>>::value);
+}
+
+#pragma endregion
+
+// TypeList 를 사용하기 위한 데이터를 묶어서 정의 
+#define DECLARE_TL		using TL = TL; int32 _typeId;
+#define INIT_TL(Type)	_typeId = IndexOf<TL, Type>::value;
+
+이제  TypeCast 함수나 CanCast 함수에서 사용하는 _typeId 라는 것을 각 클래스에 추가해줘야합니다. 
+그리고 TL 도 어떤 타입 리스트를 사용할것인지도 멤버로 들고있어야합니다. 
+
+예시로 들면 
+
+using TL = TypeList<class Player, Class Knight, Class Mage, Class Archer>;
+
+class Player
+{
+	public:
+	Player() 
+	{
+		_typeId = indexOf<TL, Player>::value;
+	}
+	virtual ~Player() { }
+
+	using TL = TL;
+	int _typeId;
+}
+
+이런 형태가 타입 캐스트를 사용할 수 있는 모든 클래스에 추가되어야 합니다. 
+이것도 간편히 DECLARE_TL, INIT_TL 로 묶어서 관리를 합니다. 
+
+using TL = TypeList<class Player, Class Knight, Class Mage, Class Archer>;
+
+class Player
+{
+	public:
+	Player() 
+	{
+		INIT_TL(Player)
+	}
+	virtual ~Player() { }
+
+	DECLARE_TL
+}
+
+이렇게 관리할 수 있다는 것입니다. 
+
+
+지금 까지 만든 TypeCast 코드를 최종적으로 테스트 해보겠습니다.
+
+using TL = TypeList<class Player, class Mage, class Knight, class Archer>;
+
+class Player
+{
+public:
+	Player()
+	{
+		INIT_TL(Player);
+	}
+	virtual ~Player() { }
+
+	DECLARE_TL
+};
+
+class Knight : public Player
+{
+public:
+	Knight() { INIT_TL(Knight); }
+};
+
+class Mage : public Player
+{
+
+public:
+	Mage() { INIT_TL(Mage); }
+};
+
+class Archer : public Player
+{
+
+public:
+	Archer() { INIT_TL(Archer) }
+};
+
+class Dog
+{
+
+};
+
+int main()
+{
+	//TypeList<Mage, Knight>::Head whoAMI;
+	//TypeList<Mage, Knight>::Tail whoAMI2;
+
+	//TypeList<Mage, TypeList<Knight, Archer>>::Head whoAMI3;
+	//TypeList<Mage, TypeList<Knight, Archer>>::Tail::Head whoAMI4;
+	//TypeList<Mage, TypeList<Knight, Archer>>::Tail::Tail whoAMI5;
+
+	//int32 len1 = Length<TypeList<Mage, Knight>>::value;
+	//int32 len2 = Length<TypeList<Mage, Knight, Archer>>::value;
+	//
+	//
+	//// 3*3 
+	//TypeAt<TL, 0>::Result whoAMI6;
+	//TypeAt<TL, 1>::Result whoAMI7;
+	//TypeAt<TL, 2>::Result whoAMI8;
+
+	//int32 index1 = IndexOf<TL, Mage>::value;
+	//int32 index2 = IndexOf<TL, Archer>::value;
+	//int32 index3 = IndexOf<TL, Dog>::value;
+
+	//bool canConvert1 = Conversion<Player, Knight>::exists;
+	//bool canConvert2 = Conversion<Knight, Player>::exists;
+	//bool canConvert3 = Conversion<Knight, Dog>::exists;
+
+	/*{
+		Player* player = new Knight();
+
+		bool canCast = CanCast<Knight*>(player);
+		Knight* knight = TypeCast<Knight*>(player);
+		
+
+		delete player;
+	}*/
+
+	{
+		shared_ptr<Player> player = MakeShared<Knight>();
+
+		shared_ptr<Archer> archer = TypeCast<Archer>(player);
+		bool canCast = CanCast<Mage>(player);
+
+	}
+	
+	for (int32 i = 0; i < 5; i++)
+	{
+		GThreadManager->Launch([]()
+			{
+				while (true)
+				{
+				}
+			});
+	}
+
+	GThreadManager->Join();
+}
+
+TypeCast.h 는 CorePch 에 추가해주면 되겠습니다. 

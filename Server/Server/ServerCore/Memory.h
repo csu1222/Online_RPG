@@ -49,5 +49,5 @@ void xdelete(Type* obj)
 template<typename Type>
 shared_ptr<Type> MakeShared()
 {
-	return make_shared<Type>{ xnew<Type>(), xdelete<Type> };
+	return shared_ptr<Type>{ xnew<Type>(), xdelete<Type> };
 }
