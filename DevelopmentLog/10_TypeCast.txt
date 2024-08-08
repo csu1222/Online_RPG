@@ -486,7 +486,7 @@ int main()
 		shared_ptr<Archer> archer = TypeCast<Archer>(player);
 		bool canCast = CanCast<Mage>(player);
 
-	}
+	}ㅋ
 	
 	for (int32 i = 0; i < 5; i++)
 	{
