@@ -84,7 +84,7 @@ int main()
 	while (true)
 	{
 		// 클라이언트가 connect 요청을 했다면 그것을 승락하는 accept
-		
+
 		SOCKADDR_IN clientAddr;	// 연결시도한 클라이언트의 주소를 받아줄 구조체
 		::memset(&clientAddr, 0, sizeof(clientAddr));
 		int32 addrLen = sizeof(clientAddr);
@@ -103,8 +103,35 @@ int main()
 		char ipAddress[16];
 		::inet_ntop(AF_INET, &clientAddr.sin_addr, ipAddress, sizeof(ipAddress));
 		cout << "Client Connected! IP = " << ipAddress << endl;
-	}
 
-	// winsock 종료
-	::WSACleanup();
+		while (true)
+		{
+			// 수신할때의 주의점은 받는 데이터의 크기를 모른다는것 
+			char recvBuffer[1000];
+
+			// recv 의 반환 값은 받은 데이터의 바이트크기 입니다. 
+			int32 recvLen = ::recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+			if (recvLen <= 0)
+			{
+				int32 errCode = ::WSAGetLastError();
+				cout << "Recv ErrorCode : " << errCode << endl;
+				return 0;
+			}
+
+			cout << "Recv Data! Data = " << recvBuffer << endl;
+			cout << "Recv Data! Len = " << recvLen << endl;
+
+			//// echo server : 받은 데이터를 그대로 토스 
+			//int32 resultCode = ::send(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+			//if (resultCode == SOCKET_ERROR)
+			//{
+			//	int32 errCode = ::WSAGetLastError();
+			//	cout << "Send ErrorCode : " << errCode << endl;
+			//	return 0;
+			//}
+		}
+
+		// winsock 종료
+		::WSACleanup();
+	}
 }

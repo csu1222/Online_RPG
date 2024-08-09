@@ -85,7 +85,42 @@ int main()
 	{
 		// TODO
 
-		this_thread::sleep_for(10ms);
+		char sendBuffer[100] = "Hello World!";
+
+		// 인자는 차례대로 
+		// 소켓, 버퍼, 버퍼의 길이, 플레그  이중 플레그는 왠만해서 0을 주면 알아서 골라줍니다.
+		
+		for (int32 i = 0; i < 10; i++)
+		{
+			int32 resultCode = ::send(clientSocket, sendBuffer, sizeof(sendBuffer), 0);
+			if (resultCode == SOCKET_ERROR)
+			{
+				int32 errCode = ::WSAGetLastError();
+				cout << "Send ErrorCode : " << errCode << endl;
+				return 0;
+			}
+		}
+
+		cout << "Send Data! Len = " << sizeof(sendBuffer) << endl;
+		
+
+		//// echo server : 받은 데이터를 그대로 토스 
+		//char recvBuffer[1000];
+
+		//// recv 의 반환 값은 받은 데이터의 바이트크기 입니다. 
+		//int32 recvLen = ::recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+		//if (recvLen <= 0)
+		//{
+		//	int32 errCode = ::WSAGetLastError();
+		//	cout << "Recv ErrorCode : " << errCode << endl;
+		//	return 0;
+		//}
+
+		//cout << "Recv Data! Data = " << recvBuffer << endl;
+		//cout << "Recv Data! Len = " << recvLen << endl;
+
+
+		this_thread::sleep_for(1s);
 	} 
 	
 	// 소켓 리소스 반환 

@@ -1,0 +1,156 @@
+
+
+아주 기본적인 인터넷 통신을 위한 준비를 했었고 
+연결이 된것 까지는 확인을 했고 이제 데이터를 송신, 수신을 해보겠습니다. 
+
+클라이언트코드에서는 Connect 가 성공한 후에서 코드를 추가하면 됩니다. 
+
+----- DummyClient
+
+// Connect 성공후
+{
+	while (true)
+	{
+		// TODO
+
+		char sendBuffer[100] = "Hello World!";
+
+		// 인자는 차례대로 
+		// 소켓, 버퍼, 버퍼의 길이, 플레그  이중 플레그는 왠만해서 0을 주면 알아서 골라줍니다. 
+		int32 resultCode = ::send(clientSocket, sendBuffer, sizeof(sendBuffer), 0);
+		if (resultCode == SOCKET_ERROR)
+		{
+			int32 errCode = ::WSAGetLastError();
+			cout << "Send ErrorCode : " << errCode << endl;
+			return 0;
+		}
+
+		cout << "Send Data! Len = " << sizeof(sendBuffer) << endl;
+		
+		this_thread::sleep_for(10ms);
+	} 
+}
+
+결국 ::send 로 데이터를 보내는데 이 함수에서 통신을 할 때 사용할 소켓과 보낼 데이터가 담간 버퍼 가 필요한것입니다. 
+
+----- GameServer
+
+반대로 데이터를 받는 경우를 GameServer 에서 보겠습니다. 
+역시 클라에서 커넥트를 하고 서버에서는 accept를 한 이후에 상황입니다. 
+
+// Accept 성공후 
+
+while (true)
+{
+    // 수신할때의 주의점은 받는 데이터의 크기를 모른다는것 
+    char recvBuffer[1000];
+
+    // recv 의 반환 값은 받은 데이터의 바이트크기 입니다. 
+    int32 recvLen = ::recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+    if (recvLen <= 0)
+    {
+        int32 errCode = ::WSAGetLastError();
+        cout << "Recv ErrorCode : " << errCode << endl;
+        return 0;
+    }
+
+    cout << "Recv Data! Data = " << recvBuffer << endl;
+    cout << "Recv Data! Len = " << recvLen << endl;
+}
+
+send 와 recv 의 차이점은 send는 자신이 데이터를 보내는 입장이니 직접 그 데이터의 크기를 정해 보낼수 있는데 
+recv 하는 입장에서는 받을 데이터의 크기를 예측하기 어렵습니다. 그래서 recvBuffer 를 충분한 크기로 만들어 줬고 또 recv 함수의 반환값은 
+받은 데이터의 byte 크기를 반환합니다. 0 이거나 음수라면 뭔가 문제가 있을 상황이니 예외 체크를 해줍니다. 
+
+
+
+
+이렇게 네트워크연결과 데이터 송수신을 해봤는데 이것은 단지 시작일 뿐입니다. 여기서 더욱 고찰해야할 부분이 있습니다. 
+
+send 와 recv 의 동작 방식을 좀 더 살펴보겠습니다. 
+위에서 테스트한것은 클라이언트에서 send 를 하고 서버에서 recv를 하고 있습니다. 여기에 서버에서 다시 받은 버퍼를 클라이언트에게 send하고 클라이언트는 서버가 보낸
+버퍼를 recv를 하는것을 에코 서버라고 하는데 이 상황을 예로 들겠습니다.
+
+만약 클라이언트에서 send를 한 후에서 서버에서는 아무accept 후 아무런 함수를 호출하지 않고 가만히 있다고 하겠습니다. 
+이렇게 하면 클라이언트에서 send한 버퍼를 서버에서 안받아줄 텐데 이러면 어떻게 동작할까요 
+
+참고로 send, recv 는 블로킹 함수라고 합니다. 
+
+그래서 테스트를 해보면 클라이언트에서 send 를 한 후 로그 까지는 출력이 되지만 그 이후 recv 로그가 안찍히고 멈춥니다. 
+이래서 블로킹함수라고 하는걸까요 어디서 막힌건지를 확인하기 위해 디버깅중 일시 정지를 해보면 프로시져가 recv에서 멈춰있는걸 확인 할 수 있습니다. 
+
+send도 블로킹 함수라고 했는데 여기서 막히는게아니라 recv 에서 막혔는지 알아보겠습니다. 
+
+
+-- 소켓 입출력 버퍼 
+
+네트워크 통신을 위해 클라이언트와 서버가 있고 각각 RecvBuffer, SendBuffer 를 하나씩 가지고 있습니다. 
+이 버퍼들은 위의 코드에서 만들었던 char 배열을 말하는게 아니라 커널영역에 따로 존재하고 있습니다. 
+
+클라이언트, 서버에서 send, recv 함수를 호출하는것은 유저레벨의 동작이고 실제 Buffer 들을 다루는 것은 커널레벨의 역할입니다.
+
+만약 클라이언트 에서 "Hello" 라는 문자열을 send 했다고 하면 겉으로 보기에는 그냥 유저레벨에서 막바로 송신을 한것 같지만 
+실제로는 커널영역에 부탁을 해서 이뤄지고 있는 것입니다. 
+
+클라이언트의 SendBuffer에 "Hello" 라는 문자열을 복사하고 send를 부탁을 하는것으로 클라이언트는 역할을 다하고 이후는 커널영역에 맡깁니다. 
+그래서 send를 호출한 이후 클라이언트는 바로 빠져나와 다음 코드를 진행시킬수 있는겁니다. 
+
+커널영역에서 알아서 상대인 서버쪽 RecvBuffer에 "Hello" 문자열을 복사해주고나서 서버에서 recv 함수를호출하게되면 들어와 있는 RecvBuffer의 데이터를 
+유저레벨에 만들어 뒀던 byte 배열에 가져오게 됩니다. 
+
+
+그러면 만약에 클라이언트에서 "Hello" 문자열로 send 를 여러번 호출해서 클라이언트의 커널영역 SendBuffer 가 꽉찼다면 클라이언트의 다음 send 함수는 블로킹이 되어서 
+기다려야 합니다. 이 때 딱히 스핀락처럼 계속 감시를 하고 있는건 아니고 이 프로세스가 슬립에 들어가 진행이 가능해 질때 까지 잠이 들게 되는것입니다. 
+결국 다음 send 가 동작하기 위해서는 데이터를 받는 서버쪽에서 recv 함수를 통해 SendBuffer를 비워줘야 이어서 실행이 가능해집니다. 
+
+반대로 서버에서 커널영역 RecvBuffer 에 아무런 데이터가 없는데도 recv 함수를 호출하게되면 데이터를 받을 수 있는 상황이 올때 까지 블로킹이 됩니다. 
+
+send, recv 함수가 블로킹 함수라는 말이 이런 뜻입니다. 
+
+
+이런 블로킹 send, recv 함수를 통해 게임을 구현한다고 하면 아주 불편할것이라는걸 알 수 있을겁니다. 
+실시간 네트워크 통신이 계속 연결이 되어있어야 할겁니다. 클라이언트가 서버로 버퍼를 보내고 그 응답을 기다리는 동안 서버는 하나의 클라이언트만 상대하는게 아니다보니 
+응답이 느려질 수 있는데 그러면 그 동안 클라이언트는 네트워크코드 때문에 게임 자체가 멈춘다는건 말이 안됩니다. 
+
+결국 게임에서는 나중에는 블로킹 방식의 send, recv는 쓸 수가 없다는것입니다. 
+
+
+
+한가지 더 테스트를 해보겠습니다. 
+----- DummyClient 
+	
+for (int32 i = 0; i < 10; i++)
+{
+    int32 resultCode = ::send(clientSocket, sendBuffer, sizeof(sendBuffer), 0);
+    if (resultCode == SOCKET_ERROR)
+    {
+        int32 errCode = ::WSAGetLastError();
+        cout << "Send ErrorCode : " << errCode << endl;
+        return 0;
+    }
+}
+
+cout << "Send Data! Len = " << sizeof(sendBuffer) << endl;
+
+----- GameServer 
+char recvBuffer[1000];
+
+// recv 의 반환 값은 받은 데이터의 바이트크기 입니다. 
+int32 recvLen = ::recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+if (recvLen <= 0)
+{
+	int32 errCode = ::WSAGetLastError();
+	cout << "Recv ErrorCode : " << errCode << endl;
+	return 0;
+}
+
+
+이번에는 클라이언트에서 send 를 한번에 10번 호출하고 있습니다. 그러면 100 바이트를 10번이니 1000바이트를 보내게 될겁니다. 
+
+이때 서버의 recv 에서 몇 바이트를 받게 될지가 궁금한것입니다. 
+
+100 바이트 크기의 버퍼를 10개 넣었으니 recv 한번에 100 바이트 하나를 꺼낼것 같지만 사실은 TCP 통신에서는 버퍼간의 경계가 없습니다. 
+
+실행해보면 클라이언트에서는 100 바이트를 열번 보내는데 서버에서는 1000 바이트를 받아주고 있습니다. 
+
+그래서 원래 의도대로 한 버퍼 마다 헤더를 붙혀서 보낸 데이터의 크기가 얼마인지 이 버퍼의 아이디는 뭐인지 같은 정보를 같이 건내줘야 구분을 할 수 있을겁니다. 
