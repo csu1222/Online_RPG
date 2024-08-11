@@ -1,0 +1,251 @@
+
+UDP 통신은 포트폴리오에 적용하지는 않을것이지만 일단 한번 알아는 보겠습니다. 
+
+기본적으로 winsock 을 초기화 하고 종료하는부분은 똑같을 것이고 그 다음 어떻게 진행 될 지 알아보겠습니다. 
+
+
+void HandleError(const char* cause)
+{
+	int32 errCode = ::WSAGetLastError();
+	cout << cause << "Socket ErrorCode :" << errCode << endl;
+}
+
+int main()
+{
+	// winsock 초기화는 공통적인 부분
+	WORD wVersionRequestes;
+	WSAData wsaData;
+
+	int err;
+
+	wVersionRequestes = MAKEWORD(2, 2);
+	err = ::WSAStartup(wVersionRequestes, &wsaData);
+
+	// err 가 0 이면 성공 아니면 실패
+	if (err != 0)
+	{
+		printf("WSAStartup failed with error: %d\n", err);
+		return 1;
+	}
+
+	// wsaData.wVersion 의 상위 바이트는 부버전 하위 바이트는 주버전을 뜻함 
+	// 아래 코드는 winsock 버전이 2.2 가 아닌경우의 예외 처리를 하고 있습니다. 
+	if (LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2) {
+		printf("Could not find a usable version of Winsock.dll\n");
+		WSACleanup();
+		return 1;
+	}
+	else
+		printf("The Winsock 2.2 dll was found okay\n");
+
+	
+	// UDP 에서는 소켓을 하나만 만들어 통신함 
+	// 두번째 인자 SOCK_DGRAM 이 UDP를 사용하는 플레그 
+	SOCKET serverSocket = ::socket(AF_INET, SOCK_DGRAM, 0);
+	if (serverSocket == SOCKET_ERROR)
+	{
+		HandleError("Socket");
+		return 0;
+	}
+
+	// Bind
+	SOCKADDR_IN serverAddr;
+	::memset(&serverAddr, 0, sizeof(serverAddr));
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_addr.s_addr = ::htonl(INADDR_ANY);
+	serverAddr.sin_port = ::htons(7777);
+
+	if (::bind(serverSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
+	{
+		HandleError("Bind");
+		return 0;
+	}
+
+	// UDP는 Listen, Accept를 생략하고 바로 데이터를 받습니다. 
+
+	while (true)
+	{
+		// UDP는 recvfrom 으로 데이터를 받습니다. 
+		char recvBuffer[1000];
+
+		SOCKADDR_IN clientAddr;
+		::memset(&clientAddr, 0, sizeof(clientAddr));
+		int32 addLen = sizeof(clientAddr);
+
+		int32 recvLen = ::recvfrom(serverSocket, recvBuffer, sizeof(recvBuffer), 0,
+			(SOCKADDR*)&clientAddr, &addLen);
+
+		
+		if (recvLen <= 0)
+		{
+			HandleError("RecvFrom");
+			return 0;
+			// 여기서 원래 에러가 하나 났다고 해서 서버통채로 종료하면 안되고 문제가 생긴 
+			// 클라이언트만 접속을 끊어야 할것입니다. 
+		}
+
+		cout << "Recv Data! Data = " << recvBuffer << endl;
+		cout << "Recv Data! Len = " << recvLen << endl;
+
+		// 받은 데이터를 다시 되돌려줍니다. 
+		int32 sendErrCode = ::sendto(serverSocket, recvBuffer, sizeof(recvBuffer), 0, (SOCKADDR*)&clientAddr,
+			sizeof(clientAddr));
+
+		if (sendErrCode == SOCKET_ERROR)
+		{
+			HandleError("SendTo");
+			return 0;
+		}
+
+		cout << "Send Data! Len = " << recvLen << endl;
+	}
+
+
+	// winsock 종료
+	::WSACleanup();
+}
+
+TCP 서버는 소켓 생성, 바인딩, 리슨, 어셉트를 한 후 recv, send로 통신을 했지만 UDP의 경우에는 리슨, 어셉트 과정을 빼고 바로 
+recvfrom, sendto 로 통신을한다는것이 다릅니다. 이 두 함수는 어셉트와 recv, send 가 합쳐져있는거 같은 형태입니다. 
+
+이제 클라이언트 쪽도 만들어 보겠습니다. 
+
+----- DummyClient
+
+void HandleError(const char* cause)
+{
+	int32 errCode = ::WSAGetLastError();
+	cout << cause << "Socket ErrorCode :" << errCode << endl;
+}
+
+int main()
+{
+	// winsock 라이브러리 초기화  (ws2_32 라이브러리 초기화)
+	// WORD 타입 윈속 버전과 윈속을 초기화 한 후의 데이터를 받아줄 WSAData 의 주소 
+	WORD wVersionRequestes;
+	WSAData wsaData;
+
+	int err;
+
+	wVersionRequestes = MAKEWORD(2, 2);
+	err = ::WSAStartup(wVersionRequestes, &wsaData);
+
+	// err 가 0 이면 성공 아니면 실패
+	if (err != 0)
+	{
+		/* Tell the user that we could not find a usable */
+		/* Winsock DLL.                                  */
+		printf("WSAStartup failed with error: %d\n", err);
+		return 1;
+	}
+
+	// wsaData.wVersion 의 상위 바이트는 부버전 하위 바이트는 주버전을 뜻함 
+	// 아래 코드는 winsock 버전이 2.2 가 아닌경우의 예외 처리를 하고 있습니다. 
+	if (LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2) {
+		/* Tell the user that we could not find a usable */
+		/* WinSock DLL.                                  */
+		printf("Could not find a usable version of Winsock.dll\n");
+		WSACleanup();
+		return 1;
+	}
+	else
+		printf("The Winsock 2.2 dll was found okay\n");
+
+	SOCKET clientSocket = ::socket(AF_INET, SOCK_DGRAM, 0);
+
+	// 소켓을 생성하는데 실패한 예외 처리
+	if (clientSocket == INVALID_SOCKET)
+	{
+		int32 errCode = ::WSAGetLastError();
+		cout << "Create Socket ErrorCode : " << errCode << endl;
+		return 0;
+	}
+
+	// 접속할 서버의 주소를 기입
+	SOCKADDR_IN serverAddr; // IPv4 에서 사용되는 주소객체
+	::memset(&serverAddr, 0, sizeof(serverAddr));	// serverAddr를 0으로 밀기
+	serverAddr.sin_family = AF_INET;	// 사용할 주소체계
+	::inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);	// 현대적인 방식
+	serverAddr.sin_port = ::htons(7777);	// 접속할 포트 번호 
+
+	// UDP 는 Connect도 안하고 바로 송신 가능
+	while (true)
+	{
+		// TODO
+
+		char sendBuffer[100] = "Hello World!";
+
+		
+		for (int32 i = 0; i < 10; i++)
+		{
+			int32 resultCode = ::sendto(clientSocket, sendBuffer, sizeof(sendBuffer), 0, (SOCKADDR*)&serverAddr, sizeof(serverAddr));
+			if (resultCode == SOCKET_ERROR)
+			{
+				HandleError("SendTo");
+				return 0;
+			}
+		}
+
+		cout << "Send Data! Len = " << sizeof(sendBuffer) << endl;
+		
+		// Connect 가 된것이 아니다 보니 수신할때 상대가 누구인지 체크해야합니다. 
+		char recvBuffer[1000];
+
+		SOCKADDR_IN recvAddr;
+		::memset(&recvAddr, 0, sizeof(recvAddr));
+		int32 addLen = sizeof(recvAddr);
+
+		// recv 의 반환 값은 받은 데이터의 바이트크기 입니다. 
+		int32 recvLen = ::recvfrom(clientSocket, recvBuffer, sizeof(recvBuffer), 0, (SOCKADDR*)&recvAddr, &addLen );
+		if (recvLen <= 0)
+		{
+			HandleError("RecvFrom");
+			return 0;
+		}
+
+		cout << "Recv Data! Data = " << recvBuffer << endl;
+		cout << "Recv Data! Len = " << recvLen << endl;
+
+
+		this_thread::sleep_for(1s);
+	} 
+	
+	// 소켓 리소스 반환 
+	::closesocket(clientSocket);
+	
+	// winsock 종료
+	::WSACleanup();
+}
+
+클라이언트 하는 쪽에서는 Connect를 생략하고 sentto, recvfrom 을 합니다. recvfrom을 할때 connect 가 되어 있지 않기 때문에 따로 데이터를 보내온 쪽의 
+SOCKADDR_IN 을 받아줍니다. 
+
+
+그리고 추가적으로 알아볼만한 부분은 일반적인 UDP 는 sendto 를 매번 호출해 전송할 곳을 넣어주고 있었는데 이렇게 하지 말고 
+계속 하나의 목적지를 쭈욱 사용할 수 있을까 라는 아쉬움이 있습니다. 
+
+이 기능이 이미 존재하는데 이 방법을 Connected UDP 라고 합니다. 
+어떻게 하냐면 클라이언트 소켓과 서버의 주소 구조체까지는 만들고 시작합니다. 
+// 소켓 생성
+
+// 서버 SOCKADDR_IN 생성
+
+{
+    ::connect(clientSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr));
+
+    {
+        while (ture)
+        {
+            // ...
+
+            // sendto 대신 send 사용 
+            int32 resultCode = ::send(clientSocket, sendBuffer, sizeof(sendBuffer), 0);
+
+            // ... 
+        }
+    }
+}
+
+이런식으로 사용이 되는데 결국 소켓을 만들때 SOCK_DGRAM 을 사용해 UDP 로 생성하고 사용하는것은 똑같이 사용할 수도 있는겁니다. 
+이러면 UDP의 속도와 순서보장이 안되는것, 경계가 있는것은 똑같은데 send 를할때 매번 다시 서버쪽 주소구조체를 넘겨주지 않아도 된다는것입니다. 
+그리고 클라이언트에서 connect를 해도 서버쪽에서 listen, accept 를 하지 않아도 됩니다. 

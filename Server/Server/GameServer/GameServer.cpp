@@ -15,6 +15,12 @@
 #include "WS2tcpip.h"
 #pragma comment(lib, "ws2_32.lib")
 
+void HandleError(const char* cause)
+{
+	int32 errCode = ::WSAGetLastError();
+	cout << cause << "Socket ErrorCode :" << errCode << endl;
+}
+
 int main()
 {
 	// winsock 초기화는 공통적인 부분
@@ -43,95 +49,69 @@ int main()
 	else
 		printf("The Winsock 2.2 dll was found okay\n");
 
-
-	// 서버의 소켓 만들기 
-	SOCKET listenSocket = ::socket(AF_INET, SOCK_STREAM, 0);
-
-	// 소켓을 생성하는데 실패한 예외 처리
-	if (listenSocket == INVALID_SOCKET)
+	
+	// UDP 에서는 소켓을 하나만 만들어 통신함 
+	// 두번째 인자 SOCK_DGRAM 이 UDP를 사용하는 플레그 
+	SOCKET serverSocket = ::socket(AF_INET, SOCK_DGRAM, 0);
+	if (serverSocket == SOCKET_ERROR)
 	{
-		int32 errCode = ::WSAGetLastError();
-		cout << "Create Socket ErrorCode : " << errCode << endl;
+		HandleError("Socket");
 		return 0;
 	}
 
-	// 서버는 연결할 목적지 주소가 아니라 서버 자신의 주소를 설정
-	SOCKADDR_IN serverAddr; // IPv4 에서 사용되는 주소객체
-	::memset(&serverAddr, 0, sizeof(serverAddr));	// serverAddr를 0으로 밀기
-	serverAddr.sin_family = AF_INET;	// 사용할 주소체계
-	serverAddr.sin_addr.s_addr = ::htonl(INADDR_ANY);	// 주소를 알아서 넣어달라 (고정주소를 넣어주면 딱 그 주소만 사용해야 하기 때문)
-	serverAddr.sin_port = ::htons(7777);	// 접속할 포트 번호 
+	// Bind
+	SOCKADDR_IN serverAddr;
+	::memset(&serverAddr, 0, sizeof(serverAddr));
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_addr.s_addr = ::htonl(INADDR_ANY);
+	serverAddr.sin_port = ::htons(7777);
 
-	// listen socket 에 서버 주소를 주고 bind
-	if (::bind(listenSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
+	if (::bind(serverSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
 	{
-		int32 errCode = ::WSAGetLastError();
-		cout << "Bind ErrorCode : " << errCode << endl;
+		HandleError("Bind");
 		return 0;
 	}
 
-	// 연결준비 완료 
-	// 인자로 소켓과 백로그라는 것을 받는데 백로그는 최대 연결 대기열 번호 
-	if (::listen(listenSocket, 10) == SOCKET_ERROR)
-	{
-		int32 errCode = ::WSAGetLastError();
-		cout << "Listen ErrorCode : " << errCode << endl;
-		return 0;
-	}
-
-	// 연결 성공 후 데이터 송수신 가능 
+	// UDP는 Listen, Accept를 생략하고 바로 데이터를 받습니다. 
 
 	while (true)
 	{
-		// 클라이언트가 connect 요청을 했다면 그것을 승락하는 accept
+		// UDP는 recvfrom 으로 데이터를 받습니다. 
+		char recvBuffer[1000];
 
-		SOCKADDR_IN clientAddr;	// 연결시도한 클라이언트의 주소를 받아줄 구조체
+		SOCKADDR_IN clientAddr;
 		::memset(&clientAddr, 0, sizeof(clientAddr));
-		int32 addrLen = sizeof(clientAddr);
+		int32 addLen = sizeof(clientAddr);
 
-		// 클라이언트와 데이터를 주고 받을 소켓 
-		SOCKET clientSocket = ::accept(listenSocket, (SOCKADDR*)&clientAddr, &addrLen);
-		if (clientSocket == INVALID_SOCKET)
+		int32 recvLen = ::recvfrom(serverSocket, recvBuffer, sizeof(recvBuffer), 0,
+			(SOCKADDR*)&clientAddr, &addLen);
+
+		
+		if (recvLen <= 0)
 		{
-			int32 errCode = ::WSAGetLastError();
-			cout << "Accept ErrorCode : " << errCode << endl;
+			HandleError("RecvFrom");
+			return 0;
+			// 여기서 원래 에러가 하나 났다고 해서 서버통채로 종료하면 안되고 문제가 생긴 
+			// 클라이언트만 접속을 끊어야 할것입니다. 
+		}
+
+		cout << "Recv Data! Data = " << recvBuffer << endl;
+		cout << "Recv Data! Len = " << recvLen << endl;
+
+		// 받은 데이터를 다시 되돌려줍니다. 
+		int32 sendErrCode = ::sendto(serverSocket, recvBuffer, sizeof(recvBuffer), 0, (SOCKADDR*)&clientAddr,
+			sizeof(clientAddr));
+
+		if (sendErrCode == SOCKET_ERROR)
+		{
+			HandleError("SendTo");
 			return 0;
 		}
 
-		// 클라이언트 입장
-		// 클라이언트의 아이피를 찍어 보겠습니다. 
-		char ipAddress[16];
-		::inet_ntop(AF_INET, &clientAddr.sin_addr, ipAddress, sizeof(ipAddress));
-		cout << "Client Connected! IP = " << ipAddress << endl;
-
-		while (true)
-		{
-			// 수신할때의 주의점은 받는 데이터의 크기를 모른다는것 
-			char recvBuffer[1000];
-
-			// recv 의 반환 값은 받은 데이터의 바이트크기 입니다. 
-			int32 recvLen = ::recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
-			if (recvLen <= 0)
-			{
-				int32 errCode = ::WSAGetLastError();
-				cout << "Recv ErrorCode : " << errCode << endl;
-				return 0;
-			}
-
-			cout << "Recv Data! Data = " << recvBuffer << endl;
-			cout << "Recv Data! Len = " << recvLen << endl;
-
-			//// echo server : 받은 데이터를 그대로 토스 
-			//int32 resultCode = ::send(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
-			//if (resultCode == SOCKET_ERROR)
-			//{
-			//	int32 errCode = ::WSAGetLastError();
-			//	cout << "Send ErrorCode : " << errCode << endl;
-			//	return 0;
-			//}
-		}
-
-		// winsock 종료
-		::WSACleanup();
+		cout << "Send Data! Len = " << recvLen << endl;
 	}
+
+
+	// winsock 종료
+	::WSACleanup();
 }
