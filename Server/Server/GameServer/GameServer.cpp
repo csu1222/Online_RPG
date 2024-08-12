@@ -72,45 +72,6 @@ int main()
 		return 0;
 	}
 
-	// UDP는 Listen, Accept를 생략하고 바로 데이터를 받습니다. 
-
-	while (true)
-	{
-		// UDP는 recvfrom 으로 데이터를 받습니다. 
-		char recvBuffer[1000];
-
-		SOCKADDR_IN clientAddr;
-		::memset(&clientAddr, 0, sizeof(clientAddr));
-		int32 addLen = sizeof(clientAddr);
-
-		int32 recvLen = ::recvfrom(serverSocket, recvBuffer, sizeof(recvBuffer), 0,
-			(SOCKADDR*)&clientAddr, &addLen);
-
-		
-		if (recvLen <= 0)
-		{
-			HandleError("RecvFrom");
-			return 0;
-			// 여기서 원래 에러가 하나 났다고 해서 서버통채로 종료하면 안되고 문제가 생긴 
-			// 클라이언트만 접속을 끊어야 할것입니다. 
-		}
-
-		cout << "Recv Data! Data = " << recvBuffer << endl;
-		cout << "Recv Data! Len = " << recvLen << endl;
-
-		// 받은 데이터를 다시 되돌려줍니다. 
-		int32 sendErrCode = ::sendto(serverSocket, recvBuffer, sizeof(recvBuffer), 0, (SOCKADDR*)&clientAddr,
-			sizeof(clientAddr));
-
-		if (sendErrCode == SOCKET_ERROR)
-		{
-			HandleError("SendTo");
-			return 0;
-		}
-
-		cout << "Send Data! Len = " << recvLen << endl;
-	}
-
 
 	// winsock 종료
 	::WSACleanup();

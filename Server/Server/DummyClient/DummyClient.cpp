@@ -57,54 +57,6 @@ int main()
 		return 0;
 	}
 
-	// 접속할 서버의 주소를 기입
-	SOCKADDR_IN serverAddr; // IPv4 에서 사용되는 주소객체
-	::memset(&serverAddr, 0, sizeof(serverAddr));	// serverAddr를 0으로 밀기
-	serverAddr.sin_family = AF_INET;	// 사용할 주소체계
-	::inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);	// 현대적인 방식
-	serverAddr.sin_port = ::htons(7777);	// 접속할 포트 번호 
-
-	// UDP 는 Connect도 안하고 바로 송신 가능
-	while (true)
-	{
-		// TODO
-
-		char sendBuffer[100] = "Hello World!";
-
-		
-		for (int32 i = 0; i < 10; i++)
-		{
-			int32 resultCode = ::sendto(clientSocket, sendBuffer, sizeof(sendBuffer), 0, (SOCKADDR*)&serverAddr, sizeof(serverAddr));
-			if (resultCode == SOCKET_ERROR)
-			{
-				HandleError("SendTo");
-				return 0;
-			}
-		}
-
-		cout << "Send Data! Len = " << sizeof(sendBuffer) << endl;
-		
-		// Connect 가 된것이 아니다 보니 수신할때 상대가 누구인지 체크해야합니다. 
-		char recvBuffer[1000];
-
-		SOCKADDR_IN recvAddr;
-		::memset(&recvAddr, 0, sizeof(recvAddr));
-		int32 addLen = sizeof(recvAddr);
-
-		// recv 의 반환 값은 받은 데이터의 바이트크기 입니다. 
-		int32 recvLen = ::recvfrom(clientSocket, recvBuffer, sizeof(recvBuffer), 0, (SOCKADDR*)&recvAddr, &addLen );
-		if (recvLen <= 0)
-		{
-			HandleError("RecvFrom");
-			return 0;
-		}
-
-		cout << "Recv Data! Data = " << recvBuffer << endl;
-		cout << "Recv Data! Len = " << recvLen << endl;
-
-
-		this_thread::sleep_for(1s);
-	} 
 	
 	// 소켓 리소스 반환 
 	::closesocket(clientSocket);
