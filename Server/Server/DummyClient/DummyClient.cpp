@@ -47,17 +47,83 @@ int main()
 	else
 		printf("The Winsock 2.2 dll was found okay\n");
 
-	SOCKET clientSocket = ::socket(AF_INET, SOCK_DGRAM, 0);
 
-	// 소켓을 생성하는데 실패한 예외 처리
+	// IPv4, TCP 소켓
+	SOCKET clientSocket = ::socket(AF_INET, SOCK_STREAM, 0);
 	if (clientSocket == INVALID_SOCKET)
-	{
-		int32 errCode = ::WSAGetLastError();
-		cout << "Create Socket ErrorCode : " << errCode << endl;
 		return 0;
+
+	// 논블로킹으로 설정
+	u_long on = 1;
+	if (::ioctlsocket(clientSocket, FIONBIO, &on) == INVALID_SOCKET)
+		return 0;
+
+	SOCKADDR_IN serverAddr;
+	::memset(&serverAddr, 0, sizeof(serverAddr));
+	serverAddr.sin_family = AF_INET;
+	::inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
+	serverAddr.sin_port = ::htons(7777);
+
+	// Connect
+	while (true)
+	{
+		if (::connect(clientSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
+		{
+			if (::WSAGetLastError() == WSAEWOULDBLOCK)
+				continue;
+			// connect는 WSAEISCONN 연결된 상태라면 브레이크 
+			if (::WSAGetLastError() == WSAEISCONN)
+				break;
+
+			// Error
+			break;
+		}
 	}
 
-	
+	cout << "Connected To Server" << endl;
+
+	char sendBuffer[100] = "Hello World";
+
+	// Send
+	while (true)
+	{
+		int32 sendLen = ::send(clientSocket, sendBuffer, sizeof(sendBuffer), 0);
+		if ( sendLen == SOCKET_ERROR)
+		{
+			if (::WSAGetLastError() == WSAEWOULDBLOCK)
+				continue;
+
+			break;
+		}
+		cout << "Send Len : " << sendLen << endl;
+
+		this_thread::sleep_for(1s);
+	}
+	// Recv 시도 
+	while (true)
+	{
+		char recvBuffer[1000];
+
+		int32 recvLen = ::recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+		// 마찬가지로 recvLen 이 SOCKET_ERROR 라고해서 진짜 에러인지는 아직 모릅니다. 
+		if (recvLen == SOCKET_ERROR)
+		{
+			if (::WSAGetLastError() == WSAEWOULDBLOCK)
+				continue;
+
+			break;
+		}
+		else if (recvLen == 0)
+		{
+			// 연결 끊김 
+			break;
+		}
+
+		cout << "Recv Len : " << recvLen << endl;
+
+		break;
+	}
+
 	// 소켓 리소스 반환 
 	::closesocket(clientSocket);
 	

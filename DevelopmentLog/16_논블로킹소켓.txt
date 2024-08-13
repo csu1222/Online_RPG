@@ -1,0 +1,268 @@
+
+
+TCP 에서 사용하는 send, recv 가 블로킹 함수라고 했었습니다. 
+
+이 뿐만 아니라 accept, connect, sendto, recvfrom 같은 함수들도 각 함수가 완료되는 조건이 있었습니다. 
+이 완료를 기다리는것이 블로킹인 상태입니다. 
+
+실시간 온라인게임을 만들면서는 이런 블로킹 방식의 소켓이 문제가 되는데 수많은 유저들이 서버에 접속해서 통신을 할때 각각의 소켓들이 블로킹으로 동작하면 
+반응속도가 매우 느려질것입니다. 
+
+그래서 언젠가는 논블로킹 소켓으로 넘어가야 합니다. 
+
+
+논블로킹으로 다시 에코 TCP 서버를 만들어보겠습니다. 
+
+----- GameServer
+
+int main()
+{
+	// winsock 초기화는 공통적인 부분
+	WORD wVersionRequestes;
+	WSAData wsaData;
+
+	int err;
+
+	wVersionRequestes = MAKEWORD(2, 2);
+	err = ::WSAStartup(wVersionRequestes, &wsaData);
+
+	// err 가 0 이면 성공 아니면 실패
+	if (err != 0)
+	{
+		printf("WSAStartup failed with error: %d\n", err);
+		return 1;
+	}
+
+	// wsaData.wVersion 의 상위 바이트는 부버전 하위 바이트는 주버전을 뜻함 
+	// 아래 코드는 winsock 버전이 2.2 가 아닌경우의 예외 처리를 하고 있습니다. 
+	if (LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2) {
+		printf("Could not find a usable version of Winsock.dll\n");
+		WSACleanup();
+		return 1;
+	}
+	else
+		printf("The Winsock 2.2 dll was found okay\n");
+
+	// 논블로킹 소켓 생성 
+
+	// IPv4, TCP 소켓
+	SOCKET listenSocket = ::socket(AF_INET, SOCK_STREAM, 0);
+	if (listenSocket == INVALID_SOCKET)
+		return 0;
+
+	// 논블로킹으로 설정
+	u_long on = 1;
+	if (::ioctlsocket(listenSocket, FIONBIO, &on) == INVALID_SOCKET)
+		return 0;
+
+	SOCKADDR_IN serverAddr;
+	::memset(&serverAddr, 0, sizeof(serverAddr));
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_addr.s_addr = ::htonl(INADDR_ANY);
+	serverAddr.sin_port = ::htons(7777);
+
+	if (::bind(listenSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
+		return 0;
+
+
+	if (::listen(listenSocket, SOMAXCONN) == SOCKET_ERROR)
+		return 0;
+
+	cout << "Accept" << endl;
+
+	SOCKADDR_IN clientAddr;
+	int32 clientAddrLen = sizeof(clientAddr);
+
+	// accept 를 성공할때 까지 시도 
+	while (true)
+	{
+		SOCKET clientSocket = ::accept(listenSocket, (SOCKADDR*)&clientAddr, &clientAddrLen);
+
+		// 여기서 논블로킹소켓에서의 다른점입니다. 
+		if (clientSocket == INVALID_SOCKET)
+		{
+			// 논블로킹 소켓이라 accept가 성공하지 않아도 지나옵니다. 
+			if (::WSAGetLastError() == WSAEWOULDBLOCK)
+				continue;
+
+			// 여기까지 오면 무언가 에러가 발생
+			break;
+		}
+
+		cout << "Client Connected!" << endl;
+
+		// Recv 시도 
+		while (true)
+		{
+			char recvBuffer[1000];
+
+			int32 recvLen = ::recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+			// 마찬가지로 recvLen 이 SOCKET_ERROR 라고해서 진짜 에러인지는 아직 모릅니다. 
+			if (recvLen == SOCKET_ERROR)
+			{
+				if (::WSAGetLastError() == WSAEWOULDBLOCK)
+					continue;
+
+				break;
+			}
+			else if (recvLen == 0)
+			{
+				// 연결 끊김 
+				break;
+			}
+
+			cout << "Recv Len : " << recvLen << endl;
+
+			// Send
+			while (true)
+			{
+				if (::send(clientSocket, recvBuffer, sizeof(recvBuffer), 0) == SOCKET_ERROR)
+				{
+					if (::WSAGetLastError() == WSAEWOULDBLOCK)
+						continue;
+
+					break;
+				}
+				cout << "Send Len : " << recvLen << endl;
+
+				break;
+			}
+		}
+	}
+
+	// winsock 종료
+	::WSACleanup();
+}
+
+이렇게 논블로킹 TCP 서버를 만들어 봤는데 딱 봐도 좀 이상합니다. while 이 3중첩으로 있는것 부터 이상합니다. 
+
+
+이젠 반대쪽 클라이언트를 보겠습니다. 
+
+----- DummyClient
+
+int main()
+{
+	// winsock 라이브러리 초기화  (ws2_32 라이브러리 초기화)
+	// WORD 타입 윈속 버전과 윈속을 초기화 한 후의 데이터를 받아줄 WSAData 의 주소 
+	WORD wVersionRequestes;
+	WSAData wsaData;
+
+	int err;
+
+	wVersionRequestes = MAKEWORD(2, 2);
+	err = ::WSAStartup(wVersionRequestes, &wsaData);
+
+	// err 가 0 이면 성공 아니면 실패
+	if (err != 0)
+	{
+		/* Tell the user that we could not find a usable */
+		/* Winsock DLL.                                  */
+		printf("WSAStartup failed with error: %d\n", err);
+		return 1;
+	}
+
+	// wsaData.wVersion 의 상위 바이트는 부버전 하위 바이트는 주버전을 뜻함 
+	// 아래 코드는 winsock 버전이 2.2 가 아닌경우의 예외 처리를 하고 있습니다. 
+	if (LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2) {
+		/* Tell the user that we could not find a usable */
+		/* WinSock DLL.                                  */
+		printf("Could not find a usable version of Winsock.dll\n");
+		WSACleanup();
+		return 1;
+	}
+	else
+		printf("The Winsock 2.2 dll was found okay\n");
+
+
+	// IPv4, TCP 소켓
+	SOCKET clientSocket = ::socket(AF_INET, SOCK_STREAM, 0);
+	if (clientSocket == INVALID_SOCKET)
+		return 0;
+
+	// 논블로킹으로 설정
+	u_long on = 1;
+	if (::ioctlsocket(clientSocket, FIONBIO, &on) == INVALID_SOCKET)
+		return 0;
+
+	SOCKADDR_IN serverAddr;
+	::memset(&serverAddr, 0, sizeof(serverAddr));
+	serverAddr.sin_family = AF_INET;
+	::inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
+	serverAddr.sin_port = ::htons(7777);
+
+	// Connect
+	while (true)
+	{
+		if (::connect(clientSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
+		{
+			if (::WSAGetLastError() == WSAEWOULDBLOCK)
+				continue;
+			// connect는 WSAEISCONN 연결된 상태라면 브레이크 
+			if (::WSAGetLastError() == WSAEISCONN)
+				break;
+
+			// Error
+			break;
+		}
+	}
+
+	cout << "Connected To Server" << endl;
+
+	char sendBuffer[100] = "Hello World";
+
+	// Send
+	while (true)
+	{
+		int32 sendLen = ::send(clientSocket, sendBuffer, sizeof(sendBuffer), 0);
+		if ( sendLen == SOCKET_ERROR)
+		{
+			if (::WSAGetLastError() == WSAEWOULDBLOCK)
+				continue;
+
+			break;
+		}
+		cout << "Send Len : " << sendLen << endl;
+
+		this_thread::sleep_for(1s);
+	}
+	// Recv 시도 
+	while (true)
+	{
+		char recvBuffer[1000];
+
+		int32 recvLen = ::recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+		// 마찬가지로 recvLen 이 SOCKET_ERROR 라고해서 진짜 에러인지는 아직 모릅니다. 
+		if (recvLen == SOCKET_ERROR)
+		{
+			if (::WSAGetLastError() == WSAEWOULDBLOCK)
+				continue;
+
+			break;
+		}
+		else if (recvLen == 0)
+		{
+			// 연결 끊김 
+			break;
+		}
+
+		cout << "Recv Len : " << recvLen << endl;
+
+		break;
+	}
+
+	// 소켓 리소스 반환 
+	::closesocket(clientSocket);
+	
+	// winsock 종료
+	::WSACleanup();
+}
+
+클라이언트에서 주의할점은 Connect 를 논블로킹으로 사용하면 WSAEWOULDBLOCK 가 아니어도 이미 커넥트 됐다는 WSAEISCONN 라면 연결 성공이니 루프를 빠져나간다는것입니다. 
+
+또 이 코드를 테스트해보면 성능이 블로킹 방식의 서버보다 더 성능이 좋다고 할 수 없고 오히려 성능이 떨어질 수도 있습니다. 
+
+현재 코드는 락의 종류중 스핀락이라고 락이 열리는지를 계속 주시하는 락이 있었는데 이것과 비슷하다고 할 수 있고 
+블로킹 서버는 이벤트 락 과 비슷하다고 할 수 있습니다. 
+
+그래서 논블로킹 말고 더욱 효율이 좋은 방법이 없나 생각을 해봐야 겠습니다. 

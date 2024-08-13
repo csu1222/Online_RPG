@@ -49,29 +49,92 @@ int main()
 	else
 		printf("The Winsock 2.2 dll was found okay\n");
 
-	
-	// UDP 에서는 소켓을 하나만 만들어 통신함 
-	// 두번째 인자 SOCK_DGRAM 이 UDP를 사용하는 플레그 
-	SOCKET serverSocket = ::socket(AF_INET, SOCK_DGRAM, 0);
-	if (serverSocket == SOCKET_ERROR)
-	{
-		HandleError("Socket");
-		return 0;
-	}
+	// 논블로킹 소켓 생성 
 
-	// Bind
+	// IPv4, TCP 소켓
+	SOCKET listenSocket = ::socket(AF_INET, SOCK_STREAM, 0);
+	if (listenSocket == INVALID_SOCKET)
+		return 0;
+
+	// 논블로킹으로 설정
+	u_long on = 1;
+	if (::ioctlsocket(listenSocket, FIONBIO, &on) == INVALID_SOCKET)
+		return 0;
+
 	SOCKADDR_IN serverAddr;
 	::memset(&serverAddr, 0, sizeof(serverAddr));
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_addr.s_addr = ::htonl(INADDR_ANY);
 	serverAddr.sin_port = ::htons(7777);
 
-	if (::bind(serverSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
-	{
-		HandleError("Bind");
+	if (::bind(listenSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
 		return 0;
-	}
 
+
+	if (::listen(listenSocket, SOMAXCONN) == SOCKET_ERROR)
+		return 0;
+
+	cout << "Accept" << endl;
+
+	SOCKADDR_IN clientAddr;
+	int32 clientAddrLen = sizeof(clientAddr);
+
+	// accept 를 성공할때 까지 시도 
+	while (true)
+	{
+		SOCKET clientSocket = ::accept(listenSocket, (SOCKADDR*)&clientAddr, &clientAddrLen);
+
+		// 여기서 논블로킹소켓에서의 다른점입니다. 
+		if (clientSocket == INVALID_SOCKET)
+		{
+			// 논블로킹 소켓이라 accept가 성공하지 않아도 지나옵니다. 
+			if (::WSAGetLastError() == WSAEWOULDBLOCK)
+				continue;
+
+			// 여기까지 오면 무언가 에러가 발생
+			break;
+		}
+
+		cout << "Client Connected!" << endl;
+
+		// Recv 시도 
+		while (true)
+		{
+			char recvBuffer[1000];
+
+			int32 recvLen = ::recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+			// 마찬가지로 recvLen 이 SOCKET_ERROR 라고해서 진짜 에러인지는 아직 모릅니다. 
+			if (recvLen == SOCKET_ERROR)
+			{
+				if (::WSAGetLastError() == WSAEWOULDBLOCK)
+					continue;
+
+				break;
+			}
+			else if (recvLen == 0)
+			{
+				// 연결 끊김 
+				break;
+			}
+
+			cout << "Recv Len : " << recvLen << endl;
+
+			// Send
+			while (true)
+			{
+				if (::send(clientSocket, recvBuffer, sizeof(recvBuffer), 0) == SOCKET_ERROR)
+				{
+					if (::WSAGetLastError() == WSAEWOULDBLOCK)
+						continue;
+
+					break;
+				}
+				cout << "Send Len : " << recvLen << endl;
+
+				break;
+			}
+		}
+	}
 
 	// winsock 종료
 	::WSACleanup();
