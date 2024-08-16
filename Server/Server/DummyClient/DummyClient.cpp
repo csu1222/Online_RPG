@@ -16,6 +16,8 @@ void HandleError(const char* cause)
 
 int main()
 {
+	this_thread::sleep_for(1s);
+
 	// winsock 라이브러리 초기화  (ws2_32 라이브러리 초기화)
 	// WORD 타입 윈속 버전과 윈속을 초기화 한 후의 데이터를 받아줄 WSAData 의 주소 
 	WORD wVersionRequestes;
@@ -97,7 +99,7 @@ int main()
 		}
 		cout << "Send Len : " << sendLen << endl;
 
-		this_thread::sleep_for(1s);
+		this_thread::sleep_for(10ms);
 	}
 	// Recv 시도 
 	while (true)
