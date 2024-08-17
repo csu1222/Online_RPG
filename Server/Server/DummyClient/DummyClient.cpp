@@ -85,45 +85,45 @@ int main()
 	cout << "Connected To Server" << endl;
 
 	char sendBuffer[100] = "Hello World";
+	// WSAEVENT 객체 생성 
+	WSAEVENT wsaEvent = ::WSACreateEvent();
+	WSAOVERLAPPED overlapped = {};
+	overlapped.hEvent = wsaEvent;
 
 	// Send
 	while (true)
 	{
-		int32 sendLen = ::send(clientSocket, sendBuffer, sizeof(sendBuffer), 0);
-		if ( sendLen == SOCKET_ERROR)
-		{
-			if (::WSAGetLastError() == WSAEWOULDBLOCK)
-				continue;
+		// 비동기-논블로킹 함수인 WSASend 필요한 인자들을 만들어 넘겨줍니다. 
+		WSABUF wsaBuf;
+		wsaBuf.buf = sendBuffer;
+		wsaBuf.len = 100;
 
-			break;
+		DWORD sendLen = 0;
+		DWORD flags = 0;
+
+		// 비동기-논블로킹 함수다 보니 함수를 호출하자마자 빠져나오기는합니다. 
+		if (::WSASend(clientSocket, &wsaBuf, 1, &sendLen, flags, &overlapped, nullptr) == SOCKET_ERROR)
+		{
+			// 아직 데이터가 안왔으니 Pending 상태 
+			// 완료통지를 받습니다.
+			if (::WSAGetLastError() == WSA_IO_PENDING)
+			{
+				// Pending 중이면 이벤트를 통해 완료 통지를 기다립니다. 
+				::WSAWaitForMultipleEvents(1, &wsaEvent, TRUE, WSA_INFINITE, FALSE);
+				// 빠져나왔다면 어떤 네트워크 이벤트인지 체크 
+				::WSAGetOverlappedResult(clientSocket, &overlapped, &sendLen, FALSE, &flags);
+			}
+			else
+			{
+				// TODO : 문제상황 
+				break;
+			}
 		}
+
+		// 빠져나왔다면 WSARecv 가 성공했습니다. 
 		cout << "Send Len : " << sendLen << endl;
 
-		this_thread::sleep_for(10ms);
-	}
-	// Recv 시도 
-	while (true)
-	{
-		char recvBuffer[1000];
-
-		int32 recvLen = ::recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
-		// 마찬가지로 recvLen 이 SOCKET_ERROR 라고해서 진짜 에러인지는 아직 모릅니다. 
-		if (recvLen == SOCKET_ERROR)
-		{
-			if (::WSAGetLastError() == WSAEWOULDBLOCK)
-				continue;
-
-			break;
-		}
-		else if (recvLen == 0)
-		{
-			// 연결 끊김 
-			break;
-		}
-
-		cout << "Recv Len : " << recvLen << endl;
-
-		break;
+		this_thread::sleep_for(1s);
 	}
 
 	// 소켓 리소스 반환 
