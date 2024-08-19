@@ -36,6 +36,16 @@ struct Session
 	WSAOVERLAPPED overlapped = {};
 };
 
+// 완료 루틴 함수 
+void CALLBACK RecvCallback(DWORD error, DWORD recvLen, LPWSAOVERLAPPED overlapped, DWORD flags)
+{
+	// TODO 
+
+	cout << "Data Recv Len Callback = " << recvLen << endl;
+
+	// 만약 에코 서버를 만든다면 여기서 WSASend 호출 
+}
+
 int main()
 {
 	// winsock 초기화는 공통적인 부분
@@ -91,55 +101,16 @@ int main()
 
 	cout << "Accept" << endl;
 
-	// Overlapped IO (비동기-논블로킹)
-	// - Overlapped 함수를 건다 (WSARecv, WSASend)
-	// - Overlapped 함수가 성공했는지 확인 후 
-	// -> 성공했으면 결과 얻어서 처리
-	// -> 실패했으면 사유를 확인 
-	
-	// WSASend,WSARecv
-	{
-		// 인자목록
-		// 1) 비동기 입출력 소켓
-		// 2) WSABUF 배열의 시작주소 
-		// 3) WSABUF 배열의 갯수
-		{
-			// WSABUF의 사용례
-			//char sendBuffer[100];
-			//WSABUF wsaBuf[2];
-			//wsaBuf[0].buf = sendBuffer;
-			//wsaBuf[0].len = 100;
 
-			//char sendBuffer2[100];
-			//wsaBuf[1].buf = sendBuffer2;
-			//wsaBuf[1].len = 100;
-
-			// 왜 WSABUF의 시작주소와 갯수를 받냐면 
-			// Scatter-Gather 기법때문 
-			// 쪼개져있는 버퍼들을 한번에 모아서 보내주는 기법
-			// 이후 패킷을 보낼때 한번에 뭉쳐서 보낼 수 있습니다. 
-		}
-		// 4) 보내고 받은 바이트의 수
-		// 5) 상세한 옵션인데 일단 0으로 주면 됩니다. 
-		// 6) WSAOVERLAPPED 구조체의 주소값
-		{
-			// WSAOVERLAPPED 는 무엇인가
-			// 내부 상세한 데이터중 Handle hEvent 라는 멤버 변수가 있는데 이것에 집중해야합니다. 
-			// 이 hEvent에 어떤 방식으로 통지받을지 넣어주는데 여기에 Event 객체를 넣어주면 Event 방식으로 완료 통지를 받게 될것
-			// WSAOVERLAPPED wsaOverlapped;
-		}
-		// 7) 입출력이 완료되면 OS가 호출할 콜백함수 (현재 버전에서는 이것 대신 Event 객체 방식을 사용할것)
-
-		// WSASend()
-	}
-
-	// 이번 실습 진행순서 
-	// - 비동기 입출력 지원하는 소켓 생성 + 통지 받기위한 이벤트 객체 생성
-	// - 비동기 입출력 함수 호출 (위에서 만든 이벤트 객체도 넘겨줌)
+	// Overlapped 모델 (Completion Routine 콜백 기반) 이번 실습 진행순서 
+	// - 비동기 입출력 지원하는 소켓 생성 , 콜백을 위한 함수(완료 루틴)를 만듬
+	// - 비동기 입출력 함수 호출 (완료 루틴의 시작주소를 넘겨줌)
 	// - 비동기 작업이 바로 완료되지 않으면 , WSA_IO_PENDING 오류코드 가 올것
-	// - 비동기 작업이 나중에 완료되면 운영체제에서 이벤트 객체를 signaled 상태로 만들어 완료 상태 알려줌
-	// - 이벤트 객체의 signaled 여부를 확인하기 위한 WSAWaitForMultipleEvents 함수 호출 
-	// -  WSAGetOverlappedResult 함수를 호출해 비동기 입출력 함수의 결과 확인 및 데이터 처리
+	// - 비동기 입출력 함수 호출한 쓰레드가 완료루틴을 받을 상태라면 -> Alertable Wait 함수로 만듭니다. 
+	//  ex) WaitForSingleObjectEx, WaitForMultipleObjectEx, SleepEx, WSAWaitForMultipleEvents 등으로 Alertable Wait 상태로 만듬
+	// - 비동기 작업이 나중에 완료되고 비동기 입출력 함수를 호출한 쓰레드가 Alertable Wait 상태라면 
+	//		운영체제에서 완료루틴 호출 그런데 이 완료 루틴 호출 시점이 문제 
+	// - 완료 루틴 호출이 모두 끝나면, 쓰레드는 Alertable Wait 상태에서 빠져나온다
 
 	// 실습 시작 
 	while (true)
@@ -164,9 +135,9 @@ int main()
 
 		// Session 구조체에서 WSAOVERLAPPED 멤버 변수를 추가했습니다. 
 		Session session = Session{ clientSocket };
-		// 위에서 할일중 하나인 완료통지를 받을 WSAEvent 객체를 만들어 Session의 멤버 변수 overlapped 에 세팅
 		WSAEVENT wsaEvent = ::WSACreateEvent();
-		session.overlapped.hEvent = wsaEvent;
+		// WSAOVERLAPPED 객체에 이벤트를 연동하는 부분이 없어집니다. 
+		// session.overlapped.hEvent = wsaEvent;
 
 		cout << "Client Accept" << endl;
 
@@ -181,17 +152,24 @@ int main()
 			DWORD recvLen = 0;
 			DWORD flags = 0;
 
-			// 비동기-논블로킹 함수다 보니 함수를 호출하자마자 빠져나오기는합니다. 
-			if (::WSARecv(clientSocket, &wsaBuf, 1, &recvLen, &flags, &session.overlapped, nullptr) == SOCKET_ERROR)
+			// WSARecv의 마지막 인자에 콜백함수를 넣어줄겁니다. 
+			//void
+			//(CALLBACK * LPWSAOVERLAPPED_COMPLETION_ROUTINE)(
+			//	IN DWORD dwError,
+			//	IN DWORD cbTransferred,
+			//	IN LPWSAOVERLAPPED lpOverlapped,
+			//	IN DWORD dwFlags
+			//	);
+			//  이런 시그니처의 함수를 받아주고 있습니다. 
+			if (::WSARecv(clientSocket, &wsaBuf, 1, &recvLen, &flags, &session.overlapped, RecvCallback) == SOCKET_ERROR)
 			{
 				// 아직 데이터가 안왔으니 Pending 상태 
-				// 완료통지를 받습니다.
 				if (::WSAGetLastError() == WSA_IO_PENDING)
 				{
-					// Pending 중이면 이벤트를 통해 완료 통지를 기다립니다. 
-					::WSAWaitForMultipleEvents(1, &wsaEvent, TRUE, WSA_INFINITE, FALSE);
+					// Pending 중이면 쓰레드를 Alertable Wait 상태로 바꿔 줘야 합니다. 
+					::SleepEx(INFINITE, TRUE);
 					// 빠져나왔다면 어떤 네트워크 이벤트인지 체크 
-					::WSAGetOverlappedResult(session.socket, &session.overlapped, &recvLen, FALSE, &flags);
+					//::WSAGetOverlappedResult(session.socket, &session.overlapped, &recvLen, FALSE, &flags);
 				}
 				else
 				{
@@ -199,9 +177,11 @@ int main()
 					break;
 				}
 			}
+			else
+			{
+				cout << "Data Recv Len : " << recvLen << endl;
+			}
 
-			// 빠져나왔다면 WSARecv 가 성공했습니다. 
-			cout << "Data Recv Len : " << recvLen << endl;
 		}
 		// 끝났다면 정리 
 		closesocket(clientSocket);
