@@ -1,26 +1,17 @@
-﻿#include "pch.h"
-#include <iostream>
-#include "CorePch.h"
-#include <thread>
-#include <atomic>
-#include <mutex>
-#include <windows.h>
-#include <future>
-#include "ThreadManager.h"
-#include "Memory.h"
-#include "Allocator.h"
 
-#include "winsock2.h"
-#include "MSWSock.h"
-#include "WS2tcpip.h"
-#pragma comment(lib, "ws2_32.lib")
 
-void HandleError(const char* cause)
-{
-	int32 errCode = ::WSAGetLastError();
-	cout << cause << "Socket ErrorCode :" << errCode << endl;
-}
+IOCP 모델이 사실 Input/Output CompletionPort 모델입니다.
 
+직전에 알아봤던 입출력 모델인 Overlapped 콜백 기반 모델은 비동기 논블로킹 입출력 함수가 완료되면 쓰레드의 APC 큐에 콜백함수가 쌓이고 
+쓰레드를 Alertable Wait 상태로 전환하면 APC 큐에 쌓였던 콜백함수들을 모두 처리하고 다시 Alertable Wait 상태에서 돌아오는 방식이었습니다. 
+
+이 모델에서 아쉬웠던점은 일감이라고 할 수 있는 콜백함수들이 쌓이는 곳이 쓰레드마다 가지고 있는 APC 큐 이기 때문에 멀티쓰레드에서 사용하지 못하는 점이 있었고 
+또 Alertable Wait 전환 자체도 부담이 갔었습니다. 또 모든 비동기 논블로킹 입출력함수에서 콜백함수를 받아 주지도 않았었습니다.  
+
+그렇다고 Overlapped 이벤트 기반 방식을 사용하는것의 단점은 서버에 연결되는 클라이언트의 소켓마다 이벤트 객체가 1:1 대응해야합니다. 
+
+ ----- GameServer
+ 
 enum
 {
 	BUF_SIZE = 1000
@@ -226,3 +217,22 @@ int main()
 	// winsock 종료
 	::WSACleanup();
 }
+
+코드의 흐름을 정리해보자면 listenSocket 을 만들고, bind, listen, accept 까지 똑같이 진행합니다. 다만 이제 멀티쓰레드를 활용할것이기 때문에 굳이 listenSocket 을 논블로킹 소켓으로 만들 필요가 없습니다. 
+이어서 CreateIoCompletionPort 의 인자를 비워서 CompletionPort 를 만들아 iocpHandle 변수에 핸들을 저장하고 이 CP를 관찰해 일감을 처리할 워커 쓰레드 5개를 만들었습니다. 
+워커쓰레드가 돌리는 워커 함수는 좀 있다 보겠습니다. 
+세션들이 많아질때를 대비해 세션들을 모아둘 Session* 를 원소타입으로 하는 벡터를 만들고 while 루프안에서 클라이언트의 접속을 받아줄 accept 호출하고 또 sessions 에 등록, CP에 등록, WSARecv 를 한번 호출까지 합니다. 
+이때 호출한 WSARecv 가 버퍼를 다 받아서 데이터를 처리할 준비가 되면 위에서 만들었던 워커쓰레드에서 GetQueuedCompletionStatus 로 이 일감이 속했던 세션, Overlapped 객체 등을 복원해 이제 이 데이터를 가지고 
+처리를 합니다. 처리가 끝나면 다시 WSARecv 를 호출해 다음 수신을 기다리게 됩니다. 
+
+
+여기까지가 일반적인 네트워크 교제에서 알려주는 내용이고 여기서 응용해 나가라고 한다고 합니다. 
+그런데 게임서버에 이 내용을 사용했을때 주의해야할 점이 있습니다. 소켓을 CP에 연결하는 CreateIoCompletionPort 함수를 호출하는 부분입니다. 
+이때 이 소켓에 대한 비동기 입출력 함수의 완료 호출의 오너를 찾기위해 session 의 주소를 키 값으로 사용했었습니다. 나중에 워커 쓰레드에서 이 키값을 그대로 Session* 으로 캐스팅해 사용했었는데 
+
+만약 이 소켓에 대한 클라이언트가 갑자기 접속을 종료해버리면 어떻게 될까요 그러면 CP에 클라이언트 소켓을 등록했을때의 주소가 유지되는데 그 주소에 있던 Session 객체는 삭제가 된겁니다. 
+그래서 유효하지 않은 주소에 접근하면서 크래시가 나는겁니다. 
+
+네트워크 프로그래밍과 메모리 프로그래밍을 포함해 생각을 할 수 있어야 겠습니다. 
+
+위의 문제를 해결하는 가장 간단한 방법은 Session 객체를 레퍼런스 카운팅을 해주는것일겁니다. 
