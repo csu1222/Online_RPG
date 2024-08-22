@@ -6,6 +6,8 @@ D:\CPP_Game\Portfolio\Server\Server\ServerCore\DeadLockProfiler.cpp;D:\CPP_Game\
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\Lock.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\Lock.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\Memory.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\Memory.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\MemoryPool.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\MemoryPool.obj
+D:\CPP_Game\Portfolio\Server\Server\ServerCore\NetAddress.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\NetAddress.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\pch.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\pch.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\RefCounting.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\RefCounting.obj
+D:\CPP_Game\Portfolio\Server\Server\ServerCore\SocketUtils.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\SocketUtils.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\ThreadManager.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\ThreadManager.obj

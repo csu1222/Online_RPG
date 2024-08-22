@@ -1,228 +1,41 @@
 ﻿#include "pch.h"
 #include <iostream>
 #include "CorePch.h"
-#include <thread>
 #include <atomic>
 #include <mutex>
 #include <windows.h>
 #include <future>
 #include "ThreadManager.h"
-#include "Memory.h"
-#include "Allocator.h"
 
-#include "winsock2.h"
-#include "MSWSock.h"
-#include "WS2tcpip.h"
-#pragma comment(lib, "ws2_32.lib")
-
-void HandleError(const char* cause)
-{
-	int32 errCode = ::WSAGetLastError();
-	cout << cause << "Socket ErrorCode :" << errCode << endl;
-}
-
-enum
-{
-	BUF_SIZE = 1000
-};
-
-// 입출력에 필요한 데이터 들을 모아둠
-struct Session
-{
-	SOCKET socket = INVALID_SOCKET;
-	char recvBuffer[BUF_SIZE] = {};
-	int32 recvByte = 0;
-	int32 sendByte = 0;
-};
-
-enum IO_TYPE
-{
-	READ,
-	WRITE,
-	ACCEPT,
-	CONNECT,
-};
-
-// Overlapped 를 따로 구조체로 만들어주겠습니다.
-struct OverlappedEx
-{
-	WSAOVERLAPPED overlapped = {};
-	int32 type = 0; // read, write, accept, connect ... 
-};
-
-// 멀티쓰레드로 CP의 일감을 처리할 함수
-void WorkerThreadMain(HANDLE iocpHandle)
-{
-	while (true)
-	{
-		// GetQueuedCompletionStatus 는 CP를 관찰하면서 일감을 찾는 함수이긴하지만 계속 대기를 타기보다는 알림을 받고 동작을 시작합니다. 
-		// 인자목록
-		// 1) CompletionPort 핸들
-		// 2) 송수신된 데이터의 바이트 수 
-		// 3) 클라이언트 소켓을 CP에 등록할때 사용했던 Key를 다시 받아옵니다.
-		// 4) 호출했던 비동기 입출력 함수의 인자였던 Overlapped 를 받아옵니다.
-		// 5) 얼마나 기다릴지 INFINITE 를 넣어 계속 기다리도록 했습니다. 
-
-		DWORD bytesTransferred = 0;
-		Session* session = nullptr;
-		OverlappedEx* overlappedEx = nullptr;
-
-		bool ret = ::GetQueuedCompletionStatus(iocpHandle, &bytesTransferred
-		, /*KeyValue*/(ULONG_PTR*)&session, (LPOVERLAPPED*)&overlappedEx, INFINITE);
-
-		// 이제 등록했던 일감에서 session 과 Overlapped 가 다 복원 되었습니다. 
-
-		if (ret == FALSE || bytesTransferred == 0)
-		{
-			// TODO : 연결끊김 
-			continue;
-		}
-
-		// 일감이 어느 입출력 함수에서 온건지 확인
-		ASSERT_CRASH(overlappedEx->type == IO_TYPE::READ);
-
-		// 원하는 대로 데이터 처리
-		cout << "Recv Data Len IOCP : " << bytesTransferred << endl;
-
-		// 데이터를 처리했으면 다시 비동기 입출력 함수를 호출해 일감을 걸어놔야합니다. 
-		WSABUF wsaBuf;
-		wsaBuf.buf = session->recvBuffer;
-		wsaBuf.len = BUF_SIZE;
-
-		DWORD recvLen = 0;
-		DWORD flags = 0;
-
-		::WSARecv(session->socket, &wsaBuf, 1, &recvLen, &flags, &overlappedEx->overlapped, NULL);
-	}
-}
+#include "SocketUtils.h"
 
 int main()
 {
-	// winsock 초기화는 공통적인 부분
-	WORD wVersionRequestes;
-	WSAData wsaData;
+	// SocketUtils 를 사용한 listenSocket 생성과 bind, listen 
+	SOCKET listenSocket = SocketUtils::CreateSocket();
 
-	int err;
+	SocketUtils::BindAnyAddress(listenSocket, 7777);
 
-	wVersionRequestes = MAKEWORD(2, 2);
-	err = ::WSAStartup(wVersionRequestes, &wsaData);
+	SocketUtils::Listen(listenSocket);
 
-	// err 가 0 이면 성공 아니면 실패
-	if (err != 0)
+	// 아직 비동기 입출력 함수는 사용하지 않습니다. 
+	// 나중에 IOCP 까지 만들고 연동할것이기 때문
+
+	SOCKET clientSocket = ::accept(listenSocket, nullptr, nullptr);
+	if (clientSocket == INVALID_SOCKET)
 	{
-		printf("WSAStartup failed with error: %d\n", err);
-		return 1;
+		int error = WSAGetLastError();
+		cout << "Accept failed with error: " << error << endl;
+		// 오류 처리 로직 추가
+		return 0; // 프로그램 종료
 	}
 
-	// wsaData.wVersion 의 상위 바이트는 부버전 하위 바이트는 주버전을 뜻함 
-	// 아래 코드는 winsock 버전이 2.2 가 아닌경우의 예외 처리를 하고 있습니다. 
-	if (LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2) {
-		printf("Could not find a usable version of Winsock.dll\n");
-		WSACleanup();
-		return 1;
-	}
-	else
-		printf("The Winsock 2.2 dll was found okay\n");
+	cout << "Client Connected!" << endl;
 
-	// 논블로킹 소켓 생성 
-
-	// IPv4, TCP 소켓
-	SOCKET listenSocket = ::socket(AF_INET, SOCK_STREAM, 0);
-	if (listenSocket == INVALID_SOCKET)
-		return 0;
-
-	SOCKADDR_IN serverAddr;
-	::memset(&serverAddr, 0, sizeof(serverAddr));
-	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_addr.s_addr = ::htonl(INADDR_ANY);
-	serverAddr.sin_port = ::htons(7777);
-
-	if (::bind(listenSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
-		return 0;
-
-
-	if (::listen(listenSocket, SOMAXCONN) == SOCKET_ERROR)
-		return 0;
-
-	cout << "Accept" << endl;
-
-	// IOCP 모델
-	// -> APC 대신 CompletionPort 라는 것을 만듭니다. (쓰레드마다 가지고 있는게 아닌 전역적으로 1개만 만듭니다.)
-	// -> Alertable Wait 전환 후 처리 대신, GetQueuedCompletionStatus 함수로 CompletionPort 에 쌓인 일을 처리
-	// 이 두가지 변화로 인해 멀티쓰레드에 친화적이 됩니다. 
-
-	// 등장할 주요 두가지 함수
-	// - CompletionPort 를 생성하는 일, 또 CompletionPort에 일감을 등록하는 일
-	//   두 일모두 한가지 함수로 처리합니다. 
-	//	 CreateIoCompletionPort
-	// - 결과 처리를 감시하는 함수는 
-	//   GetQueuedCompletionStatus 
-
-	// CP 생성
-	// 최초에 CP를 생성할때는 인자를 이렇게 줍니다. 핸들을 받아줍니다. 
-	HANDLE iocpHandle = ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
-	
-	// 멀티쓰레드를 도입할건데 이번에는 accept 까지는 메인쓰레드에서 처리하고 send,recv 는 멀티쓰레드로 처리하겠습니다. 
-	// 그러다 보니 listen 소켓을 논블로킹으로 사용할 필요도 없습니다. 
-
-	// 쓰레드 생성
-	for (int32 i = 0; i < 5; i++)
-	{
-		GThreadManager->Launch([=]() { WorkerThreadMain(iocpHandle); });
-	}
-
-	// 세션 매니저 역활의 벡터
-	vector<Session*> sessionManager;
-
-	// Main Thread
 	while (true)
-	{	
-		// 먼저 클라이언트 소켓을 받는 accept 함수를 호출합니다. 
-		SOCKADDR_IN clientAddr;
-		int32 addrLen = sizeof(clientAddr);
-		SOCKET clientSocket;
+	{
 
-		// 논블로킹 소켓이다 보니 accept 를 루프돌 필요도 없습니다. 
-		clientSocket = ::accept(listenSocket, (SOCKADDR*)&clientAddr, &addrLen);
-		if (clientSocket == INVALID_SOCKET)
-			return 0;
-
-		// 세션을 동적할당 했습니다. 
-		Session* session = new Session();
-		session->socket = clientSocket;
-
-		// 세션을 관리할 매니저를 하나 만들겠습니다. 
-		sessionManager.push_back(session);
-		 
-		cout << "Client Accept" << endl;
-
-		// 소켓을 CP 에 등록
-		// 인자 목록
-		// 1) CP에 등록할 소켓을 HANDLE로 캐스팅해서 넘겨준다
-		// 2) 이전에 만든 CP의 핸들
-		// 3) 나중이 일감을 빼왔을때 어느 소켓에 대한건지를 알기위한 키값 여기서는 ULONG_PTR 로 캐스팅한 session 의 주소
-		// 4) CP가 사용할 쓰레드의 갯수 인자를 0으로 주면 컴퓨터의 코어갯수로 알아서 설정 (여기서 쓰레드를 생성하는건 아니고 따로 생성해야합니다.)
-		::CreateIoCompletionPort((HANDLE)clientSocket, iocpHandle, /*Key*/(ULONG_PTR)session, 0);
-
-		// 비동기 입출력 함수 호출
-		WSABUF wsaBuf;
-		wsaBuf.buf = session->recvBuffer;
-		wsaBuf.len = BUF_SIZE;
-
-		OverlappedEx* overlappedEx = new OverlappedEx();
-		overlappedEx->type = IO_TYPE::READ;
-
-		DWORD recvLen = 0;
-		DWORD flags = 0;
-
-		::WSARecv(clientSocket, &wsaBuf, 1, &recvLen, &flags, &overlappedEx->overlapped, NULL);
-
-		// 이제 clientSocket 을 CP가 관찰하고 있을것입니다. WSARecv 가 완료되었는지는 멀티쓰레드로 처리할것입니다. 
 	}
 
 	GThreadManager->Join();
-	
-
-	// winsock 종료
-	::WSACleanup();
 }

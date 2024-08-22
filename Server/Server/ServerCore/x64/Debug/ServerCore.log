@@ -8,7 +8,9 @@
   Lock.cpp
   Memory.cpp
   MemoryPool.cpp
+  NetAddress.cpp
   RefCounting.cpp
+  SocketUtils.cpp
   ThreadManager.cpp
   코드를 생성하고 있습니다...
   ServerCore.vcxproj -> D:\CPP_Game\Portfolio\Server\Server\Libraries\Debug\ServerCore.lib
