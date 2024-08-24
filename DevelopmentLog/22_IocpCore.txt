@@ -1,0 +1,65 @@
+
+
+이제 프로젝트에 본격적으로 Iocp 모델을 라이브러리화 하겠습니다. 
+
+추가되는 클래스는 
+
+IocpCore : 말 그대로 IOCP 모델의 코어입니다. IOCP 모델을 사용하는 주요 함수인 CreateIoCompletionPort, GetQueuedCompletionStatus 를 여기서 다룹니다. 
+
+IocpObject : CompletinoPort 에 등록할 객체들은 이 클래스를 상속받게 됩니다. GetHandle 이라는 소켓을 HANDLE 로 캐스팅해서 반환하는 함수와 
+        Dispatch 라는 CP 가 네트워크 이벤트가 완료되는지를 관찰한 후 완료된 객체를 IocpEvent 를 통해 복원해 데이터를 처리하도록 하는 인터페이스를 제공합니다.
+
+IocpEvent : OVERLAPPED 클래스를 상속받아 GetQueuedCompletionStatus 를 호출할때 인자로 사용됩니다. EventType 이라는 enum 으로 어떤 네트워크 이벤트인지를 구별합니다.
+
+ConnectEvent : IocpEvent 를 상속받은 클래스 클라이언트에서 Connect를 할때 사용하는 이벤트입니다.
+
+AcceptEvent : IocpEvent 를 상속받은 클래스, 서버에서 클라의 AcceptEx 를 받을때 사용하는 이벤트로 여기서는 접속한 클라이언트의 소켓, 세션등을 받아줘야 해서 멤버 변수로 세션을 들고 있습니다. 
+
+RecvEvent : IocpEvent 를 상속받은 클래스, RecvEx 를 할때 사용
+
+SendEvent : IocpEvent 를 상속받은 클래스, SendEx 를 할때 사용
+
+Listener : 이전 입출력 모델 실습에서 ListenerSocket 에 해당하는 클래스, IocpObject 를 상속받습니다. 소켓과 AcceptEvent 들을 벡터에 담아 가지고 있습니다. listener 에서 
+        서버로 접속하는 클라이언트들의 AcceptEvent 를 가지고 있어야 언젠가 삭제할때도 여기서 삭제할 수 있습니다. 
+        함수는 StartAccept , CloseSocket, GetHandle, Dispatch, RegisterAccept, ProcessAccept 가 있습니다. 간단히 설명하자면 
+        StartAccept는 리스터 소켓을 생성, 옵션 설정, bind, listen 까지 호출하며 AcceptEvent 를 생성해 RegisterAccept 까지 호출합니다. 
+        CloseSocket은 단순히 리스너 소켓을 닫아줍니다. GetHandle은 리스너 소켓을 HANDLE로 캐스팅해 반환합니다.
+        Dispatch는 IocpCore->Dispatch 에서부터 호출되는데 IocpEvent 를 인자로 받아 이 IocpEvent가 AcceptEvent로 캐스팅되면서 ProcessAccept를 호출합니다. 
+        RegisterAccept는 처음에는 StartAccept에서 호출됩니다. 빈 세션을 하나 만들어 AcceptEvent 가 Session을 들고 있게 세팅하고 AcceptEx를 호출해 클라이언트의 커넥트를 예약합니다. 
+        ProcessAccept는 CP와 Listener->Dispatch 를 통해 호출이 되는데 받은 AcceptEvent 가 들고 있는 세션을 복원하고 getpeername 함수로 접속한 클라이언트의 주소 구조체를 세션에 세팅합니다. 
+
+Session : IocpObject를 상속받습니다. 지금 세션은 간단하게 소켓과 네트워크 주소 구조체, 현제 접속중인지를 변수로 들고 있을겁니다. 함수는 SetNetAddress, GetAddress, GetSocket, GetHandle,
+        Dispatch 입니다. 
+        SetNetAddress, GetAddress, GetSocket 는 이름그대로 의 함수이고 GetHandle 도 들고 있는 소켓을 HANDLE로 캐스팅해 반환합니다. 
+        Dispatch 함수는 나중에 Recv,Send 에 해당하는 IocpEvent 가 들어오면 처리를 해주겠지만 지금은 그냥 넘어갑니다. 
+
+
+
+이런 클래스들이 추가되면서 이전 Iocp 모델 실습을 하던 코드를 클래스화 시켜서 나눠 놓았습니다. 
+
+실습 예는 이렇게 됩니다. 
+
+#include "Listener.h"
+
+int main()
+{
+	Listener listener;
+	// listener의 StartAccept 를 바로 호출하면 리스너 소켓의 옵션과 bind, listen 까지 하고 RegisterAccept 까지 호출이 됩니다. 
+	listener.StartAccept(NetAddress(L"127.0.0.1" , 7777));
+
+	// 그러면 이제 리스너는 AcceptEx 로 클라이언트의 접속을 기다리게 되니 워커 쓰레드들을 만들어 Dispatch 로 AcceptEx 가 완료 되었는지 추적
+
+	// 워커쓰레드는 계속해서 IocpCore 를 Dispatch 로 관찰을 하면됩니다. 
+	for (int32 i = 0; i < 5; i++)
+	{
+		GThreadManager->Launch([=]()
+			{
+				while (true)
+				{
+					GIocpCore.Dispatch();
+				}
+			});
+	}
+
+	GThreadManager->Join();
+}

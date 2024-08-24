@@ -8,33 +8,26 @@
 #include "ThreadManager.h"
 
 #include "SocketUtils.h"
+#include "Listener.h"
 
 int main()
 {
-	// SocketUtils 를 사용한 listenSocket 생성과 bind, listen 
-	SOCKET listenSocket = SocketUtils::CreateSocket();
+	Listener listener;
+	// listener의 StartAccept 를 바로 호출하면 리스너 소켓의 옵션과 bind, listen 까지 하고 RegisterAccept 까지 호출이 됩니다. 
+	listener.StartAccept(NetAddress(L"127.0.0.1" , 7777));
 
-	SocketUtils::BindAnyAddress(listenSocket, 7777);
+	// 그러면 이제 리스너는 AcceptEx 로 클라이언트의 접속을 기다리게 되니 워커 쓰레드들을 만들어 Dispatch 로 AcceptEx 가 완료 되었는지 추적
 
-	SocketUtils::Listen(listenSocket);
-
-	// 아직 비동기 입출력 함수는 사용하지 않습니다. 
-	// 나중에 IOCP 까지 만들고 연동할것이기 때문
-
-	SOCKET clientSocket = ::accept(listenSocket, nullptr, nullptr);
-	if (clientSocket == INVALID_SOCKET)
+	// 워커쓰레드는 계속해서 IocpCore 를 Dispatch 로 관찰을 하면됩니다. 
+	for (int32 i = 0; i < 5; i++)
 	{
-		int error = WSAGetLastError();
-		cout << "Accept failed with error: " << error << endl;
-		// 오류 처리 로직 추가
-		return 0; // 프로그램 종료
-	}
-
-	cout << "Client Connected!" << endl;
-
-	while (true)
-	{
-
+		GThreadManager->Launch([=]()
+			{
+				while (true)
+				{
+					GIocpCore.Dispatch();
+				}
+			});
 	}
 
 	GThreadManager->Join();

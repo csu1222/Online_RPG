@@ -3,11 +3,15 @@ D:\CPP_Game\Portfolio\Server\Server\ServerCore\CoreGlobal.cpp;D:\CPP_Game\Portfo
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\CorePch.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\CorePch.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\CoreTLS.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\CoreTLS.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\DeadLockProfiler.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\DeadLockProfiler.obj
+D:\CPP_Game\Portfolio\Server\Server\ServerCore\IocpCore.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\IocpCore.obj
+D:\CPP_Game\Portfolio\Server\Server\ServerCore\IocpEvent.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\IocpEvent.obj
+D:\CPP_Game\Portfolio\Server\Server\ServerCore\Listener.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\Listener.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\Lock.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\Lock.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\Memory.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\Memory.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\MemoryPool.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\MemoryPool.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\NetAddress.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\NetAddress.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\pch.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\pch.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\RefCounting.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\RefCounting.obj
+D:\CPP_Game\Portfolio\Server\Server\ServerCore\Session.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\Session.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\SocketUtils.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\SocketUtils.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\ThreadManager.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\ThreadManager.obj
