@@ -5,7 +5,7 @@
 -----------------*/
 
 // Completion Port 에 등록할 클래스가 상속받을 클래스
-class IocpObject
+class IocpObject : public enable_shared_from_this<IocpObject>
 {
 public:
 	virtual HANDLE GetHandle() abstract;
@@ -25,14 +25,10 @@ public:
 
 	HANDLE		GetHandle() { return _iocpHandle; }	
 
-	// 소켓을 CP 에 등록하는 함수
-	bool		Register(class IocpObject* iocpObject);
+	// 소켓을 CP 에 등록하는 함수 IocpCoreRef 로 통일 
+	bool		Register(IocpObjectRef iocpObject);
 	// CP에 들어온 일감을 관찰하는 함수
 	bool		Dispatch(uint32 timeoutMs = INFINITE);
 private:
 	HANDLE		_iocpHandle;
 };
-
-
-// TEMP
-extern IocpCore GIocpCore;

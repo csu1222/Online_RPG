@@ -22,10 +22,10 @@ public:
 	IocpEvent(EventType type);
 
 	void		Init();
-	EventType	GetType() { return _type; }
 
-protected:
-	EventType	_type;
+public:
+	EventType	eventType;
+	IocpObjectRef owner;
 };
 
 /*----------------
@@ -42,17 +42,14 @@ public:
 	AcceptEvent
 -----------------*/
 
+// 세션도 세어드 포인터로 들고 있게
 class AcceptEvent : public IocpEvent
 {
 public:
 	AcceptEvent() : IocpEvent(EventType::Accept) { }
 
-	// AcceptEx 에서는 ListenSocket 과 AcceptedSocket을 모두 필요로 하기 때문에 다 아우르는 Session 클래스를 다루는 함수가 필요합니다. 
-	void		SetSession(Session* session) { _session = session; }
-	Session*	GetSession() { return _session; }
-
-private:
-	Session*	_session = nullptr;
+public:
+	SessionRef	session = nullptr;
 };
 
 /*----------------

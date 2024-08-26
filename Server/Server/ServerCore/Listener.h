@@ -3,6 +3,7 @@
 #include "NetAddress.h"
 
 class AcceptEvent;
+class ServerService;
 
 /*--------------
 	Listener
@@ -16,7 +17,7 @@ public:
 
 public:
 	/* 외부에서 사용 */
-	bool StartAccept(NetAddress netAddress);
+	bool StartAccept(ServerServiceRef serverService);
 	void CloseSocket();
 
 public:
@@ -34,5 +35,6 @@ protected:
 	SOCKET _socket = INVALID_SOCKET;
 	// 클라이언트들이 접속할때 들어오는 Accept Event 들 
 	Vector<AcceptEvent*> _acceptEvents;
+	ServerServiceRef _service;
 };
 

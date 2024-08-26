@@ -1,0 +1,78 @@
+
+Iocp 의 큰 윤곽을 잡았지만 아직 코드에 문제가 있습니다. 
+
+IocpCore::Dispatch 에서 GetQueuedCompletionStatus 를 하면서 일감을 예약했던 세션은 복원하고 있는데 이때 
+예약했던 세션이 이미 삭제되고 없다면 메모리 오염이 일어날것입니다. 
+
+이것을 수정하는 여러 방법이 있겠지만 GetQueuedCompletionStatus 에서 복원할 키값의 주소에 있는 IocpObject(Listener, Session 등)과 IocpEvent 로 캐스팅 가능한 
+OVERLAPPED 구조체도 일감이 처리 될때까지는 살아 있도록 보장을 해줘야합니다. 
+
+그 중에 OVERLAPPED구조체(IocpEvent) 는 어떤 입출력함수를 호출했는지를 알기 위한 수단이다 보니 아주 중요하지는 않은데 
+문제가 되는 것은 IocpObject입니다. 
+
+첫번째 해결법은 IocpObject 를 레퍼런스 카운팅을 하는것입니다. 
+이전에 실습했던 RefCounting IocpObject 가 상속받고 Register 류 함수를 호출하면서 비동기 입출력 함수들을 호출하는 시점에 RefCount 를 증가시키고 Dispatch 에서 
+GetQueuedCompletionStatus 를 통해 입출력 함수가 다 처리 된 후에 RefCount를 줄이는 방법도 있습니다. 
+
+하지만 이 RefCounting 방식의 문제점은 만약 외부에서 Session 을 shared_ptr로 사용하거나 하면 레퍼런스 카운팅이 2중으로 관리가 되면서 문제가 발생 할 수 있는데 
+그러면 아예 RefCounting을 상속받지 않고 Session 같은 IocpObject 를 사용할때 shared_ptr로 만들면 어떤가 생각을 할 수 있는데 shared_ptr는 Register 할때 
+카운팅을 늘린다거나 할 수 없고 그냥 실제 이 객체를 참조하는 갯수만 셀 수 있습니다. 
+아예 불가능하지는 않지만 깔끔하지는 않을겁니다. 
+
+그래서 GetQueuedCompletionStatus 에서 Key 값을 사용하지 않고 IocpEvent 들에게 자신을 예약한 IocpObject 를 들고 있도록하는 것입니다. 
+이렇게 하자면 먼저 IocpEvnet의 멤버 변수로 owner 역할의 IocpObject를 들고 있어야 합니다. 그리고 거기에 shared_ptr로 들고 있어야 삭제 문제도 해결이 됩니다.
+
+자주사용할 클래스는 Types 에서 따로 매크로로 쉽게 사용하게끔하고 
+
+IocpEvent 에서 owner 를 가지고 있고 그 아래로 각 이벤트 들중 AcceptEvent 도 클라이언트 세션을 받을 멤버 변수가 있었는데 shared_ptr타입으로 바꿔줍니다. 
+
+빌드를 해서 이에 맞춰 에러가 뜨는 부분들을 다 정리한 후 Listener 를 보면 RegisterAccept 에서 AcceptEvent 가 AcceptEx 를 하고 있는데 아직은 AcceptEvent 가 owner 를 설정하고 있지 않습니다. 
+이 AcceptEvent 가 만들어 질때 같이 owner를 설정해 줘야 하는데 어디서 만들어 지냐면 같은 클래스의 멤버 함수 StartAccept 에서 만들어지고 있습니다. 만들때 자기 자신을 owner 로 줘야하는데 
+일반 생포인터로 주듯이 this 로는 줄 수 없고 IocpObject 에 enable_shared_from_this<> 상속받아 shared_from_this() 로 줘야합니다. 
+
+그래야 shared_ptr 에서 자기자신을 넘겨 줄 수 있는데 그냥 this 를 shared_ptr로 만들어 주게 되면 참조 사이클이 일어나 메모리 누수가 나는데 
+enable_shared_from_this 는 내부적으로 자신의 타입을 weak_ptr 로 들고 있고 shared_from_this 를 호출하게되면 이 weak_ptr 를 .lock() 을 해서 shared_ptr 로 바꾸어 넘겨주기 때문에 
+참조카운트가 안일어나는 원리를 가지고 있습니다. 
+
+
+
+여기에 추가로 더 수정할것이 있는데 지금 IocpCore 의 객체를 IocpCore 파일안에서 extern 으로 하나 만들어 사용하고 있는데 
+이러면 전역적으로 IocpCore를 하나만 사용하게 됩니다.
+
+하지만 실제 서비스하는 게임에서는 분산 서버를 많이들 운영한다고 합니다. 실제 게임로직서버와 로그인서버, DB 서버 등으로 나눠 동시에 운영을 하게 되는데 이런경우 IocpCore가 여럿 필요해집니다. 
+
+분산서버를 활용하면 클라이언트와 서버간의 연결 뿐만아니라 서버와 서버간의 연결도 해야하기때문에 클라이언트 서버의 역할을 나눠 연결을 해야 합니다. 
+이렇게 서버끼리 연결을 하기 위해 묶어 두면 좋습니다. 
+
+여기에 또 한가지 더 생각해봐야 할점은 Session 클래스입니다. ServerCore 에서 Session 은 많은 역할을 하게 될것입니다. 각종 입출력 함수들을 여기서 처리해주게 될것인데 
+이 Session은 말했듯이 ServerCore 안에 있는 클래스인데 나중에 가면 컨텐츠 단에서 이 세션을 어떻게 활용할지 정해지지 않았습니다. 
+예를 들어서 GameServer 에서 Session 클래스를 상속받은 하위 세션클래스를 만들어 필요한대로 사용하고 싶은데 현재는 ServerCore의 Listener::RegisterAccept 의 코드처럼
+기본 Session 객체로 만들어 버리기 때문에 하위 클래스로 사용하지 못합니다. 이런 부분도 처리할 수 있어야 겠습니다. 
+
+이런 기능들을 하나의 클래스 Service로 모아 만들어 줄것입니다. 
+
+서비스 타입을 둬서 관리 할 수 있는데 서비스 타입이란 서버 서비스, 클라 서비스 거기에 같은 서비스라고 하더라도 정책에 따라도 갈리는데 클라 서비스가 연결이 끊겼는데 계속 연결을 다시 시도하는 서비스라거나 
+서버도 마찬가지로 정책으로 갈릴 수도 있습니다. 
+
+이 프로젝트에서는 일단 서버와 클라이언트 두가지 서비스 타입만 다루겠습니다.
+서비스의 생성자에서 받는 인자는 먼저 서비스타입, 네트워크 어드레스 구조체, IocpCoreRef, SessinoFactory, int32 의 최대 세션카운트 입니다. 
+서비스타입은 위에서 설명했고, 네트워크 어드레스는 서버 서비스면 자신의 주소이고 클라이언트 서비스라면 붙어야 하는 상대방쪽 주소일것입니다. IocpCoreRef는 하나만 사용할 수도 있고 분활해 사용할 수도 있을겁니다. 
+SessinoFactory 는 세션을 만들어주는 매크로로 
+using SessionFactory = function<SessionRef(void)>;
+이런 형태입니다. 
+마지막인자 최대 세션 숫자는 말 그대로 입니다.
+
+
+서비스는 그대로 사용하는게 아니라 서버 서비스, 클라이언트 서비스에 상속하고 이걸 사용합니다. 
+
+서버 서비스에서는 접속을 받을 Listener 를 가지고 있을것입니다. 그래서 서버 서비스의 초기화때 이 Listener를 동적할당후 Listener::StartAccept 까지 호출해줄것입니다. 
+이때 서비스 자신을 넘겨주도록 바꾸어 이 서비스에 담긴 데이터로 이후 작업을 이어가도록 하겠습니다. 
+서버 서비스에는 IocpCore 도 가지고 있을 것이기 때문에 여기서 IocpCore 를 전역으로 사용하지 않아도 됩니다. 
+
+서비스를 통해 세션을 SessionFactory 를 통해 만들고 IocpCore 도 관리하면서 이제 서버나 클라이언트에서 서비스를 만들때 SessionFactory 를 어떻게 만들지를 정하면 그대로 입출력함수에서 사용할 수 있을것입니다. 
+
+
+서비스를 테스트 하면서 MakeShared 를 통해 생성이 될것인데 이전에 따로 생성자에서 인자를 받는 버전을 안만들어서 이번에 만들게 됩니다. 
+
+결국 서비스라는 것은 이전에 만들었던 NetAddress, Session, IocpCore 를 한번에 묶어서 관리하도록 만들어 정리한 것입니다. 그 과정에서 Session 을 더 유연하게 사용하게 하고 IocpCore 도 전역이 아닌 Service 에 넣어 관리하도록 
+만든것입니다. 
