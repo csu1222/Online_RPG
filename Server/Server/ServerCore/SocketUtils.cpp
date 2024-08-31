@@ -6,7 +6,7 @@
 */
 
 LPFN_CONNECTEX		SocketUtils::ConnectEx = nullptr;
-LPFN_DISCONNECTEX	SocketUtils::DisConnectEx = nullptr;
+LPFN_DISCONNECTEX	SocketUtils::DisconnectEx = nullptr;
 LPFN_ACCEPTEX		SocketUtils::AcceptEx = nullptr;
 
 void SocketUtils::Init()
@@ -20,7 +20,7 @@ void SocketUtils::Init()
 	더미 소켓, 가져오고 싶은 함수, 함수를 받을 포인터 순으로 인자를 넣습니다. */
 	SOCKET dummySocket = CreateSocket();
 	ASSERT_CRASH(BindWindowsFunction(dummySocket, WSAID_CONNECTEX, reinterpret_cast<LPVOID*>(&ConnectEx)));
-	ASSERT_CRASH(BindWindowsFunction(dummySocket, WSAID_DISCONNECTEX, reinterpret_cast<LPVOID*>(&DisConnectEx)));
+	ASSERT_CRASH(BindWindowsFunction(dummySocket, WSAID_DISCONNECTEX, reinterpret_cast<LPVOID*>(&DisconnectEx)));
 	ASSERT_CRASH(BindWindowsFunction(dummySocket, WSAID_ACCEPTEX, reinterpret_cast<LPVOID*>(&AcceptEx)));
 
 	// 더미 소켓을 닫아줍니다. 

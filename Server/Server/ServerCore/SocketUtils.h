@@ -11,7 +11,7 @@ public:
 	// 비동기 커넥트 함수의 포인터가 될것입니다. 
 	// 처음은 null 값이지만 이후 런타임에 함수를 가져올겁니다. 
 	static LPFN_CONNECTEX		ConnectEx;
-	static LPFN_DISCONNECTEX	DisConnectEx;
+	static LPFN_DISCONNECTEX	DisconnectEx;
 	static LPFN_ACCEPTEX		AcceptEx;
 
 public:

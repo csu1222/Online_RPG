@@ -22,8 +22,7 @@ Listener::~Listener()
 }
 
 bool Listener::StartAccept(ServerServiceRef serverService)
-{
-	_service = serverService;
+{	_service = serverService;
 	if (_service == nullptr)
 		return false;
 
@@ -120,6 +119,7 @@ void Listener::ProcessAccept(AcceptEvent* acceptEvent)
 	session->SetNetAddress(NetAddress(sockAddress));
 
 	cout << "Client Connected!" << endl;
+	session->ProcessConnect();
 
 	// TODO
 
