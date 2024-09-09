@@ -13,6 +13,7 @@ D:\CPP_Game\Portfolio\Server\Server\ServerCore\NetAddress.cpp;D:\CPP_Game\Portfo
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\pch.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\pch.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\RecvBuffer.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\RecvBuffer.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\RefCounting.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\RefCounting.obj
+D:\CPP_Game\Portfolio\Server\Server\ServerCore\SendBuffer.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\SendBuffer.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\Service.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\Service.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\Session.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\Session.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\SocketUtils.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\SocketUtils.obj

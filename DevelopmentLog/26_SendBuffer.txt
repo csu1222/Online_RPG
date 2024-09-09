@@ -1,0 +1,48 @@
+
+SendBuffer 도 수정해볼것입니다. 
+
+이전에는 그냥 SendEvent 에서 Vector<BYTE> 타입으로 버퍼를 사용하고 있었습니다. 
+
+그러면 안좋은 것이 Sessino::Send 에서 SendEvent 를 memcpy를 하면서 복사 비용이 생깁니다. 
+
+그런데 Send는 하도 많이 호출이 된다고 했습니다. 이런 작업이 복사비용이 생기면 좋지 않습니다. 
+
+또 온라인게임의 서버는 클라 하나가 보낸 데이터를 다시 다른 모든 유저에게 뿌리는 일이 많습니다. 
+
+일단 간단한 버전으로 한번 만들어 보자면 
+SendBuffer라는 클래스를 만들고 멤버 변수는 똑같이 Vector<BYTE> 타입으로 _buffer하나 들고 있고 또 이 버퍼에서 실제로 사용하는 데이터의 크기를 
+int32 _writeSize 라고 들고 있을겁니다. 
+
+멤버 함수는 생성자, 소멸자, 버퍼를 반환하는함수, _writeSize를 반환하는 함수, 버퍼의 크기를 반환하는 함수, 인자의 데이터를 버퍼에 복사하는 함수가 있을겁니다. 
+
+생성자에서는 인자로 버퍼 사이즈를 인자로 받아서 _buffer.resize(bufferSize) 를 해줄겁니다. 
+
+소멸자는 딱히 다른 동작을 하지는 않을것이고 
+
+복사하는 함수에서는 인자로 void* 타입의 data 를 받아서 void 배열의 데이터와 이 데이터의 길이 len 을 받을겁니다. 
+먼저 버퍼의 사이즈보다 복사하려는 데이터가 큰지를 체크하고 
+그 후 memcpy를 사용해 버퍼에 복사해줄것입니다. 
+
+지금 만든 간단한 구조의 SendBuffer 를 게임서버에 어떻게 사용할지를 보면 
+
+Send를 사용하는 부분이 Session::Send 인데 이전에 SendEvent 가 직접 들고 있던거 대신 
+SendBuffer 객체를 만들어줄겁니다. 
+그런데 객체를 만들고 Send를 할것이다 보니 SendBuffer도 레퍼런스 카운팅이 필요해집니다. SendBuffer 객체를 하나만 만들고 여러 클라이언트에게 보내도록 연결해 줄건데 
+멀티쓰레드 환경에서 어느 한 쓰레드가 먼저 다 사용하고 SendBuffer 객체를 삭제해버리면 곤란하기 때문입니다. 
+
+그래서 어떻게 해줄것이냐면 Session 에서도 들어온 Send 일감 버퍼들을 들고 있을것이고 버퍼들을 RegisterSend 까지 가게되면 SendEvent 에서 들고 있도록할것입니다. 
+
+Send를 호출할대 락을 걸고 SendQueue를 만들어 여기에 SendBuffer 를 푸시 한 뒤 한번에 하나의 쓰레드만 RegisterSend 를 호출할 수 있도록 아토믹 불리언 값을 하나 체크해 RegisterSend를 호출합니다. 
+즉 한 쓰레드가 RegisterSend 를 하고 있다면 다른 Send 호출은 SendQueue 에 버퍼를 넣기만 하고 나옵니다. 
+
+RegisterSend 에서는 기존 매번 Send 에서 새로 만들던 SendEvent 대신 Session의 멤버 변수 _sendEvent 를 가지고 WSASend 를 하게 될건데 _sendEvent 하나만 가지고 가능한 이유가 
+이 등록한 WSASend 가 처리 되거나 아니면 에러로 실패할때만 다른 쓰레드의 접근을 허용할것이기 때문입니다. 
+여기서 이제 SendQueue에 들어 있는 SendBuffer 들을 모두 _sendEvent 의 _sendBuffers에 푸시하는데 그 이유는 이 후 WSASend 에 모든 버퍼를 등록하더라도 _sendEvent에서 참조를 하고 있어야 
+처리전 삭제가 되는걸 막아 줄것입니다. 
+그리고 WSASend 에 버퍼를 등록할때 WSABUF 라는 구조체는 사실 하나만 사용해야하는것이 아니라 여러 WSABUF 를 사용할 수 있기때문에 Vector<WSABUF> 로 담아 WSASend에 등록 할 수 있습니다. 
+
+ProcessSend에서는 _sendEvent 의 오너를 풀어줘서 참조 카운트를 풀고 들고 있는 버퍼도 밀어 줍니다. 이미 Send가 완료된것이기 때문입니다.
+WSASend 가 완료되기전에 이미 Send 가 다시 호출되세 SendQueeu에 버퍼가 있다면 다시 RegisterSend를 호출합니다.
+
+
+이번 내용에서 중요한 것은 서버에서 브로드캐스팅을 할때 SendBuffer를 한번만 만들고 이걸 모든 세션에 뿌릴 수 있게 되어 복사비용이 많이 줄었다는것입니다. 
