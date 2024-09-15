@@ -45,4 +45,94 @@ ProcessSend에서는 _sendEvent 의 오너를 풀어줘서 참조 카운트를 �
 WSASend 가 완료되기전에 이미 Send 가 다시 호출되세 SendQueeu에 버퍼가 있다면 다시 RegisterSend를 호출합니다.
 
 
-이번 내용에서 중요한 것은 서버에서 브로드캐스팅을 할때 SendBuffer를 한번만 만들고 이걸 모든 세션에 뿌릴 수 있게 되어 복사비용이 많이 줄었다는것입니다. 
+이번 내용에서 중요한 것은 서버에서 브로드캐스팅을 할때 SendBuffer를 한번만 만들고 이걸 모든 세션에 뿌릴 수 있게 되어 복사비용이 많이 줄었다는것입니다. \\
+
+
+
+-------------------------------
+
+
+SendBufferPooling
+
+이제 Send를 할때 매번 SendEvent와 보낼 데이터를 생성해 사용하던 것을 이제는 보낼 데이터를 하나만 생성하는데 shared_ptr 로 만들어 이걸 SendBuffer에 연결해 Send하게끔 했습니다. 
+
+하지만 그래도 서버에서 에코 서버를 만들면서 OnRecv에서 받은 데이터를 다시 BroadCast를 하면서 SendBuffer를 생성해 사용하고 있습니다.
+
+이렇게 하면 문제가 SendBuffer를 매번 만드는것이 아쉬운데 이전 메모리 풀링을 만들면서 MakeShared 함수에서는 일정크기 안의 메모리를 사용하는 버퍼는 메모리 풀에서 가져와 사용하도록 했었습니다. 
+그러면 그 크기 안의 버퍼만 만드어 사용하면 될 수 있지 않을까 생각이 듭니다. 
+OnRecv 를 보면 또 하나의 문제가 Recv 한 데이터의 크기를 OnRecv의 인자로 받아서 그 크기를 가지고 데이터를 SendBuffer에 복사해 사용하고 있습니다. 
+즉 받은 데이터의 크기를 정확히 알고 있고 그 크기를 활용해 딱 맞는 크기의 SendBuffer를 만들어 사용해도 될것 같지만 지금은 4096 크기로 크게 잡아서 사용하고 있습니다. 
+왜 이렇게 하냐면 나중에 가서 패킷설계에 따라 받은 데이터의 크기를 모를 수도 있습니다. 
+
+그래서 이번 주제는 SendBuffer 를 사용할때 매번 만들지 않고 풀링을 하는 것을 만들어 볼것입니다. 
+생각해보면 최대크기 4096 로만 메모리 풀링을 해서 사용하는것도 가능해 보입니다. 그래도 메모리가 아깝기는합니다. 만약 1바이트 짜리 패킷을 보내더라도 
+4kb 의 버퍼를 잡아야 하는것이기 때문인데 좀 더 효율적으로 사용하는 방법을 알아보겠습니다. 
+
+
+SendBuffer 클래스 파일에서 SendBufferChunk, SendBufferManager 클래스를 추가할건데 SendBufferChunk 는 커다란 메모리인데 이것들을 하나씩 꺼내 SendBuffer로 사용할것입니다. 
+SendBufferManager 에서 SendBufferChunk를 shared_ptr의 Vector 로 들고 있을겁니다. 
+매니저에서 들고 있는 청크를 나눠 버퍼를 꺼내고 넣게 됩니다. 즉 메모리 풀 같은 역할을 하게 됩니다. 
+
+SendBufferManager 에서 핵심적인 기능인 Push, Pop 을 먼저 만드는데 Push 의 경우는 그냥 락을 걸고 push_back 을 하면되고 
+Pop은 기존 샌드버퍼청크의 벡터에 여유분이 있다면 그것을 꺼내 반환 아니라면 이제 새로 청크를 만들어 반환을 하게 되는데 shared_ptr 의 객체를 생성할때 인자를 두개 주게 되면 그것들을 생성자, 소멸자로 사용할 수 있습니다. 
+생성자는 xnew 를 사용하고 소멸자는 PushGlobal 이란것을 사용하는데 이것은 SendBufferManager 에 새로 만들고 소멸할때 청크 벡터로 push 가 되도록 합니다. 
+PushGlobal 을 static 함수로 만들어줘야 소멸자때 사용할 수 있습니다. 
+
+PushGlobal 은 글로벌로 사용할 SendBufferManager 의 Push를 호출해주는데 이 글로벌 SendBufferManager 객체를 CoreGlobal에서 만들어 주면됩니다. 
+
+버퍼 청크들을 관리하는 매니저는 글로벌로 관리하지만 버퍼청크 자체는 TLS 영역에 두고 사용하게되면 락을 잡지 않고사용할 수 있기 때문입니다. 
+실제로 버퍼를 사용할때는 SendBufferManager::Open 을 사용하게 될건데 이 때 TLS 에 있는 SendBufferChunk 가 nullptr 이라면 Pop을 해줍니다.
+
+
+SendBufferChunk 는 실제 메모리를 BYTE 타입의 Array 혹은 Vector 로 만들어 주고 오픈 여부를 불리언으로 만들고 관리해줄겁니다. 
+그리고 이 청크에서 사용한 데이터의 크기를 가지고 있으면 그 뒤 위치의 주소를 바로 보낼수 있어 이것도 같이 관리합니다. Reset을 할때 이 사용한 데이터 크기를 0으로 초기화 하는것이 중요합니다. 
+청크라는 큰 메모리를 할당받은 쓰레드는 매 Send 마다 사용할 크기만큼의 버퍼를 잘라 사용하고 그 크기를 _usedSize 로 관리한 후 다음 Send 때 _usedSize 를 인덱스로 사용해 다음 
+버퍼를 사용하는것입니다. 
+
+그래서 SendBuffer 자체는 이제 직접 배열이나 벡터를 직접 들고 있지 않고 BYTE* 만 들고 있을것이고 그 SendBufferChunkRef 를 알고 있게 해줄겁니다. 
+즉 SendBuffer 가 가지고 있을 멤버 변수는 
+BYTE*               _buffer;
+uint32              _allocSize = 0;
+uint32              _writeSize = 0;
+SendBufferChunkRef  _owner;
+이렇게 입니다. 
+
+이전까지 사용하던 SendBuffer의 멤버 함수들도 바뀌게 되는데 
+이제 Buffer(), WriteSize(), Close() 세가지를 사용하게 됩니다. 
+각 함수의 의미는 Buffer는 _buffer 를 반환하는함수입니다. 사용할 버퍼의 시작 주소를 반환하면서 여기부터 데이터를 써내려가는등 사용하게 됩니다. 
+WriteSize 는 _writeSize를 반환하는데 버퍼를 할당받고 실제 사용한 크기를 반환합니다. 
+Close는 인자로 uint32 하나를 받는데 이 정수를 writeSize로 저장합니다. 그 전에 _allocSize 와 비교해 wirteSize가 더 작은지를 확인해야할테고 
+그 다음 _wirteSize 에 저장한 후 _owner인 SendBufferChunk의 Close를 호출해줍니다. 
+어떤의미냐면 SendBufferChunk::Open 으로 청크의 _usedSize 부터 allocSize 만큼의 SendBuffer를 때어 만들고 SendBuffer에서 실제 버퍼에 데이터를 작성한 후
+실제 사용한 크기인 _writeSize로 Close를 하면 이제 그 크기까지 SendBufferChunk에서 사용했다고 확정짔는 겁니다. 
+
+
+
+다시 SendBuffer 에 대한 전체적인 그림을 보자면 
+이제 SendBuffer를 사용하는 곳이 GameServer 의 GameSession::OnRecv 의 받은 데이터를 다시 되돌려줄때 인데 
+OnRecv 마다 SendBuffer를 매번 MakeShared 하는 것 대신 이제는 SendBufferChunk::Open 으로 어느정도 여유(allocSize)를 두고 SendBuffer를 가져온 다음 
+실제 데이터(writeSize)만큼 사용한후 Close 를 해 확정짓고 Close 한 SendBuffer를 Send 하게 됩니다. 
+
+SendBufferChunk는 클래스내에 정의해놓은 크기 SEND_BUFFER_CHUNK_SIZE 라는 enum 값만큼의 크기를 가지고 또 각 쓰레드마다 하나씩 들고 있게 TLS 영역에 위치합니다. 
+그래서 락을 걸지 않고 사용해도 되는것입니다. 
+Open을 하면 인자로 받은 allocSize 만큼의 SendBuffer 를 일단 만들어 넘겨주고 SendBuffer 에서 실제 사용한 writeSize 를 인자로 준 Close를 호출하면 
+writeSize를 _usedSize 로 저장한 후 완료를 짓게 됩니다. 
+이렇게 사용하다가 _usedSize 가 SEND_BUFFER_CHUNK_SIZE 보다 크다면 크래시를 내주고 또 남은 SendBufferChunk 용량인 FreeSize() 보다 allocSize 가 크다면 
+사용중인 TLS의 LSendBufferChunk는 다시 SendBufferManager::Pop 을 해 새 청크로 교체합니다. 
+버려진 청크는 바로 메모리 해제되지는 않는데 왜냐면 아직 WSASend 를 호출한 SendBuffer가 남아 있다면 SendBuffer가 다시 _owner로 SendBufferChunk 를 참조하고 있기때문에 
+소멸하지 않습니다. 그래서 이미 호출된 Send명령이 끝나면 그때서야 소멸을 하기 시작하는데 그냥 아예 SendBufferChunk가 해제되지 않고 대신 
+SendBufferManager::PushGlobal 을 호출하게 되어 SendBufferChunk 의 벡터들로 돌아옵니다. 
+
+
+
+이제 테스트를 하기 위해 GameServer, DummyClient 쪽을 수정하겠습니다. 
+
+GameServer 부터보면 여기서 GameSession::OnRecv 에서 SendBuffer 를 매번 MakeShared 해 사용하던것대신 이제 
+    SendBufferRef sendBuffer = GSendBufferManager->Open(4096); 
+을 해서 여유롭게 4096 이라는 4kb 의 크기의 버퍼를 일단 오픈합니다. 
+그러면 sendBuffer 는 오픈한 메모리 시작 주소를 _buffer 로 가지고 있을것인데 여기서 
+	::memcpy(sendBuffer->Buffer(), buffer, len);
+이렇게 데이터를 복사해주고 실제 복사한 데이터 크기인 len만큼을 Close로 줍니다. 
+	sendBuffer->Close(len);
+
+DummyClient에서도 SendBuffer를 사용하는 부분을 위와 같이 수정해주면 됩니다. 

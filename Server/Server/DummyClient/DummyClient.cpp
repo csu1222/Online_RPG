@@ -16,8 +16,11 @@ public:
 	virtual void OnConnected() override
 	{
 		cout << "Connected To Server" << endl;
-		SendBufferRef sendBuffer = MakeShared<SendBuffer>(4096);
-		sendBuffer->CopyData(sendData, sizeof(sendData));
+
+		SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
+		::memcpy(sendBuffer->Buffer(), sendData, sizeof(sendData));
+		sendBuffer->Close(sizeof(sendData));
+
 		Send(sendBuffer);
 	}
 
@@ -27,9 +30,12 @@ public:
 
 		this_thread::sleep_for(1s);
 
-		SendBufferRef sendBuffer = MakeShared<SendBuffer>(4096);
-		sendBuffer->CopyData(buffer, sizeof(buffer));
+		SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
+		::memcpy(sendBuffer->Buffer(), sendData, sizeof(sendData));
+		sendBuffer->Close(sizeof(sendData));
+
 		Send(sendBuffer);
+
 		return len;
 	}
 
