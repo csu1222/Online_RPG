@@ -1,4 +1,6 @@
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\Allocator.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\Allocator.obj
+D:\CPP_Game\Portfolio\Server\Server\ServerCore\BufferReader.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\BufferReader.obj
+D:\CPP_Game\Portfolio\Server\Server\ServerCore\BufferWriter.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\BufferWriter.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\CoreGlobal.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\CoreGlobal.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\CorePch.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\CorePch.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\CoreTLS.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\CoreTLS.obj

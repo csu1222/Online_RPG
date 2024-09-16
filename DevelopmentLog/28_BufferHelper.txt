@@ -1,0 +1,138 @@
+
+
+이제 패킷 직렬화를 알아볼겁니다. 
+
+패킷 직렬화란 지금까지 주고받는 데이터인 SendBuffer 와 버퍼 헤드 들을 네트워크로 효율적으로 보내기 위해 데이터를 바이트화 시키는 것입니다. 
+유명한 패킷직렬화 라이브러리로는 구글에서 배포한 ProtoBuffers, FlatBuffers 등이 있는데 이 프로젝트에서는 ProtoBuffers(protobuf)를 사용할것이긴한데 
+일단은 기존 버퍼를 만들고 데이터를 카피하는 부분을 좀 더 간편하게 바꿔보겠습니다. 
+
+버퍼를 읽고 쓰기 편하게 해줄 BufferReader, BufferWriter 라는 클래스를 추가해줄건데 각 역할을 간단히 말하자면 
+
+BufferReader는 어떤 메모리의 시작 포인터와 그 이후 범위를 가지고 관리하는 클래스입니다. 
+이전 ServerCore에서 이제 SendBuffer를 SendBufferChunk 에서 빈 메모리 시작 주소를 받고 사용한 메모리의 크기를 가지고 범위를 지정한 상태였습니다. 
+그러기 위해서 BufferReader 가 가지고 있어야할 멤버 변수는 BYTE* 타입의 메모리의 시작주소, 버프의 크기, 그리고 버프의 어디를 읽고 있는지를 표현하는 커서 역할의 _pos
+
+기본적으로 데이터를 외부에서 꺼내주는 함수들 Buffer() 버퍼의 시작 주소, Size() 버퍼의 크기, ReadSize() 현재 읽고 있는 위치, FreeSize() 아직 읽지 않은 버퍼의 크기를 추가하고 
+
+이후에 오퍼레이터 오버로드로 ">>" 을 만들어 줍니다. 
+
+template<typename T>
+inline BufferReader& BufferReader::operator>>(OUT T& dest)
+{
+	dest = *reinterpret_cast<T*>(&_buffer[_pos]);
+	_pos += sizeof(T);
+	return *this;
+}
+
+이런 오버로딩인데 BufferReader 객체에 >> 연산자를 사용하면 현재 위치 _pos 의 주소를 템플릿 T 타입으로 캐스팅해서 가져옵니다. 
+T라는 타입을 꺼낸것이니 _pos 에는 T타입 크기만큼을 더해줍니다. 
+
+또 추가할 함수는 Peek 이라고 해서 버퍼의 내용을 알고는 싶지만 꺼내지 않고 들여다만 보는 용도 입니다. 
+예를 들면 버퍼 헤더만 잠시 보고 파싱을 하는 상황입니다. 
+
+그리고 그냥 데이터를 읽는 Read 함수도 만듭니다. 
+
+Peek 은 인자로 데이터를 받아올 포인터와 얼만큼의 크기를 가져올지를 받아서 인자 포인터에 버퍼의 내용을 len 만큼 memcpy 해주고 
+성공여부를 반환합니다. 
+
+Read는 여기서 Peek의 내용에 더해 _pos를 읽은 만큼 전진시킵니다. 
+
+추가로 Peek, Read 를 템플릿 문법을 더해서 어떤 타입 T 포인터를 인자로 주게 되면 그 타입 크기만큼을 len 으로 주도록 할 수도 있습니다. 
+
+
+BufferWriter 도 비슷한 방식으로 만들어 줄겁니다. 
+BufferWriter 도 멤버 변수가 BufferReader 와 똑같이 버퍼 시작 주소와 버퍼 크기, 쓰는중인 위치를 가지고 있을겁니다. 
+
+BufferWriter의 경우도 오퍼레이터 오버로딩이 있는데 이번에는 "<<" 입니다. 
+이때는 두가지 버전으로 만들어 줄건데 인자가 다릅니다. 하나는 const T& src, T&& src 두가지 입니다. 
+각각 왼값 참조와 오른값 참조 를 받아줍니다. (왼값은 주소가 있는 프로그래밍 등식에서 왼쪽에 올 수 있는값, 오른값은 주소가 없는 프로그래밍 등식에서 오른쪽에 오는값)
+버퍼에 작성할때는 왼값이나 오른값이나 건드리지 않고 버퍼를 수정하는것입니다. 
+내용은 현재 버퍼의 _pos 위치에서 인자의 소스를 복사하고 그 크기만큼 _pos를 밉니다. 반환은 버퍼라이터 자신을 반환합니다. 
+즉, 그냥 Write와 같습니다. 
+
+그리고 Peek는 Writer에서 사용하지않고 대신 Write 함수와 Reserve 함수가 있습니다. 
+Write 함수의 인자는 버퍼에 작성할 소스의 시작주소 그리고 소스의 총 크기입니다. 
+Write 함수는 말그대로 버퍼에 소스의 데이터를 복사하는 함수입니다. 
+
+그런데 버퍼를 매번 시작 위치에서 작성하는것은아닙니다. 예를 들어서 맨앞에 버퍼 헤더의 공간을 남겨두고 본 버프를 먼저 작성한 후 나중에 헤더를 기입할 수도 있는데 
+이럴때 사용하는게 Reserve 함수입니다. Reserve는 템플릿 타입을 받는데 템플릿 타입만큼 _pos 를 밀고 실제 버퍼 시작 주소를 반환합니다. 
+
+
+여기까지 BufferReader, BufferWriter 를 만들고 어떤 식으로 사용하게 되는지를 보겠습니다. 
+지금까지 버퍼를 사용할때 이런식으로 사용하고 있었습니다. 
+
+		SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
+
+		BYTE* buffer = sendBuffer->Buffer();
+		((PacketHeader*)buffer)->size = (sizeof(sendData) + sizeof(PacketHeader));
+		((PacketHeader*)buffer)->id = 1; // 1 : Hello Msg
+		::memcpy(&buffer[4], sendData, sizeof(sendData));
+		sendBuffer->Close((sizeof(sendData) + sizeof(PacketHeader)));
+
+매우 지저분하고 실수가 나오기 쉬운 방법인데 GameServer.cpp 부터 보자면 
+
+	char sendData[1000] = "Hello World";
+
+	while (true)
+	{
+		SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
+
+		BufferWriter bw(sendBuffer->Buffer(), 4096);
+
+		PacketHeader* header = bw.Reserve<PacketHeader>();
+		// id(uint64), 체력(uint32), 공격력(uint16)
+		bw << (uint64)1001 << (uint32)100 << (uint16)10;
+		bw.Write(sendData, sizeof(sendData));
+
+		header->size = bw.WriteSize();
+		header->id = 1; // 1 : Test Msg
+
+		sendBuffer->Close(bw.WriteSize());
+
+		GSessionManager.Broadcast(sendBuffer);
+
+		this_thread::sleep_for(250ms);
+	}
+
+이런식입니다. SendBuffer의 시작 주소와 크기를 가지고 BufferWriter 객체 bw 를 만들고 Reserve 를 PacketHeader 타입크기로 예약을했습니다. 
+이때 반환 주소가 헤더의 시작주소입니다. 그대로 PacketHeader로 사용해도 되는 상태입니다. 
+header 를 한번 파싱해두면 위처럼 언제든지 그 내용을 채워줘도 됩니다. 
+
+Reserve를 하면서 bw 의 _pos 가 PacketHeader크기 만큼 밀리게 되므로 이어서 데이터를 채워줄 수 있습니다. 위의 경우처럼 <<연산자로 채워줄 수 있고 
+Write로 채워줄 수도 있을겁니다. 
+이번에는 그냥 문자열만 사용하지 않고 여러 크기의 id(uint64), 체력(uint32), 공격력(uint16) 을 넣어봤습니다. 
+위에서 << 연산자를 연속해서 사용할 수 있는 이유가 << 연산자를 오버로딩할때 반환은 BufferWriter& 를 반환하도록 해줬기 때문입니다. 
+
+이제 데이터를 받는쪽인 DummyClient 코드를 보면 
+
+	virtual int32 OnRecvPacket(BYTE* buffer, int32 len) override
+	{
+		BufferReader br(buffer, len);
+
+		PacketHeader header;
+		br >> header;
+
+		uint64 id;
+		uint32 hp;
+		uint16 attack;
+		br >> id >> hp >> attack;
+
+		cout << "ID: " << id << " HP : " << hp << " ATT : " << attack << endl;
+
+		char recvBuffer[4096];
+		br.Read(recvBuffer, header.size - sizeof(PacketHeader) - 8 - 4 - 2);
+		cout << recvBuffer << endl;
+
+		return len;
+	}
+
+이렇습니다. 데이터를 꺼낼때 >> 연산자와 Read 를 사용하고 있습니다. >> 연산자를 사용할때 주의할점은 SendBuffer에 데이터를 작성한 순서대로 데이터를 꺼내야 한다는 것입니다. 
+위의 Read에서 읽을 데이터 크기를 지저분하게 작성한것은 RecvBuffer에 버퍼헤더와 id, hp, attack 데이터 들도 들어있었기 때문입니다. 
+
+당연히 이런 하드코딩 방식으로 해도 되는건 아니고 이후 알아볼 방법에서는 버퍼 헤더에 처음부터 가변 길이 데이터들의 크기를 써 놓는 방식으로 해결합니다. 
+
+
+오늘 작업한 내용을 보면 SendBuffer를 만들면서 처음에는 버퍼헤더를 작성하고 이어서 아이디, 체력, 공격력 그리고 Hello World! 문자열을 작성한 후 
+수신하는 DummyClient 쪽에서도 보낸 순서 그대로 파싱해 읽어 냈습니다. 
+
+이것이 바로 프로토콜의 설계 기초라고 할 수 있습니다. 
