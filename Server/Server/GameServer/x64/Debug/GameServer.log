@@ -1,5 +1,2 @@
 ﻿  GameServer.cpp
-  ServerPacketHandler.cpp
-D:\CPP_Game\Portfolio\Server\Server\GameServer\ServerPacketHandler.cpp(17,2): warning C4065: switch문에 'default'가 있으나 'case' 레이블이 없습니다.
-  코드를 생성하고 있습니다...
   GameServer.vcxproj -> D:\CPP_Game\Portfolio\Server\Server\Binary\Debug\GameServer.exe
