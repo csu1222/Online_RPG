@@ -1,0 +1,162 @@
+
+
+기본적인 패킷 직렬화 방법에 대한 실습을 해봤으니 본격적으로 프로젝트에 적용할 직렬화 라이브러리를 추가할것인데 
+구글에서 배포하는 Protobuf 를 도입할것입니다. 
+
+Protobuf를 사용하기 위해서는 먼저 Protobuf compiler 를 설치해야합니다. 구글에서 Protobuf를 검색해 다운로드 링크를 따라가보면 
+protoc-버전-win64.zip 이라는 파일을 다운받으면 됩니다. 
+
+이 protoc 는 이전에 설계했던 패킷 설계구조를 xml 파일로 만들고 있었는데 나중에 이 xml 파일을 툴을 통해 실습해봤던 PKT_S_TEST 코드와 같은 것을 생성해주게 됩니다. 
+protobuf 만의 문법으로 패킷설계를 해야하는데 그것을 proto 파일이라고 합니다. 
+
+결국 protoc 가 사용하는 프로그래밍 언어에 맞는 클래스로 만들어주는 것입니다. 
+다운받은 압축 파일을 해제한 후 Server 프로젝트 디렉토리에 붙여 넣어줄겁니다. Server.sln 이 있는 위치로 그냥 붙여 넣어 줍니다.
+
+저의 경우 protoc-28.2-win64 버전이고 폴더 이름도 똑같습니다. 안에 bin 폴더 까지 들어가면 protoc 실행파일이 있는데 이것이 중요합니다. 
+
+간단하게 proto 파일 변환 실습을 해보자면 protoc 가 있는 위치에 새로 텍스트를 하나 만들고 Proto.proto 라는 이름으로 수정합니다. 
+이 파일을 문서편집기로 열어서 작성하면 되는데 proto 문법으로 작성해야 한다고 했습니다. 이 proto 문법은 구글의 Protobuf 공식 문서에 나와 있습니다. 
+버전이 proto2, proto3 두가지가 있는데 지금 사용하는 버전은 proto3 버전 문법을 보면 됩니다. 
+
+<?xml version="1.0" encoding="utf-8"?>
+<PDL>
+	<Packet name="S_TEST" desc="테스트 용도">
+		<Field name="id" type="uint64" desc=""/>
+		<Field name="hp" type="uint32" desc=""/>
+		<Field name="attack" type="uint16" desc=""/>
+		<List name="buffs" desc="">
+			<Field name="buffId" type="uint64" desc=""/>
+			<Field name="remainTime" type="float" desc=""/>
+		</List>
+	</Packet>
+</PDL>
+
+xml 로 이런 구조의 패킷설계를 proto3 문법으로 변환하면 아래와 같습니다. 
+
+syntax = "proto3";
+package Protocol;
+
+message BuffData
+{
+	uint64 buffId = 1;
+	float remainTime = 2;
+	repeated uint64 victims = 3;
+}
+
+message S_TEST
+{
+	uint64 id = 1;
+	uint32 hp = 2;
+	uint16 attack = 3;
+	repeated BuffData buffs = 4;
+}
+syntax 로 어떤 언어를 사용할지 지정하고 BuffData, S_TEST 라는 message 를 정의 하는데 message 가 C++ 에서 struct 와 비슷한 결입니다. 
+
+이 proto 파일을 protoc 로 돌리면 이 구조대로 직렬화 코드가 생성이 되는것입니다. 
+변환이 된 코드는 일만 class 로 사용도 가능하기때문에 그걸 그냥 다른 클래스에서 멤버 변수로 들고 있어도 됩니다. 
+
+
+이제 정식으로 Protobuf를 어떻게 사용할지 알아보겠습니다. 
+
+실습한 Proto.proto 파일을 protoc로 실행할건데 protoc는 C++ 뿐만아니라 C#, java 등등 온갖언어를 지원하기 때문에 protoc 에게 C++ 코드로 변환해 달라고 지정해야합니다. 
+그러기 위해 protoc 를 시작하면서 인자들을 같이 넘겨줘야합니다. 
+이 방법도 Protobuf 공식 문서에 나와 있습니다. 
+
+Proto3 문법 페이지 아래부분에 Generating Your Class 라고 되어 있는 부분이 각언어들의 클래스로 코드를 생성해주는 인자입니다. 
+CPP 의 경우는 --cpp_out 입니다. 
+
+protoc.exe -I=./ --cpp_out=./ ./Protocol.proto
+IF ERRORLEVEL 1 PAUSE
+
+이런 코드를 사용하면 protoc.exe 파일을 실행할때 proto 파일이 현재 bat 파일이 위치한 자리에 있고 컴파일한 파일을 현재 디렉토리에 출력하고 컴파일할 파일이 같은 경로에 있는 Protocol.proto 을 컴파일 할것이라는 뜻입니다.
+그리고 에러 레벨 1 일때 실행 정지한다는 bat 파일 문법도 추가 했습니다. 
+
+이 상태에서 GenPacket.bat 을 실행하면 프롬프트가 뜨는데 잘 실행되거나 문제가 생기면 로그가 찍히는데 
+현재는 uint16 이라는게 정의가 되지 않았다고 뜹니다. 왜 이러냐면 proto3 문법에서 int 타입이 C++ 에서 지금까지 사용했던 int32 타입이라고 보장이 되지 않습니다. Variable Length 라고 적혀 있는데 
+4바이트가 아닐 수 있습니다. 최대 4바이트를 사용하긴 하지만 그안에 들어있는 값에 따라 크기가 달라질 수 있는것입니다. 
+이런식으로 uint16 이라는 것이 proto3 문법에 애초에 없습니다. 이럴 때는 가장 가까운 타입인 uint32 로 그냥 만들어 주면 사용한 값에 따라 적절히 크기가 달라 질 것입니다. 
+
+다시 GenPacket.bat 을 실행하면 Protocol.pb.cc, Protocol.pb.h 라는 파일이 생깁니다. 이후 나중에는 이 GenPacket.bat 을 실행하면 생성된 파일이 프로젝트 안으로 복사가 되도록 만들어 줄건데 지금은 일단 
+Protobuf 테스트용이기 때문에 생성된 파일을 직접 복사 붙여넣기를 할것입니다. 
+GameServer, DummyClient 프로젝트 폴더에 각각 붙여넣고 비주얼 스튜디오에도 추가해줍니다. 
+
+하지만 이 상태에서는 가져온 파일에 붉은 줄이 막 그어져서 에러가 뜰건데 지금 한것은 그냥 패킷 설계대로 코드만 생성한것이고 이 코드에서 사용하는 라이브러리는 아직 가져오지 않았습니다. 
+
+결국 protoc 라는 컴파일러만 가지고는 protobuf를 사용할 수 없고 이제 라이브러리를 가져와야 합니다. 
+
+pch 관련 에러는 Protocol.pb.cc 파일들의 속성에서 C/C++ 미리 컴파일된 헤더 옵션에 미리 컴파일된 헤더 사용안함 으로 바꾸면 됩니다. 
+
+라이브러리를 가져오는 방법은 친절하게 라이브러리를 바로 배포하는 방법이 있고 아니면 소스코드를 공개하고 여기서 필요한 파일을 알아서 가져가 사용하는 방식이 있는데 Protobuf는 
+후자의 방법을 사용해야합니다. 
+
+파일 정리를 할건데 솔루션 디렉토리에 Libraries 디렉토리를 만들고 여기에 ServerCore lib 파일들을 두었었습니다. 이제 여기를 
+Libraries/ 아래로 두개의 디렉토리를 만듭니다. Include, Libs 디렉토리를 만들고 기존 ServerCore.lib 파일들이 들어있는 Debug, Release 폴더는 Libraries/Libs/ServerCore 위치로 이동합니다. 
+이제 ServerCore 출력 파일들의 위치가 변경 되었는데 비주얼 스튜디오 설정을 바꿔서 변경된 위치에 출력 파일이 오도록 해줘야합니다. 
+GameServer 프로젝트의 라이브러리 디렉토리를 $(SolutionDir)Libraries\Libs\;$(LibraryPath) 로 수정하고 포함 디렉토리도 $(SolutionDir)Libraries\Include\;$(SolutionDir)ServerCore\;$(IncludePath)
+이 줄을 추가합니다. 
+DummyClient 도 마찬가지 작업을 해줍니다. 
+
+그러면 GameServer, DummyClient 두 프로젝트에 있는 pch.h 의 코드에서 설정해준 라이브러리 디렉토리, 포함디렉터리로 부터 상대 경로로 어떤 파일을 찾으라고 설정 되어있는데 
+이 코드 앞에 조금 수정을 해야합니다. Debug 모드와 Release 모드 두가지 경로를 설정할때 맨 앞에 ServerCore\\ 이 코드를 추가하면 됩니다. 
+
+
+이제 Libraries 아래로 Protobuf 관련 파일들을 가져올겁니다. 
+구글에서 google protobuf c++ librariy 라고 검색하면 첫번째 링크로 구글에서 관리하는 깃허브 사이트가 뜹니다. 
+여기서 적당한 버전을 골라 받습니다. 다운받아 압축을 풀면 안에 여러 파일들이 있습니다. 이 소스 코드로 빌드를 해서 라이브러리 파일을 가져와야한다고 했는데 따로 sln 파일이 없습니다. 
+이 코드는 CMake 라는 프로그램을 가지고 빌드를 해야합니다. 
+
+역시 구글에서 CMake 를 설치합니다. CMake를 열고 소스코드가 어디있는지 입력하는 칸이 있는데 여기에 Protobuf c++ 코드 받은 위치를 넣습니다. 
+그리고 결과물을 어디에 받을지도 선택할 수 있습니다. 
+
+Generate 를 누르면 어떤 버전의 비주얼 스튜디오를 사용하는지가 나오고 그대로 실행하면 됩니다. 
+하지만 처음 시도에는 에러가 날것입니다. 몇가지 체크박스할 것이 나오는데 그중에서 PROTOC_BINARIES, SHARED_LIBS 두가지 만 체크하고 다시 시도합니다. 
+이러면 출력 디렉토리에 sln 파일이 생기고 비주얼 스튜디오로 연 후 Debug, Release 각 모드에서 한번씩 다시 빌드를 해주면 됩니다. 
+(어떤 오류때문에 최신 버전으로 하면 설치가 안되고 일정 버전 이전 것으로 해야 성공합니다.)
+
+빌드가 된 후 생성된 라이브러리파일을 가져다가 프로젝트에 추가하면 됩니다. 
+가져올 파일들은 빌드된 폴더에서 Debug 폴더 안에 libprotobufdd 가 이름인 시리즈들을 가져와야합니다. 복사해 와서 Libraries/Libs/Protobuf/Debug 위치로 복사합니다. 
+또 Protobuf 빌드 디렉토리 Release 에서 libprotobuf 이름 파일들을 복사하고 Libraries/Libs/Protobuf/Release 에 복사합니다. 
+
+이제 Protobuf 라이브러리를 가져온 것입니다. 여기에 한가지 더 필요한데 Include 디렉토리에 Protobuf 가 사용하는 include 소스코드들을 가져와야합니다. 
+Protobuf 빌드 디렉토리에서 src 소스 디렉토리가 있고 여기서 다시 google 디렉토리가 있는데 이 디렉토리에 소스들이 다 있기 때문에 이것을 복사해 가져옵니다. 
+
+
+다음은 Protobuf를 활용한 테스트를 해보겠습니다. 실습했던 ServerPacketHandler, ClientPacketHandler 코드를 수정하겠습니다. 
+
+먼저 ServerPacketHandler 코드에서는 이제 PacketIterator 와 PacketList 두 클래스는 사용하지 않을겁니다. 
+그리고 pragma pack(1) 로 감싼 부분의 PKT_S_TEST 구조체도 다 사용하지 않을것이라 삭제합니다. 
+남은건 패킷 타입을 enum으로 지정해놓은 부분과 ServerPacketHandler 클래스 뿐입니다. 지금 지운 코드들은 다 Protobuf 에 포함되어 있는 기능들일것입니다. 
+또 GameServer.cpp 파일에서도 기존 BufferWriter를 사용해 패킷을 만들어 SendBuffer를 만들고 BroadCast 하는 부분에서 BufferWriter 부분을 없애도 Protobuf 기능으로 다시 만들어 볼겁니다. 
+
+사용법을 알기 위해 Protocol.pb.h 를 열어보면 매우 복잡해 읽기 힘든데 이걸 다 이해할 필요는 없고 
+Protobuf 의 원리는 따로 임시 객체를 만들어 그 안에 전송할 데이터를 넣고 이것을 직렬화해 전송하는것입니다. 
+
+#include "Protocol.pb.h" 
+
+void main()
+{
+	// 이렇게 Protobuf 로 생성한 S_TEST 패킷 객체를 만듭니다. 
+	Protocol::S_TEST pkt;	
+
+	// 구체적인 기능은 pkt에 . 을 찍어 하나씩 살펴보며 사용해도 됩니다. Protocol.proto 파일에 설계한 패킷 구조 그대로 생성 되었기 때문에 채울 데이터를 알 수 있습니다. 
+	pkt.set_id(1000);
+	pkt.set_hp(100);
+	pkt.set_attack(10);
+	{
+		Protocol::BuffData* data = pkt.add_buffs();
+		data->set_buffid(100);
+		data->set_remaintime(1.2f);
+		data->add_victims(4000);
+	}
+	{
+		Protocol::BuffData* data = pkt.add_buffs();
+		data->set_buffid(200);
+		data->set_remaintime(2.5f);
+		data->add_victims(1000);
+		data->add_victims(2000);
+	}
+
+}
+
+그리고 이렇게 임시객체를 만들었으면 임시객체를 직렬화해서 버퍼로 만드는 과정이 필요한데 이 코드를 함수화 하는게 좋을것입니다. 
+ServerPacketHandler 에 _MaketSendBuffer라는 이름으로 만들었습니다. 
