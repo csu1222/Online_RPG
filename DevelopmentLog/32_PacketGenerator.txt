@@ -1,0 +1,85 @@
+
+Protobuf로 패킷 설계한 대로 코드를 생성하는 것 까지는 했지만 좀 더 자동화작업을 하겠습니다.
+
+자동화 할 부분은 Proto 파일로 설계를 한 후 GenPacket.bat 파일을 따로 실행해 주는것 
+생성된 pb.h pb.cc 파일들을 프로젝트폴더에 복사하는 것
+또 ServerPacketHandler 를 보면 만든 패킷종류 마다 enum으로 타입으로 등록하고 패킷 타입마다 맞는 처리를 하도록 함수를 연결해 줬던것
+
+이런 부분들을 자동화 할 수 있습니다. 물론 꼭 하지 않아도 되지만 그만큼 손이 많이 가게되어 시간이 소모되고 또 직접 하다보면 버그가 날 확률이 늘어 나는 것입니다. 
+
+
+한번은 수동으로 만들어보면서 어떤걸 자동으로 만들면 좋을지 생각해보면 좋겠습니다. 
+지금까지 테스트 용으로 Protocol.proto 파일이 하나 있습니다. S_TEST 와 BuffData 라는 message 두가지가 있었습니다. 
+이중에 S_TEST는 패킷설계로 설계한게 맞지만 BuffData 는 S_TEST 에 사용할 sturct 용으로 만들었습니다. 
+
+용도에 따라 proto 파일을 나눠두는게 가독성이 좋을것이기 때문에 나누는 방식으로 갈것입니다. 나중에 가서는 컨텐츠 별로 패킷들을 나눠두는게 나을것입니다. 
+하나의 proto 파일로 뭉쳐두면 가독성에서도 안좋고 조금만 수정해도 모든 proto 코드를 다시 빌드해야해서 시간이 너무 많이 듭니다. 
+
+proto 파일을 3개로 나눠서 실습할건데 패킷 설계가 되어 있는 Protocol.proto 와 구조체 역할을 할 message 들이 있는 Struct.proto 파일 또 Enum 값을 관리할 Enum.proto 파일입니다. 
+Enum.proto 에서는 예시로 플레이어 타입이 있다고 할것입니다. None, Knight, Mage, Archer 라는 타입 4가지가 있다고 하겠습니다. 
+Struct.proto 파일은 이전 테스트때 BuffData message 를 관리합니다. 
+Protocol.proto 파일은 기존 S_TEST 패킷을 가지고 있을겁니다 
+
+그런데 이렇게 proto 파일이 3개가 되었으면 protoc.exe 로 3개의 proto 파일을 다 컴파일해야합니다. 
+이 컴파일을
+protoc.exe -I=./ --cpp_out=./ ./Protocol.proto 
+이런 코드로 실행을 하는데 이것과 마찬가지로 Struct.proto, Enum.proto 도 해주면 됩니다. 
+
+protoc.exe -I=./ --cpp_out=./ ./Enum.proto
+protoc.exe -I=./ --cpp_out=./ ./Struct.proto
+protoc.exe -I=./ --cpp_out=./ ./Protocol.proto
+IF ERRORLEVEL 1 PAUSE
+
+이 bat 파일을 실행하면 현재 디렉토리에 각 proto 파일에 해당하는 pb.h, pb.cc 파일들이 생성됩니다. 
+다음에 이 생성된 파일들을 GameServer, DummyClient 폴더에 직접 복사하고 visual studio 에서도 프로젝트에 추가해주어야 합니다. 이 작업도 자동화 해주면 좋겠습니다. 
+
+XCOPY /Y Enum.pb.h "../../../GameServer"
+XCOPY /Y Enum.pb.cc "../../../GameServer"
+XCOPY /Y Struct.pb.h "../../../GameServer"
+XCOPY /Y Struct.pb.cc "../../../GameServer"
+XCOPY /Y Protocol.pb.h "../../../GameServer"
+XCOPY /Y Protocol.pb.cc "../../../GameServer"
+
+XCOPY /Y Enum.pb.h "../../../DummyClient"
+XCOPY /Y Enum.pb.cc "../../../DummyClient"
+XCOPY /Y Struct.pb.h "../../../DummyClient"
+XCOPY /Y Struct.pb.cc "../../../DummyClient"
+XCOPY /Y Protocol.pb.h "../../../DummyClient"
+XCOPY /Y Protocol.pb.cc "../../../DummyClient"
+
+bat 파일 문법으로 이 코드들이 생성된 파일들을 GameServer, DummyClient 폴더에 복사하고 이미 같은이름 파일이 있다면 덮어쓰겠다는 의미입니다. 
+그런데 이문법은 현재 bat 파일을 실행한 위치부터 상대 위치로 찾아서 실행하는 코드인데 만약 bat 파일을 본래 위치가 아니라 다른 곳에서 실행했다면 그 위치부터 상대 위치를 찾게 되는데
+그게 아니라 bat 파일이 있는 위치부터 실행하도록 하려면 아래와 같은 코드를 맨 위에 넣어주면 됩니다. 
+
+pushd %~dp0
+
+이 GenPacket.bat 을 실행하면 이제 정상적으로 파일들이 위치해야합니다. 
+새로 생성된 pb.cc 파일들은 다시 모두 pch 사용하지 않도록 속성에서 수정해줘야 합니다.
+
+일단 여기까지 proto 파일들을 수정하고 GenPacket.bat 을 실행하면 컴파일된 파일들이 프로젝트에 위치하게는 되었습니다. 
+여기서 더 나아가 프로젝트를 빌드할때 알아서 수정한 proto 파일들을 컴파일하고 복사까지 시키고 싶습니다. 
+
+먼저 GameServer, DummyClient 프로젝트 설정에서 빌드 전 이벤트를 CALL $(SolutionDir)Common\Protobuf\bin\GenPackets.bat 로 해주면 프로젝트 빌드 때마다 GenPacket.bat 을 실행해줍니다. 
+그런데 항상 실행해주는건 아니고 프로젝트 내 파일의 변경점이 있을때 실행을 해주는데 지금은 proto 파일을 수정해도 이것들의 수정점을 추적하지 못해 빌드 전 이벤트가 실행이 되지 않는데 
+GameServer.vcxproj, DummyClient.vcxproj 를 다른 텍스트 에디터로 열어서 하단 ItemGroup 태그 밑에 
+
+  <ItemGroup>
+    <UptoToDateCheckInput Include="..\Common\Protobuf\bin\Enum.proto" />
+    <UptoToDateCheckInput Include="..\Common\Protobuf\bin\Protocol.proto" />
+    <UptoToDateCheckInput Include="..\Common\Protobuf\bin\Struct.proto" />
+  </ItemGroup>
+
+이 코드도 붙여 넣으면 proto 파일들이 수정될때도 빌드 전 이벤트가 동작합니다. 
+
+
+이 다음 생각해볼부분은 패킷들마다 아이디를 부여해 관리하게 될건데 이 아이디를 하드코딩으로 부여하는것은 실수의 위험과 해킹의 위험때문에 추천하지 않고 자동화 툴을 통해 아이디를 발급하는걸 
+추천합니다. 
+직접 만들어보면 ServerPacketHandler 코드를 수정할건데 Protocol.proto 파일 코드를 보고 ServerPacketHandler 코드를 만들어줄것입니다. 
+Protocol.proto 에 만약 S_TEST, S_LOGIN 두가지 패킷 설계가 되어있다면 두개의 id를 uint16 타입 enum으로 관리하게 됩니다. 
+패킷을 넘겨주면 SendBuffer로 만드는 함수로 ServerPacketHandler::MakeSendBuffer 함수가 있었습니다. 그런데 인자를 패킷타입마다 다르게 받아주면 각 패킷에 따라 버퍼를 만들어 줄 수 있습니다. 
+그래서 패킷의 종류에 따라 계속 만들어 줘야 하기에 이것도 자동화가 되면 좋습니다. 
+
+패킷 타입을골라주는것도 switch case 문으로 골라주었는데 코드를 작성하기도 힘들고 가독성도 안좋기 때문에 다른 방법을 사용 할 수 있습니다. 
+사용할 함수들을 그냥 큰 크기의 함수타입 배열로 관리하는 방법은 메모리상 손해를 보지만 대신 인덱싱에 이득을 봅니다. 
+
+패킷핸들함수 배열을 초기화 할때 먼저 모든 원소들을 싹 INVALID로 밀고 사용할 패킷 타입 enum 값에 해당하는 인덱스만 실제 패킷핸들함수로 채워줍니다.
