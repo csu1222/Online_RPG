@@ -20,7 +20,7 @@ class Service : public enable_shared_from_this<Service>
 {
 public:
 	Service(ServiceType type, NetAddress address, IocpCoreRef core, SessionFactory factory, int32 maxSessionCount = 1);
-	virtual				~Service();
+	virtual ~Service();
 
 	virtual bool		Start() abstract;
 	bool				CanStart() { return _sessionFactory != nullptr; }
@@ -28,6 +28,7 @@ public:
 	virtual void		CloseService();
 	void				SetSessionFactory(SessionFactory func) { _sessionFactory = func; }
 
+	void				Broadcast(SendBufferRef sendBuffer);
 	SessionRef			CreateSession();
 	void				AddSession(SessionRef session);
 	void				ReleaseSession(SessionRef session);
@@ -37,7 +38,7 @@ public:
 public:
 	ServiceType			GetServiceType() { return _type; }
 	NetAddress			GetNetAddress() { return _netAddress; }
-	IocpCoreRef&		GetIocpCore() { return _iocpCore; }
+	IocpCoreRef& GetIocpCore() { return _iocpCore; }
 
 protected:
 	USE_LOCK;
