@@ -31,3 +31,139 @@ JobQueue 한곳만 락을 잡으면 여기를 처리하는 쓰레드만 묵이�
 이 원시적인 JobQueue 방식의 의미를 요약하자면 락을 거는 부분을 줄이는 것입니다. 컨텐츠 코드마다 락을 걸기 보다는 JobQueue 에 넣고 빼는 잠깐씩만 락을 걸고 
 일감을 처리할때도 한 쓰레드만 락을 거는것입니다. 
 개선할 부분은 Job 클래스들을 매번 직접 만드는 것을 피하는것일겁니다. 
+
+
+------------
+
+
+1 세대 Job 방식을 알아봤습니다. 일감의 종류마다 직접 클래스를 만들어 Job으로 사용하는 방식이었습니다. 그나마 장점은 직관적으로 코드를 읽기가 쉽다는 것입니다. 
+두번째 방식은 공용 클래스로 만들어 일감을 관리하는 방법입니다. 
+
+위에서 알아 봤던 Job 은 어떤 역할을 하는 클래스를 사용하는 방법이었고 사실 이것이 함수자 Functor 입니다. 
+
+예를 들어 타겟에게 어떤 값만큼 힐링을 하는 기능을 함수로 만들고 이 함수를 Job 으로 만드는 것이 목표라고 하겠습니다. 
+그러면 새로 클래스를 만들어 () 오퍼레이터 오버로딩을 정의해 들고 있는 함수를 실행하는것이 함수자였습니다. 
+함수자로 사용할 함수가 인자를 받을때가 문제가 되는데 이것을 템플릿으로 받게 되면 먼저 함수의 반환 값 타입, 인자들을 받아줘야합니다. 
+
+그런데 함수마다 인자의 갯수가 다른게 문제입니다. 
+인자가 없는 함수부터 인자의 수가 N개 인 함수 까지 템플릿을 각각 만들어 주는것은 어렵습니다. 
+
+템플릿 문법에서 인자 갯수만큼 틀을 만들면서 typename 을 똑같게 쓰면 에러가 난다고 합니다. 
+이럴때 사용하는 템플릿 문법이 
+
+template<typename... Args> 입니다. 
+
+이 Args 를 펑터에서 멤버변수로 들고 있어야 할때 사용하는게 std::tuple<Args...> 입니다. 이 타입으로 변수를 만들어 주면 됩니다. 
+
+또 Job 을 만들때 함수를 함수포인터로 넘겨줘 변수로 들고 있고 실행할때는 C++17 에서 추가된 
+std::apply(func, tuple) 을 호출하면 됩니다. 
+
+이 apply 라는 것이 어떤 원리인지를 잠깐 알아보자면 
+
+// C++11 apply
+template<int... Remains>
+struct seq
+{};
+
+template<int N, int... Remains>
+struct gen_seq : gen_seq<N - 1, N - 1, Remains...>
+{};
+
+template<int... Remains>
+struct gen_seq<0, Remains...> : seq<Remains...>
+{};
+
+template<typename Ret, typename... Args>
+void xapply(Ret(*func)(Args...), std::tuple<Args...>& tup)
+{
+	xapply_helper(func, gen_seq<sizeof...(Args)>(), tup);
+}
+
+template<typename F, typename... Args, int... ls>
+void xapply_helper(F func, seq<ls...>, std::tuple<Args...>& tup)
+{
+	(func)(std::get<ls>(tup)...);
+}
+
+template<typename T, typename Ret, typename... Args>
+void xapply(T* obj, Ret(T::* func)(Args...), std::tuple<Args...>& tup)
+{
+	xapply_helper(obj, func, gen_seq<sizeof...(Args)>(), tup);
+}
+
+template<typename T, typename F, typename... Args, int... ls>
+void xapply_helper(T* obj, F func, seq<ls...>, std::tuple<Args...>& tup)
+{
+	(obj->*func)(std::get<ls>(tup)...);
+}
+
+어떤 내용인지 하나도 이해가 안갈 수 있는데 풀어서 설명해보겠습니다. 
+
+일단 tuple 이라는 컨테이너가 뭘하는것이냐면 여러 데이터들을 모아두는 것입니다. 
+설명이 막연한데 예를 들면 
+
+auto tup = std::tuple<int, int>(1, 2);
+
+이렇게 <> 안에 넣은 타입대로 값을 저장합니다. tuple 에 저장한 값을 꺼내려면 std::get<index>(tuple) 로 하면됩니다. 위의 tup 을 예시로 하면 
+auto val0 = std::get<0>(tup) // 1 추출
+auto val1 = std::get<1>(tup) // 2 추출
+
+이런 tuple 과 get 을 통해서 variadic template 가변길이 템플릿을 통해 Job 에서 사용할 인자들을 저장하고 꺼냅니다. 
+xapply_helper 를 보면 func 를 호출한 () 안에서 tup의 내용물들을 꺼내서 호출하고 있습니다. 
+이때 seq 라는 struct 로 ls 인자를 받고 있습니다. 
+
+
+auto s = gen_seq<3>(); 
+이런 gen_seq 가 있다고 하겠습니다. 두번째 gen_seq 오버라이드에 따라 
+gen_seq<2, 2> 가 있다고 볼 수 있습니다. 그러면 뒤의 2 가 다시 Remains 로 인식되어 
+gen_seq<1, 1, 2> 로 확장이 되고 다시 1 이 N 이 되고 1, 2 가 Remains 이 되어 
+gen_seq<0, 0, 1, 2> 로 확장되는데 이게 가장 근사한 버전이 0 과 Remains 을 받는 버전입니다. 
+여기로 들어오면 seq<Remains> 만 상속받고 끝나기 때문에 결국 
+seq<0, 1, 2> 가 나옵니다. 
+
+그러면 이 gen_seq 가 사용된 부분을 보면 xapply 에서 xapply_helper 를 호출할때 sizeof(Args)을 gen_seq 에 들어갑니다. 그러면 호출할 함수의 인자수 만큼
+seq<0, 1, 2, 3 ... > 이 xapply_helper 에 인자로 들어가고 0, 1, 2, 3 .. 부분이 get<ls>(tup) 의 ls 부분에 들어갑니다. 
+
+이러면 다시 (func)(get<0>(tup), get<1>(tup), get<2>(tup) ...) 이렇게 호출됩니다. 
+
+결국 템플릿을 잘 사용하게되면 인자도 알아서 함수 포인터에 넘겨주게 됩니다. 
+
+
+이때 한가지 문제는 지금 사용한 함수포인터의 타입을 보면 
+
+	using FuncType = Ret(*)(Args...);
+
+이런 형태인데 이 버전이 모든 함수 타입을 받아 줄 수는 없습니다. 
+다른 클래스 내부에 있는 멤버 함수같은 경우가 그렇습니다. 
+이 경우를 커버하기 위해 MemberJob 이라는 클래스를 만듭니다. 
+템플릿 타입을 T 로 하나 더 받아주고 이것을 멤버 함수가 있는 클래스 타입을 받아줍니다. 
+
+
+template<typename T, typename Ret, typename... Args>
+class MemberJob : public IJob
+{
+	using FuncType = Ret(T::*)(Args...);
+
+public:
+	MemberJob(T* obj, FuncType func, Args... args) : _obj(obj), _func(func), _tuple(args...)
+	{
+
+	}
+
+	virtual void Execute() override
+	{
+		//std::apply(_func, _tuple); // C++17
+		xapply(_obj, _func, _tuple);
+	}
+
+private:
+	T* _obj;
+	FuncType	_func;
+	std::tuple<Args...> _tuple;
+};
+
+오브젝트를 받는 타입의 xapply, xapply_helper 도 추가하면됩니다. 
+
+직접 apply 를 구현해 봤는데 C++ 17 이후에서는 그냥 사용할 수 있는 기능입니다. 
+
+위의 첫번째 Job 방식에서 바뀐것은 이제 EnterJob, LeaveJob 같은 클래스를 매번 만드는게 아니라 사용할 함수를 넣어 
