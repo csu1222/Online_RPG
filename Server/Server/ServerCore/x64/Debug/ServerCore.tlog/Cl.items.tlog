@@ -5,13 +5,14 @@ D:\CPP_Game\Portfolio\Server\Server\ServerCore\CoreGlobal.cpp;D:\CPP_Game\Portfo
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\CorePch.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\CorePch.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\CoreTLS.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\CoreTLS.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\DeadLockProfiler.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\DeadLockProfiler.obj
+D:\CPP_Game\Portfolio\Server\Server\ServerCore\GlobalQueue.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\GlobalQueue.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\IocpCore.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\IocpCore.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\IocpEvent.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\IocpEvent.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\Job.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\Job.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\JobQueue.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\JobQueue.obj
-D:\CPP_Game\Portfolio\Server\Server\ServerCore\JobSerializer.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\JobSerializer.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\Listener.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\Listener.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\Lock.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\Lock.obj
+D:\CPP_Game\Portfolio\Server\Server\ServerCore\LockQueue.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\LockQueue.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\Memory.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\Memory.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\MemoryPool.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\MemoryPool.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\NetAddress.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\NetAddress.obj
