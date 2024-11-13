@@ -1,0 +1,88 @@
+
+데이터 베이스 연동을 해볼겁니다. 
+
+데이터 베이스는 여러 제품군이 있지만 각각 연동 방법이 다르면 사용하기 매우 힘들겠습니다. 
+이것을 ODBC 라는 것을 사용해 DB에 접근해 데이터를 쓰거나 읽을것이고 연동 자체는 각 DB 제조사에서 알아서 맡을겁니다.
+
+ServerCore 에 DB 필터를 만들어 여기에 코드를 만들겠습니다. DBConnection 이라는 DB 연결을 하는 클래스와 이 DBConnection을 관리하게될
+DBConnectionPool을 만들겁니다. 
+이코드들은 너무 자세히 알지는 않아도 되고 필요할때 찾아서 사용하면 되는 정도입니다. 
+
+대략 어떻게 동작하는지를 보겠습니다. 
+
+먼저 DBConnection에서 sql.h, sqlext.h 두가지 헤더를 추가합니다. 
+그 후 DBConnectionPool 에서 DBConnection 을 추가합니다. 이후 DBConnectionPool에 락을 사용할것이고 SQLHENV 라는 타입의 변수를 들고 있을겁니다. 
+SQLHENV는 sql.h, sqlext.h 헤더를 추가해서 사용가능해졌습니다. SQLHENV 가 무슨 의미냐면 SQL 은 DB 이름이고 H는 핸들 ENV 는 환경입니다. 
+그래서 SQL의 환경을 담당하는 핸들이라는 뜻입니다. 이 타입 변수 이름을 _environment 라고 하고 값을 SQL_NULL_HANDLE이라고 주겠습니다.
+또 DBConnection 을 가지고 있을 Vector 도 _connections 라는 이름으로 들고 있을겁니다. 
+
+멤버함수로는 연결하는, 즉 DBConnectionPool을 만들어주는 Connect 함수를 사용할건데 인자로 먼저 몇개의 DBConnection 을 사용할지를 int32 로 받아줄것이고 
+또 const WCHAR* 타입으로 connectionString 을 받아주는데 이 문자열은 어떤 DB 랑 어떤 환경, 조건으로 연결할지를 받아줄겁니다. 
+다음으로 Clear 함수, DBConnection을 꺼내는 Pop 함수, 밀어 넣는 Push 함수를 만들어 줄겁니다. 
+Pop, Push 에서 Shared_ptr 을 쓰지 않고 그냥 생 포인터를 쓸건데 왜 참조 카운터 없이 사용하냐면 DB를 사용할때 DB의 내용을 지울일은 사실상 없고 
+바로 꺼내 내용을 참조하고 다시 곧바로 넣어둘거라 그렇습니다. 이 경우가 특별한 경우 입니다. 
+
+Connect, Clear, Pop, Push 함수의 내용을 채워줄겁니다. 여기서 사용하는 함수들의 자세한 내용을 다 외울 필요는 없고 대강 어떤 일을 하는지만 알고 넘어갑니다.
+Connect 에서는 처음에 서버가 뜰때 한번만 호출해줄겁니다. 일단 락을 걸고 SQLAllocHandle 이라는 함수를 호출하는데 여러 필요 인자를 넣고 
+그 반환값이 SQL_SUCCESS 인지 체크해 아니라면 false 로 리턴합니다. 
+다음으로 SQLSetEnvAttr 함수를 호출합니다. 다음이 중요한데 인자로 받은 DBConnection 갯수만큼을 for 루프를 돌면서 
+DBConnection 객체를 만들고 이후 만들어줄 DBConnection::Connect 함수를 _environment , connectionString 을 인자로 줄겁니다. 
+이후 _connections 에 push_back 합니다. 
+
+Clear 는 그냥 SQLFreeHandle 함수로 정리를 해줍니다. 그리고 _connections 도 하나씩 꺼내서 DBConnection 객체들을 다 delete 해줍니다. 
+이 Clear는 따로 호출하지는 않고 DBConnectionPool의 소멸자에서 호출할겁니다. 
+
+Pop은 _connections 가 비었는지 체크 후 하나 꺼내줄꺼고 
+Push 함수에서도 인자를 받아서 _connections 에 넣어줄겁니다.
+
+다음 클래스 DBConnection 을 만들겠습니다. 
+멤버 변수 부터보면 SQLHDBC 타입 SQL 핸들인데 데이터베이스 커넥션의 약자입니다. 값을 SQL_NULL_HANDLE 로 줍니다. 
+SQLHSTMT 도 있는데 이건 SQL Statement의 핸들입니다. DBConnection 을 DB와 연결할때 statement에 인자를 넣어서 연결하는겁니다. 
+
+사용할 멤버 함수는 Connect, Clear, Execute, Fetch, GetRowCount, Unbind, BindParam, Bindcol, HandleError 입니다. 
+각각 역할을 보자면 
+Connect 는 DBConnection 객체에서 서버와 DB를 실제 연결해주면서 SQL 쿼리를 줍니다.
+Clear는 연결한 핸들을 삭제합니다. 
+Execute는 연결후 SQL 쿼리를 인자를 DB에 입력합니다. 
+Fetch는 _statement 의 값대로 SQLFetch를 합니다. 
+GetRowCount는 DB의 Row 의 카운트를 가져옵니다. 
+이런식으로 각각 함수의 이름대로 동작을 합니다. 
+
+
+이제 어떻게 사용할거냐면 DBConnectionPool 을 전역으로 하나 들고 있을 겁니다. 어떤 스레드이건 DB에 접근할지 모르기 때문에 전역으로 관리하는겁니다.
+전역 객체는 CoreGlobal에서 관리하고 있었으니 거기에 만들겠습니다. 
+
+DB를 사용할지 안할지는 모르지만 글로벌 객체로 만든이유는 사용할때만 DBConnectionPool:Connect 를 호출해 사용하면 되기 때문입니다. 
+DB를 사용하는 흐름은 GDBConnectionPool을 Connect로 원하는 DBConnection 갯수만큼과 connectString을 가지고 연결해주고
+그 다음 Pop을 해 DBConnection 하나 꺼내 BindParam, BindCol 을 이용해 인자와 Column 을 세팅해 Execute 를 때립니다. 받아올 결과를 Fetch로 받아오게 됩니다. 
+
+다음은 어떤 DB를 사용할지를 정해야하는데 기본적으로 어떤 DB든 다 지원을 하지만 VisualStudio가 기본적으로 지원하는 SQLServer로 실습하겠습니다.
+
+SQLServer 탐색기를 열고 데이터베이스 필터 아래에 새 데이터 베이스 추가를 해서 ServerDB를 추가합니다. 
+속성을 열어서 연결 문자열을 확인해보면 Data Source 와 Catalog 가 뭔지 알고 있으면 됩니다. 
+
+실습은 이어서 GameServer.cpp 에서 할건데 
+DBConnectionPool 을 만들어야하는데 GDBConnectionPool->Connect 함수로 만들겁니다. 이때 인자가 만들 DBConnection 갯수와 Connection String 입니다. 
+odbc connection string 이라고 검색해보면 마이크로 소프트 SQL 서버 커넥션 스트링이 있는 사이트가 나올건데 기본적으로 아이디와 패스워드를 입력하는 버전을 사용할건지 
+아니면 신뢰가능한 연결 버전으로 아이디 패스워드를 생략하는 버전이 있습니다. 
+지금은 테스트 용이고 로컬에서만 사용할것이다 보니 신뢰가능한 연결 버전을 사용합니다. 
+
+Driver={SQL Server};Server=myServerAddress;Database=myDataBase;Trusted_Connection=Yes;
+
+이런 문자열인데 Driver 는 사용하는 SQL 서버의 버전을 입력해줍니다. 
+그리고 Server 에는 아까 ServerDB의 연결문자열의 Data Source 부분을 적어줍니다. 그리고 myDataBase 는 사용할 DB인 ServerDB를 적어줍니다. 
+지금은 이 문자열을 하드코딩으로 적었지만 나중에는 여기에 들어가는 내용들을 다 옵션으로 꺼내 읽어서 접근하는 식으로 만들어야합니다. 
+
+서버에 접속했으면 DB 쿼리로 작업을 시작합니다. 
+먼저 테이블 쿼리를 변수로 만들고 이 쿼리를 가지고 DBConnection 을 GDBConnectionPool 에서 Pop 하고 이 DBConnection의 Execute 의 인자로 쿼리를 넘겨주면 됩니다. 
+다 사용하면 DBConnection 을 다시 GDBConnectionPool 에 Push 합니다. 
+
+다음으로 DB에 데이터를 추가하려면 다시 GDBConnectionPool 에서 Pop 해 DBConnection 을 꺼내온 다음 Unbind 를 한번 해줘서 혹시 이전에 Bind 된 데이터를 날립니다. 
+넘길 데이터 인자들을 변수로 만들고 DBConnection 에 BindParam 으로 바인딩해줍니다. 바인딩한 인자를 테이블에 어떻게 넣냐면 Execute로 쿼리를 통해 넣어 줄 수 있는데 
+어떤 테이블에 어떤 데이터를 넣을지 쿼리를 작성하고 바인드한 인자는 (?) 부분에 들어가게 됩니다. 
+
+그리고 이제 DB의 내용을 읽어오는 방법은 역시 DBConnection 을 꺼내서 찾을 데이터를 위에서 넣은 인자로 BindParam 하고 
+받아올 인자를 BindCol 을 한 후 Execute 에서 SELECT 문으로 찾아옵니다. 그 후 DBConnection->Fetch() 를 한 후 받아온 인자를 꺼내 확인합니다. 
+
+
+이렇게 기본적인 DB와 서버 연결을 해봤는데 이렇게 사용하기에는 그 과정이 너무 지저분합니다. 

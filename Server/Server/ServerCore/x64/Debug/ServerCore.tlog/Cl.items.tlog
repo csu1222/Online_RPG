@@ -4,6 +4,8 @@ D:\CPP_Game\Portfolio\Server\Server\ServerCore\BufferWriter.cpp;D:\CPP_Game\Port
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\CoreGlobal.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\CoreGlobal.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\CorePch.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\CorePch.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\CoreTLS.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\CoreTLS.obj
+D:\CPP_Game\Portfolio\Server\Server\ServerCore\DBConnection.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\DBConnection.obj
+D:\CPP_Game\Portfolio\Server\Server\ServerCore\DBConnectionPool.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\DBConnectionPool.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\DeadLockProfiler.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\DeadLockProfiler.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\GlobalQueue.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\GlobalQueue.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\IocpCore.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\IocpCore.obj
