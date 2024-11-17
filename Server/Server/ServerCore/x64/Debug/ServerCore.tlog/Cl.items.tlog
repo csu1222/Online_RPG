@@ -8,6 +8,7 @@ D:\CPP_Game\Portfolio\Server\Server\ServerCore\DBBind.cpp;D:\CPP_Game\Portfolio\
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\DBConnection.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\DBConnection.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\DBConnectionPool.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\DBConnectionPool.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\DeadLockProfiler.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\DeadLockProfiler.obj
+D:\CPP_Game\Portfolio\Server\Server\ServerCore\FileUtils.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\FileUtils.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\GlobalQueue.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\GlobalQueue.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\IocpCore.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\IocpCore.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\IocpEvent.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\IocpEvent.obj
@@ -28,3 +29,4 @@ D:\CPP_Game\Portfolio\Server\Server\ServerCore\Service.cpp;D:\CPP_Game\Portfolio
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\Session.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\Session.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\SocketUtils.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\SocketUtils.obj
 D:\CPP_Game\Portfolio\Server\Server\ServerCore\ThreadManager.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\ThreadManager.obj
+D:\CPP_Game\Portfolio\Server\Server\ServerCore\XmlParser.cpp;D:\CPP_Game\Portfolio\Server\Server\ServerCore\x64\Debug\XmlParser.obj
