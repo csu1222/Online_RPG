@@ -233,3 +233,50 @@ XmlParser 를 테스트할때는 이런 흐름이 될겁니다.
 	}
 
 이렇게 해서 Xml 파일로 설계한 데이터 베이스 테이블을 읽어오는 것 까지 했고 다음은 읽어온 데이터를 서버에서 다시 사용하는 방법을 알아 봐야합니다. 
+
+
+xml 파일을 토대로 테이블 설계를 긁어와 파싱하는 부분까지 했고 다음은 xml 파일을 토대로 데이터베이스를 업데이트 하는 부분까지 만들겠습니다. 
+매번 모든 테이블을 만들 수도 있지만 xml 파일의 상태와 현재 데이터베이스 상태를 비교해 다른 점을 판단해 바뀐 부분만 업데이트하는 방법으로 진행하겠습니다.
+
+테스트를 하면서 로그를 찍을때 좀더 가시성이 좋게 로그에 모양을 넣을 수 있는 클래스 ConsoleLog를 추가했습니다. 
+이 ConsoleLog 객체는 전역객체로 사용해 어디서든 접근할 수 있도록 하겠습니다.
+역시 CoreGlobal 에서 전역객체를 추가합니다. 
+
+본격적으로 ORM 을 구현하기 위해 ServerCore의 DB 필터아래 두가지 클래스를 추가할겁니다. 
+DBModel 이라고 해서 DB 정보를 모델링 하기위한 클래스와 DBSynchronizer 라고해서 DB의 싱크를 맞춰주는 클래스입니다. 
+
+CoreMacro 에서 namespace를 쉽게 사용하도록 
+
+#define NAMESPACE_BEGIN(name)	namespace name {
+#define NAMESPACE_END			}
+매크로를 추가했습니다. 
+
+일단 지금 작업한 내용은 SQL Server 기준 코드입니다. 다른 DB를 사용하면 수정이 되어야 합니다.
+대표적으로는 DataType 이라는 enum class 가 있는데 이 각 타입마다 준 정수들은 임의로 정한 값이 아니라 구글링을해 SQL Server 에서 사용하는 실제 오브젝트 
+번호입니다. 
+
+DBModel 클래스부터 분석하자면 위에서말한 DataType 이외에도 실제 DB에서 사용할 개념들을 다 클래스로 정의하고 있습니다. 
+먼저 Column 클래스를 보면 Column 에서 들고 있을만한 정보를 들고 있습니다. _name, _columnId, _type 등등의 정보를 들고 있고 
+CreateText 라는 멤버 함수도 가지고 있는데 가지고 있는 정보를 토대로 SQL 쿼리를 생성하는 함수입니다. 
+이때 Helpers::Format 멤버 함수를 사용하는데 printf 와 비슷한 역할을 합니다. 
+
+Index 클래스는 그 전에 IndexType 이라는 enum class가 필요한데 Clustered = 1, NonClustered = 2 라는 두가지 값이 있습니다. Clustered 라는 것은 키값을 기준으로 정렬을 할지 여부입니다.
+Index 클래스에서도 필요한 변수들과 함수들이 들어있습니다. 
+
+나머지 Table, Param, Procedure 도 마찬가지입니다. 
+
+DBModel 은 이런 식으로 되어있습니다. 
+
+
+실질적으로 DB 싱크를 맞춰주는 것이 DBSynchronizer 입니다. 이 클래스도 내용이 많은데 사용방법 자체는 단순합니다. 
+DBSynchronizer 객체를 만들어 DBSynchronizer::Synchronizer 를 호출해주면 끝입니다. 
+나머지 함수들은 Synchronizer 를 위한 함수들입니다. 
+
+Synchronizer 에서는 내부에서 ParseXmlDB, GatherDBTables, GatherDBIndexes, GatherDBStoredProcedures, CompareDBModel, ExecuteUpdateQueries 함수들을 호출합니다. 
+ParseXmlDB는 설계했던 GameDB.xml 파일을 파싱해서 구조를 분석해 메모리 상에 들고 있겠다라는 함수이고 
+GatherDB 시리즈 함수들은 진짜로 DB에 접근해 쿼리를 통해 해당 데이터들을 가져옵니다. 
+이제 ParseXmlDB 와 GatherDB류 함수를 한번씩 호출했으면 xml 파일과 DB 의 데이터들을 모두 긁어왔으니 다음으로 
+CompareDBModel 함수에서 두 데이터를 비교하고 만약 다르다면 xml 파일의 형식에 맞게끔 DB를 업데이트하는 예약을 해주고 
+실제 실행응 ExecuteUpdateQueries 함수에서 하게될겁니다. 
+
+DBSynchronizer 클래스의 코드가 많기는하지만 결국 그 역할은 위와 같이 정리 할 수 있습니다. 
