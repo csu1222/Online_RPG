@@ -280,3 +280,64 @@ CompareDBModel 함수에서 두 데이터를 비교하고 만약 다르다면 xm
 실제 실행응 ExecuteUpdateQueries 함수에서 하게될겁니다. 
 
 DBSynchronizer 클래스의 코드가 많기는하지만 결국 그 역할은 위와 같이 정리 할 수 있습니다. 
+
+
+정말 마지막으로 Procedure 를 xml 파일에 설계한 대로 코드를 생성하는 Procedure Generator 를 만들겠습니다. 
+이전에 이와 비슷한 작업을 했었는데 Packet Generator 를 파이썬으로 만들었었습니다. 마찬가지로 파이썬으로 만들겠습니다. 
+
+이것도 Jinja2 를 이용할것입니다. 그래서 template를 만들어 이 것을 기반으로 코드를 생성할겁니다. 
+
+PacketGenerator와 비슷합니다. 
+ProcedureGenerator.py 에서 먼저 argparse, jinja2, XmlDBParser 를 import 하고 메인함수가 시작됩니다. 
+메인함수 시작하면서 argparse 를 통해 인자를 받아줍니다. 인자는 GameDB.xml 파일이 어디있는지 출력한 파일을 어디에 어떤 이름으로 출력할건지를 받습니다. 
+일단 지금은 하드코딩으로 직접 적어 넣었습니다. 
+
+그 후 XmlDBParser 라는 클래스의 객체를 만들어 parse_xml 을 호출하는데 이 함수는 좀 있다 내용을 볼겁니다. packetgenerator 때 protoparser 와 비슷한 것입니다. 
+
+파싱이 끝나면 jinja2를 이용해 template 폴더에 GenProcedures.h 파일을 템플릿으로 삼아 코드를 생성합니다.
+다음은 생성자의 인자로 받았던 출력 디렉토리에 출력을 합니다. 
+
+
+위에서 사용했던 XmlParser 의 코드를 보면 xml.etree.ElementTree 라는 라이브러리를 import 하고 있습니다. ET 라고 줄여 부르기로 하고 이걸로 xml 을 파싱합니다. 
+멤버 변수로 tables, procedures 라는 dictionary와 list 를 들고 있을겁니다. 
+메소드로 parse_xml을 호출하면 ET를 사용해 경로에서 파싱을 하는데 
+파싱을 하는 원리는 이전에 배웠듯이 root 노드부터 쭉 체크를 하면서 Table을 파싱하고 테이블에서 다시 Column 을 파싱하는 식으로 
+Procedure 노드를 파싱합니다. 
+쭉 파싱을 하면서 table 들은 tables에 Procedure들은 Procedures 에 넣어 관리합니다. 
+
+각각의 컨테이너에 넣을 때 Table, Procedure 라는 클래스로 객체를 만들어 넣고 있는데 Table 클래스에서는 테이블의 이름과 하위 컬럼들, 그리고 그 컬럼들의 이름정도만 들고 있습니다. 
+Procedure 클래스는 좀더 정보를 상세하게 가지고 있는데 Procedure 의 이름그리고 파라미터와 바디부분을 파싱합니다. 
+
+아무튼 이런 코드로 파싱을 하는데 그 대상이 GenProcedures.h 을 템플릿으로하는데 여기서 다시 Procedure.h 를 가져와 템플릿으로 삼습니다. 
+
+ProcedureGenerator 를 만든후 그 결과물을 확인하기위해서 그냥 ProcedureGenerator 를 실행할 수도 있지만 이전 PacketGenerator를 자동화 하기위해서 bat 과 exe 파일을 만들었던 걸 다시 적용할 수 있습니다. 
+PacketGenerator에서 사용했던 MakeExe.bat 코드를 가져와서 실행할 파일과 그 결과 exe 파일이름을 수정해 사용합니다. 
+
+exe 파일을 만들었으면 이걸 프로젝트쪽에 복사해 사용하면됩니다. 
+솔루션 디렉토리 위치에서 Common/Procedures 폴더를 만들고 GenProcs.exe와 Template 폴더를 복사 붙여넣기를 합니다. 
+다시 GenProcs.exe 의 결과물들을 자동으로 각 프로젝트 폴더로 옮기는 bat 파일을 만들어 주면 좋을것같습니다. 그리고 이 bat 파일을 VisualStudio가 관리해 빌드를 할때 자동으로 실행해주면 되겠습니다. 
+
+GameServer 프로젝트의 속성창을 열어 빌드 이벤트쪽에서 CALL $(SolutionDir)CommonProcedures\bin\GenProcs.bat 을 추가합니다. 
+
+그리고 GameDB.xml 파일의 수정을 추적하도록 하기 위해서 VisualStudio 솔루션을 조금 수정해야 했습니다. 
+GameServer의 디렉토리에서 솔루션 파일을 메모장 같은걸로 열어서 하단의 UpToDateCheckInput 노드를 하나 더 추가해 GameDB.xml 을 추적하도록 합니다. 
+
+여기까지 완료가 되었으면 툴이 제대로 작동하는지만 체크하면됩니다. 
+
+
+마지막으로 테스트를 어떻게 해야하냐면 
+GameServer.cpp 의 main 함수에 GenProcedures.h 를 import 합니다. 
+그리고 DBConnection 을 만든 코드 밑에서 SP::InsertGold 같은 클래스를 사용해 데이터들을 넣어줄 수 있겠습니다. 
+
+	{
+		WCHAR name[] = L"csu";
+
+		SP::InsertGold insertGold(*dbConn);
+		insertGold.In_Gold(100);
+		insertGold.In_Name(name);
+		insertGold.In_CreateDate(TIMESTAMP_STRUCT{ 2020, 6, 8 });
+		insertGold.Execute();
+	}
+
+이런 식입니다. 
+get 계열 함수도 비슷합니다. 
