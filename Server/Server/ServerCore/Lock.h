@@ -22,7 +22,7 @@ public:
 	void ReadUnlock(const char* name);
 
 private:
-	Atomic<uint32> _lockFlag = EMPTY_FLAG;
+	atomic<uint32> _lockFlag = EMPTY_FLAG;
 	uint16 _writeCount = 0;
 };
 

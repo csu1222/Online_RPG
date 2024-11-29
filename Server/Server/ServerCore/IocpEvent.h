@@ -83,5 +83,5 @@ class SendEvent : public IocpEvent
 public:
 	SendEvent() : IocpEvent(EventType::Send) { }
 
-	Vector<SendBufferRef> sendBuffers;
+	vector<SendBufferRef> sendBuffers;
 };

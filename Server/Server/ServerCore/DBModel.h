@@ -37,20 +37,20 @@ enum class DataType
 class Column
 {
 public:
-	String				CreateText();
+	wstring				CreateText();
 
 public:
-	String				_name;
+	wstring				_name;
 	int32				_columnId = 0; // DB
 	DataType			_type = DataType::None;
-	String				_typeText;
+	wstring				_typeText;
 	int32				_maxLength = 0;
 	bool				_nullable = false;
 	bool				_identity = false;
 	int64				_seedValue = 0;
 	int64				_incrementValue = 0;
-	String				_default;
-	String				_defaultConstraintName; // DB
+	wstring				_default;
+	wstring				_defaultConstraintName; // DB
 };
 
 /*-----------
@@ -66,20 +66,20 @@ enum class IndexType
 class Index
 {
 public:
-	String				GetUniqueName();
-	String				CreateName(const String& tableName);
-	String				GetTypeText();
-	String				GetKeyText();
-	String				CreateColumnsText();
-	bool				DependsOn(const String& columnName);
+	wstring				GetUniqueName();
+	wstring				CreateName(const wstring& tableName);
+	wstring				GetTypeText();
+	wstring				GetKeyText();
+	wstring				CreateColumnsText();
+	bool				DependsOn(const wstring& columnName);
 
 public:
-	String				_name; // DB
+	wstring				_name; // DB
 	int32				_indexId = 0; // DB
 	IndexType			_type = IndexType::NonClustered;
 	bool				_primaryKey = false;
 	bool				_uniqueConstraint = false;
-	Vector<ColumnRef>	_columns;
+	vector<ColumnRef>	_columns;
 };
 
 /*-----------
@@ -89,13 +89,13 @@ public:
 class Table
 {
 public:
-	ColumnRef			FindColumn(const String& columnName);
+	ColumnRef			FindColumn(const wstring& columnName);
 
 public:
 	int32				_objectId = 0; // DB
-	String				_name;
-	Vector<ColumnRef>	_columns;
-	Vector<IndexRef>	_indexes;
+	wstring				_name;
+	vector<ColumnRef>	_columns;
+	vector<IndexRef>	_indexes;
 };
 
 /*----------------
@@ -104,22 +104,22 @@ public:
 
 struct Param
 {
-	String				_name;
-	String				_type;
+	wstring				_name;
+	wstring				_type;
 };
 
 class Procedure
 {
 public:
-	String				GenerateCreateQuery();
-	String				GenerateAlterQuery();
-	String				GenerateParamString();
+	wstring				GenerateCreateQuery();
+	wstring				GenerateAlterQuery();
+	wstring				GenerateParamString();
 
 public:
-	String				_name;
-	String				_fullBody; // DB
-	String				_body; // XML
-	Vector<Param>		_parameters;  // XML
+	wstring				_name;
+	wstring				_fullBody; // DB
+	wstring				_body; // XML
+	vector<Param>		_parameters;  // XML
 };
 
 /*-------------
@@ -129,9 +129,9 @@ public:
 class Helpers
 {
 public:
-	static String		Format(const WCHAR* format, ...);
-	static String		DataType2String(DataType type);
-	static String		RemoveWhiteSpace(const String& str);
+	static wstring		Format(const WCHAR* format, ...);
+	static wstring		DataType2String(DataType type);
+	static wstring		RemoveWhiteSpace(const wstring& str);
 	static DataType		String2DataType(const WCHAR* str, OUT int32& maxLen);
 };
 

@@ -72,7 +72,7 @@ private:
 	weak_ptr<Service>	_service;
 	SOCKET				_socket = INVALID_SOCKET;
 	NetAddress			_netAddress = {};
-	Atomic<bool>		_connected = false;
+	atomic<bool>		_connected = false;
 
 private:
 	USE_LOCK;
@@ -81,8 +81,8 @@ private:
 	RecvBuffer				_recvBuffer;
 
 	/* 송신 관련 */
-	Queue<SendBufferRef>	_sendQueue;
-	Atomic<bool>			_sendRegistered = false;
+	queue<SendBufferRef>	_sendQueue;
+	atomic<bool>			_sendRegistered = false;
 
 private:
 	/* IocpEvent 재사용 */

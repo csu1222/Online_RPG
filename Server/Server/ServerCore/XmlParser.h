@@ -1,6 +1,6 @@
 #pragma once
 #include "Types.h"
-#include "Container.h"
+//#include "Container.h"
 #include "rapidxml.hpp"
 using namespace rapidxml;
 
@@ -38,7 +38,7 @@ public:
 	const WCHAR* GetStringValue(const WCHAR* defaultValue = L"");
 
 	XmlNode				FindChild(const WCHAR* key);
-	Vector<XmlNode>		FindChildren(const WCHAR* key);
+	vector<XmlNode>		FindChildren(const WCHAR* key);
 
 private:
 	XmlNodeType* _node = nullptr;
@@ -55,5 +55,5 @@ public:
 
 private:
 	shared_ptr<XmlDocumentType>		_document = nullptr;
-	String							_data;
+	wstring							_data;
 };

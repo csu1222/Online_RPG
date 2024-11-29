@@ -21,7 +21,7 @@ public:
 		return ret;
 	}
 
-	void PopAll(OUT Vector<T>& items)
+	void PopAll(OUT vector<T>& items)
 	{
 		WRITE_LOCK;
 		while (T item = Pop())
@@ -31,10 +31,10 @@ public:
 	void Clear()
 	{
 		WRITE_LOCK;
-		_items = Queue<T>();
+		_items = queue<T>();
 	}
 
 private:
 	USE_LOCK;
-	Queue<T> _items;
+	queue<T> _items;
 };

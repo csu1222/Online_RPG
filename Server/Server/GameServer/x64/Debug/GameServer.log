@@ -21,7 +21,7 @@
   bool Handle_C_ENTER_GAME(PacketSessionRef& session, Protocol::C_ENTER_GAME& pkt);
   bool Handle_C_CHAT(PacketSessionRef& session, Protocol::C_CHAT& pkt);
   
-  class ClientPacketHandler
+  class ServerPacketHandler
   {
   public:
   	static void Init()
@@ -52,14 +52,14 @@
   
   		return func(session, pkt);
   	}
-  
+  	
   	template<typename T>
   	static SendBufferRef MakeSendBuffer(T& pkt, uint16 pktId)
   	{
   		const uint16 dataSize = static_cast<uint16>(pkt.ByteSizeLong());
   		const uint16 packetSize = dataSize + sizeof(PacketHeader);
   
-  		SendBufferRef sendBuffer = GSendBufferManager->Open(packetSize);
+  		SendBufferRef sendBuffer = make_shared<SendBuffer>(packetSize);
   		PacketHeader* header = reinterpret_cast<PacketHeader*>(sendBuffer->Buffer());
   		header->size = packetSize;
   		header->id = pktId;
@@ -91,7 +91,7 @@
   bool Handle_S_ENTER_GAME(PacketSessionRef& session, Protocol::S_ENTER_GAME& pkt);
   bool Handle_S_CHAT(PacketSessionRef& session, Protocol::S_CHAT& pkt);
   
-  class ServerPacketHandler
+  class ClientPacketHandler
   {
   public:
   	static void Init()
@@ -122,14 +122,14 @@
   
   		return func(session, pkt);
   	}
-  
+  	
   	template<typename T>
   	static SendBufferRef MakeSendBuffer(T& pkt, uint16 pktId)
   	{
   		const uint16 dataSize = static_cast<uint16>(pkt.ByteSizeLong());
   		const uint16 packetSize = dataSize + sizeof(PacketHeader);
   
-  		SendBufferRef sendBuffer = GSendBufferManager->Open(packetSize);
+  		SendBufferRef sendBuffer = make_shared<SendBuffer>(packetSize);
   		PacketHeader* header = reinterpret_cast<PacketHeader*>(sendBuffer->Buffer());
   		header->size = packetSize;
   		header->id = pktId;
@@ -139,34 +139,37 @@
   		return sendBuffer;
   	}
   };
-  D:Enum.pb.h
-  1개 파일이 복사되었습니다.
-  D:Enum.pb.cc
-  1개 파일이 복사되었습니다.
-  D:Struct.pb.h
-  1개 파일이 복사되었습니다.
-  D:Struct.pb.cc
-  1개 파일이 복사되었습니다.
-  D:Protocol.pb.h
-  1개 파일이 복사되었습니다.
-  D:Protocol.pb.cc
-  1개 파일이 복사되었습니다.
-  D:ClientPacketHandler.h
-  1개 파일이 복사되었습니다.
-  D:Enum.pb.h
-  1개 파일이 복사되었습니다.
-  D:Enum.pb.cc
-  1개 파일이 복사되었습니다.
-  D:Struct.pb.h
-  1개 파일이 복사되었습니다.
-  D:Struct.pb.cc
-  1개 파일이 복사되었습니다.
-  D:Protocol.pb.h
-  1개 파일이 복사되었습니다.
-  D:Protocol.pb.cc
-  1개 파일이 복사되었습니다.
-  D:ServerPacketHandler.h
-  1개 파일이 복사되었습니다.
+  파일을 찾을 수 없습니다-Enum.pb.h
+  0개 파일이 복사되었습니다.
+  파일을 찾을 수 없습니다-Enum.pb.cc
+  0개 파일이 복사되었습니다.
+  파일을 찾을 수 없습니다-Struct.pb.h
+  0개 파일이 복사되었습니다.
+  파일을 찾을 수 없습니다-Struct.pb.cc
+  0개 파일이 복사되었습니다.
+  파일을 찾을 수 없습니다-Protocol.pb.h
+  0개 파일이 복사되었습니다.
+  파일을 찾을 수 없습니다-Protocol.pb.cc
+  0개 파일이 복사되었습니다.
+  0개 파일이 복사되었습니다.
+  파일을 찾을 수 없습니다-ServerPacketHandler.h
+  파일을 찾을 수 없습니다-Enum.pb.h
+  0개 파일이 복사되었습니다.
+  파일을 찾을 수 없습니다-Enum.pb.cc
+  0개 파일이 복사되었습니다.
+  파일을 찾을 수 없습니다-Struct.pb.h
+  0개 파일이 복사되었습니다.
+  파일을 찾을 수 없습니다-Struct.pb.cc
+  0개 파일이 복사되었습니다.
+  파일을 찾을 수 없습니다-Protocol.pb.h
+  0개 파일이 복사되었습니다.
+  파일을 찾을 수 없습니다-Protocol.pb.cc
+  0개 파일이 복사되었습니다.
+  0개 파일이 복사되었습니다.
+  파일을 찾을 수 없습니다-ClientPacketHandler.h
+  D:\CPP_Game\Portfolio\Server\Server\Common\Protobuf\bin\*.pb.h을(를) 찾을 수 없습니다.
+  D:\CPP_Game\Portfolio\Server\Server\Common\Protobuf\bin\*.pb.cc을(를) 찾을 수 없습니다.
+  D:\CPP_Game\Portfolio\Server\Server\Common\Protobuf\bin\*.h을(를) 찾을 수 없습니다.
   계속하려면 아무 키나 누르십시오 . . . 
   #pragma once
   #include "Types.h"
@@ -220,11 +223,11 @@
   Protocol.pb.cc
   Struct.pb.cc
   코드를 생성하고 있습니다...
-  ClientPacketHandler.cpp
   GameServer.cpp
   GameSession.cpp
   GameSessionManager.cpp
   Player.cpp
   Room.cpp
+  ServerPacketHandler.cpp
   코드를 생성하고 있습니다...
   GameServer.vcxproj -> D:\CPP_Game\Portfolio\Server\Server\Binary\Debug\GameServer.exe

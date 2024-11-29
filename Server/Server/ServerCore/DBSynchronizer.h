@@ -59,14 +59,14 @@ private:
 private:
 	DBConnection& _dbConn;
 
-	Vector<DBModel::TableRef>			_xmlTables;
-	Vector<DBModel::ProcedureRef>		_xmlProcedures;
-	Set<String>							_xmlRemovedTables;
+	vector<DBModel::TableRef>			_xmlTables;
+	vector<DBModel::ProcedureRef>		_xmlProcedures;
+	set<wstring>							_xmlRemovedTables;
 
-	Vector<DBModel::TableRef>			_dbTables;
-	Vector<DBModel::ProcedureRef>		_dbProcedures;
+	vector<DBModel::TableRef>			_dbTables;
+	vector<DBModel::ProcedureRef>		_dbProcedures;
 
 private:
-	Set<String>							_dependentIndexes;
-	Vector<String>						_updateQueries[UpdateStep::Max];
+	set<wstring>							_dependentIndexes;
+	vector<wstring>						_updateQueries[UpdateStep::Max];
 };

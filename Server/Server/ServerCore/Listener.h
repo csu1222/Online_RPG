@@ -34,7 +34,7 @@ protected:
 	// listenerSocket 이라고 만들던것
 	SOCKET _socket = INVALID_SOCKET;
 	// 클라이언트들이 접속할때 들어오는 Accept Event 들 
-	Vector<AcceptEvent*> _acceptEvents;
+	vector<AcceptEvent*> _acceptEvents;
 	ServerServiceRef _service;
 };
 

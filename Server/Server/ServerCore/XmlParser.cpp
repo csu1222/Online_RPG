@@ -157,9 +157,9 @@ XmlNode XmlNode::FindChild(const WCHAR* key)
 	return XmlNode(_node->first_node(key));
 }
 
-Vector<XmlNode> XmlNode::FindChildren(const WCHAR* key)
+vector<XmlNode> XmlNode::FindChildren(const WCHAR* key)
 {
-	Vector<XmlNode> nodes;
+	vector<XmlNode> nodes;
 
 	xml_node<WCHAR>* node = _node->first_node(key);
 	while (node)
@@ -177,13 +177,13 @@ Vector<XmlNode> XmlNode::FindChildren(const WCHAR* key)
 
 bool XmlParser::ParseFromFile(const WCHAR* path, OUT XmlNode& root)
 {
-	Vector<BYTE> bytes = FileUtils::ReadFile(path);
+	vector<BYTE> bytes = FileUtils::ReadFile(path);
 	_data = FileUtils::Convert(string(bytes.begin(), bytes.end()));
 
 	if (_data.empty())
 		return false;
 
-	_document = MakeShared<XmlDocumentType>();
+	_document = make_shared<XmlDocumentType>();
 	_document->parse<0>(reinterpret_cast<WCHAR*>(&_data[0]));
 	root = XmlNode(_document->first_node());
 	return true;

@@ -20,6 +20,6 @@ public:
 private:
 	USE_LOCK;
 	SQLHENV					_environment = SQL_NULL_HANDLE;
-	Vector<DBConnection*>	_connections;
+	vector<DBConnection*>	_connections;
 };
 

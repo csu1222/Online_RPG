@@ -9,9 +9,9 @@
 
 namespace fs = std::filesystem;
 
-Vector<BYTE> FileUtils::ReadFile(const WCHAR* path)
+vector<BYTE> FileUtils::ReadFile(const WCHAR* path)
 {
-	Vector<BYTE> ret;
+	vector<BYTE> ret;
 
 	fs::path filePath{ path };
 
@@ -24,11 +24,11 @@ Vector<BYTE> FileUtils::ReadFile(const WCHAR* path)
 	return ret;
 }
 
-String FileUtils::Convert(string str)
+wstring FileUtils::Convert(string str)
 {
 	const int32 srcLen = static_cast<int32>(str.size());
 
-	String ret;
+	wstring ret;
 	if (srcLen == 0)
 		return ret;
 

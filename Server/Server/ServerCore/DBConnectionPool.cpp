@@ -27,7 +27,7 @@ bool DBConnectionPool::Connect(int32 connectionCount, const WCHAR* connectionStr
 
 	for (int32 i = 0; i < connectionCount; i++)
 	{
-		DBConnection* connection = xnew<DBConnection>();
+		DBConnection* connection = new DBConnection();
 		if (connection->Connect(_environment, connectionString) == false)
 			return false;
 
@@ -48,7 +48,7 @@ void DBConnectionPool::Clear()
 	}
 
 	for (DBConnection* connection : _connections)
-		xdelete(connection);
+		delete connection;
 
 	_connections.clear();
 }

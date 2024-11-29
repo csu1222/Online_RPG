@@ -110,16 +110,16 @@ void DBSynchronizer::ParseXmlDB(const WCHAR* path)
 	XmlParser parser;
 	ASSERT_CRASH(parser.ParseFromFile(path, OUT root));
 
-	Vector<XmlNode> tables = root.FindChildren(L"Table");
+	vector<XmlNode> tables = root.FindChildren(L"Table");
 	for (XmlNode& table : tables)
 	{
-		DBModel::TableRef t = MakeShared<DBModel::Table>();
+		DBModel::TableRef t = make_shared<DBModel::Table>();
 		t->_name = table.GetStringAttr(L"name");
 
-		Vector<XmlNode> columns = table.FindChildren(L"Column");
+		vector<XmlNode> columns = table.FindChildren(L"Column");
 		for (XmlNode& column : columns)
 		{
-			DBModel::ColumnRef c = MakeShared<DBModel::Column>();
+			DBModel::ColumnRef c = make_shared<DBModel::Column>();
 			c->_name = column.GetStringAttr(L"name");
 			c->_typeText = column.GetStringAttr(L"type");
 			c->_type = DBModel::Helpers::String2DataType(c->_typeText.c_str(), OUT c->_maxLength);
@@ -141,10 +141,10 @@ void DBSynchronizer::ParseXmlDB(const WCHAR* path)
 			t->_columns.push_back(c);
 		}
 
-		Vector<XmlNode> indexes = table.FindChildren(L"Index");
+		vector<XmlNode> indexes = table.FindChildren(L"Index");
 		for (XmlNode& index : indexes)
 		{
-			DBModel::IndexRef i = MakeShared<DBModel::Index>();
+			DBModel::IndexRef i = make_shared<DBModel::Index>();
 			const WCHAR* typeStr = index.GetStringAttr(L"type");
 			if (::_wcsicmp(typeStr, L"clustered") == 0)
 				i->_type = DBModel::IndexType::Clustered;
@@ -156,7 +156,7 @@ void DBSynchronizer::ParseXmlDB(const WCHAR* path)
 			i->_primaryKey = index.FindChild(L"PrimaryKey").IsValid();
 			i->_uniqueConstraint = index.FindChild(L"UniqueKey").IsValid();
 
-			Vector<XmlNode> columns = index.FindChildren(L"Column");
+			vector<XmlNode> columns = index.FindChildren(L"Column");
 			for (XmlNode& column : columns)
 			{
 				const WCHAR* nameStr = column.GetStringAttr(L"name");
@@ -171,14 +171,14 @@ void DBSynchronizer::ParseXmlDB(const WCHAR* path)
 		_xmlTables.push_back(t);
 	}
 
-	Vector<XmlNode> procedures = root.FindChildren(L"Procedure");
+	vector<XmlNode> procedures = root.FindChildren(L"Procedure");
 	for (XmlNode& procedure : procedures)
 	{
-		DBModel::ProcedureRef p = MakeShared<DBModel::Procedure>();
+		DBModel::ProcedureRef p = make_shared<DBModel::Procedure>();
 		p->_name = procedure.GetStringAttr(L"name");
 		p->_body = procedure.FindChild(L"Body").GetStringValue();
 
-		Vector<XmlNode> params = procedure.FindChildren(L"Param");
+		vector<XmlNode> params = procedure.FindChildren(L"Param");
 		for (XmlNode& paramNode : params)
 		{
 			DBModel::Param param;
@@ -190,7 +190,7 @@ void DBSynchronizer::ParseXmlDB(const WCHAR* path)
 		_xmlProcedures.push_back(p);
 	}
 
-	Vector<XmlNode> removedTables = root.FindChildren(L"RemovedTable");
+	vector<XmlNode> removedTables = root.FindChildren(L"RemovedTable");
 	for (XmlNode& removedTable : removedTables)
 	{
 		_xmlRemovedTables.insert(removedTable.GetStringAttr(L"name"));
@@ -238,7 +238,7 @@ bool DBSynchronizer::GatherDBTables()
 		auto findTable = std::find_if(_dbTables.begin(), _dbTables.end(), [=](const DBModel::TableRef& table) { return table->_objectId == objectId; });
 		if (findTable == _dbTables.end())
 		{
-			table = MakeShared<DBModel::Table>();
+			table = make_shared<DBModel::Table>();
 			table->_objectId = objectId;
 			table->_name = tableName;
 			_dbTables.push_back(table);
@@ -248,7 +248,7 @@ bool DBSynchronizer::GatherDBTables()
 			table = *findTable;
 		}
 
-		DBModel::ColumnRef column = MakeShared<DBModel::Column>();
+		DBModel::ColumnRef column = make_shared<DBModel::Column>();
 		{
 			column->_name = columnName;
 			column->_columnId = columnId;
@@ -303,11 +303,11 @@ bool DBSynchronizer::GatherDBIndexes()
 	{
 		auto findTable = std::find_if(_dbTables.begin(), _dbTables.end(), [=](const DBModel::TableRef& table) { return table->_objectId == objectId; });
 		ASSERT_CRASH(findTable != _dbTables.end());
-		Vector<DBModel::IndexRef>& indexes = (*findTable)->_indexes;
+		vector<DBModel::IndexRef>& indexes = (*findTable)->_indexes;
 		auto findIndex = std::find_if(indexes.begin(), indexes.end(), [indexId](DBModel::IndexRef& index) { return index->_indexId == indexId; });
 		if (findIndex == indexes.end())
 		{
-			DBModel::IndexRef index = MakeShared<DBModel::Index>();
+			DBModel::IndexRef index = make_shared<DBModel::Index>();
 			{
 				index->_name = indexName;
 				index->_indexId = indexId;
@@ -320,7 +320,7 @@ bool DBSynchronizer::GatherDBIndexes()
 		}
 
 		// 인덱스가 걸린 column 찾아서 매핑해준다.
-		Vector<DBModel::ColumnRef>& columns = (*findTable)->_columns;
+		vector<DBModel::ColumnRef>& columns = (*findTable)->_columns;
 		auto findColumn = std::find_if(columns.begin(), columns.end(), [columnId](DBModel::ColumnRef& column) { return column->_columnId == columnId; });
 		ASSERT_CRASH(findColumn != columns.end());
 		(*findIndex)->_columns.push_back(*findColumn);
@@ -332,7 +332,7 @@ bool DBSynchronizer::GatherDBIndexes()
 bool DBSynchronizer::GatherDBStoredProcedures()
 {
 	WCHAR name[101] = { 0 };
-	Vector<WCHAR> body(PROCEDURE_MAX_LEN);
+	vector<WCHAR> body(PROCEDURE_MAX_LEN);
 
 	SP::GetDBStoredProcedures getDBStoredProcedures(_dbConn);
 	getDBStoredProcedures.Out_Name(OUT name);
@@ -343,10 +343,10 @@ bool DBSynchronizer::GatherDBStoredProcedures()
 
 	while (getDBStoredProcedures.Fetch())
 	{
-		DBModel::ProcedureRef proc = MakeShared<DBModel::Procedure>();
+		DBModel::ProcedureRef proc = make_shared<DBModel::Procedure>();
 		{
 			proc->_name = name;
-			proc->_fullBody = String(body.begin(), std::find(body.begin(), body.end(), 0));
+			proc->_fullBody = wstring(body.begin(), std::find(body.begin(), body.end(), 0));
 		}
 		_dbProcedures.push_back(proc);
 	}
@@ -358,11 +358,11 @@ void DBSynchronizer::CompareDBModel()
 {
 	// 업데이트 목록 초기화.
 	_dependentIndexes.clear();
-	for (Vector<String>& queries : _updateQueries)
+	for (vector<wstring>& queries : _updateQueries)
 		queries.clear();
 
 	// XML에 있는 목록을 우선 갖고 온다.
-	Map<String, DBModel::TableRef> xmlTableMap;
+	map<wstring, DBModel::TableRef> xmlTableMap;
 	for (DBModel::TableRef& xmlTable : _xmlTables)
 		xmlTableMap[xmlTable->_name] = xmlTable;
 
@@ -391,7 +391,7 @@ void DBSynchronizer::CompareDBModel()
 	{
 		DBModel::TableRef& xmlTable = mapIt.second;
 
-		String columnsStr;
+		wstring columnsStr;
 		const int32 size = static_cast<int32>(xmlTable->_columns.size());
 		for (int32 i = 0; i < size; i++)
 		{
@@ -448,7 +448,7 @@ void DBSynchronizer::ExecuteUpdateQueries()
 {
 	for (int32 step = 0; step < UpdateStep::Max; step++)
 	{
-		for (String& query : _updateQueries[step])
+		for (wstring& query : _updateQueries[step])
 		{
 			_dbConn.Unbind();
 			ASSERT_CRASH(_dbConn.Execute(query.c_str()));
@@ -459,7 +459,7 @@ void DBSynchronizer::ExecuteUpdateQueries()
 void DBSynchronizer::CompareTables(DBModel::TableRef dbTable, DBModel::TableRef xmlTable)
 {
 	// XML에 있는 컬럼 목록을 갖고 온다.
-	Map<String, DBModel::ColumnRef> xmlColumnMap;
+	map<wstring, DBModel::ColumnRef> xmlColumnMap;
 	for (DBModel::ColumnRef& xmlColumn : xmlTable->_columns)
 		xmlColumnMap[xmlColumn->_name] = xmlColumn;
 
@@ -514,7 +514,7 @@ void DBSynchronizer::CompareTables(DBModel::TableRef dbTable, DBModel::TableRef 
 	}
 
 	// XML에 있는 인덱스 목록을 갖고 온다.
-	Map<String, DBModel::IndexRef> xmlIndexMap;
+	map<wstring, DBModel::IndexRef> xmlIndexMap;
 	for (DBModel::IndexRef& xmlIndex : xmlTable->_indexes)
 		xmlIndexMap[xmlIndex->GetUniqueName()] = xmlIndex;
 
@@ -647,7 +647,7 @@ void DBSynchronizer::CompareColumns(DBModel::TableRef dbTable, DBModel::ColumnRe
 void DBSynchronizer::CompareStoredProcedures()
 {
 	// XML에 있는 프로시저 목록을 갖고 온다.
-	Map<String, DBModel::ProcedureRef> xmlProceduresMap;
+	map<wstring, DBModel::ProcedureRef> xmlProceduresMap;
 	for (DBModel::ProcedureRef& xmlProcedure : _xmlProcedures)
 		xmlProceduresMap[xmlProcedure->_name] = xmlProcedure;
 
@@ -658,7 +658,7 @@ void DBSynchronizer::CompareStoredProcedures()
 		if (findProcedure != xmlProceduresMap.end())
 		{
 			DBModel::ProcedureRef xmlProcedure = findProcedure->second;
-			String xmlBody = xmlProcedure->GenerateCreateQuery();
+			wstring xmlBody = xmlProcedure->GenerateCreateQuery();
 			if (DBModel::Helpers::RemoveWhiteSpace(dbProcedure->_fullBody) != DBModel::Helpers::RemoveWhiteSpace(xmlBody))
 			{
 				GConsoleLogger->WriteStdOut(Color::YELLOW, L"Updating Procedure : %s\n", dbProcedure->_name.c_str());

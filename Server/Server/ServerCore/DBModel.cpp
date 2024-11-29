@@ -7,7 +7,7 @@ using namespace DBModel;
 	Column
 --------------*/
 
-String Column::CreateText()
+wstring Column::CreateText()
 {
 	return DBModel::Helpers::Format(
 		L"[%s] %s %s %s",
@@ -21,9 +21,9 @@ String Column::CreateText()
 	Index
 ------------*/
 
-String Index::GetUniqueName()
+wstring Index::GetUniqueName()
 {
-	String ret;
+	wstring ret;
 
 	ret += _primaryKey ? L"PK " : L" ";
 	ret += _uniqueConstraint ? L"UK " : L" ";
@@ -39,9 +39,9 @@ String Index::GetUniqueName()
 	return ret;
 }
 
-String Index::CreateName(const String& tableName)
+wstring Index::CreateName(const wstring& tableName)
 {
-	String ret = L"IX_" + tableName;
+	wstring ret = L"IX_" + tableName;
 
 	for (const ColumnRef& column : _columns)
 	{
@@ -52,12 +52,12 @@ String Index::CreateName(const String& tableName)
 	return ret;
 }
 
-String Index::GetTypeText()
+wstring Index::GetTypeText()
 {
 	return (_type == IndexType::Clustered ? L"CLUSTERED" : L"NONCLUSTERED");
 }
 
-String Index::GetKeyText()
+wstring Index::GetKeyText()
 {
 	if (_primaryKey)
 		return L"PRIMARY KEY";
@@ -68,9 +68,9 @@ String Index::GetKeyText()
 	return L"";
 }
 
-String Index::CreateColumnsText()
+wstring Index::CreateColumnsText()
 {
-	String ret;
+	wstring ret;
 
 	const int32 size = static_cast<int32>(_columns.size());
 	for (int32 i = 0; i < size; i++)
@@ -84,7 +84,7 @@ String Index::CreateColumnsText()
 	return ret;
 }
 
-bool Index::DependsOn(const String& columnName)
+bool Index::DependsOn(const wstring& columnName)
 {
 	auto findIt = std::find_if(_columns.begin(), _columns.end(),
 		[&](const ColumnRef& column) { return column->_name == columnName; });
@@ -96,7 +96,7 @@ bool Index::DependsOn(const String& columnName)
 	Table
 ------------*/
 
-ColumnRef Table::FindColumn(const String& columnName)
+ColumnRef Table::FindColumn(const wstring& columnName)
 {
 	auto findIt = std::find_if(_columns.begin(), _columns.end(),
 		[&](const ColumnRef& column) { return column->_name == columnName; });
@@ -111,25 +111,25 @@ ColumnRef Table::FindColumn(const String& columnName)
 	Procedures
 -----------------*/
 
-String Procedure::GenerateCreateQuery()
+wstring Procedure::GenerateCreateQuery()
 {
 	const WCHAR* query = L"CREATE PROCEDURE [dbo].[%s] %s AS BEGIN %s END";
 
-	String paramString = GenerateParamString();
+	wstring paramString = GenerateParamString();
 	return DBModel::Helpers::Format(query, _name.c_str(), paramString.c_str(), _body.c_str());
 }
 
-String Procedure::GenerateAlterQuery()
+wstring Procedure::GenerateAlterQuery()
 {
 	const WCHAR* query = L"ALTER PROCEDURE [dbo].[%s] %s AS	BEGIN %s END";
 
-	String paramString = GenerateParamString();
+	wstring paramString = GenerateParamString();
 	return DBModel::Helpers::Format(query, _name.c_str(), paramString.c_str(), _body.c_str());
 }
 
-String Procedure::GenerateParamString()
+wstring Procedure::GenerateParamString()
 {
-	String str;
+	wstring str;
 
 	const int32 size = static_cast<int32>(_parameters.size());
 	for (int32 i = 0; i < size; i++)
@@ -148,7 +148,7 @@ String Procedure::GenerateParamString()
 	Helpers
 --------------*/
 
-String Helpers::Format(const WCHAR* format, ...)
+wstring Helpers::Format(const WCHAR* format, ...)
 {
 	WCHAR buf[4096];
 
@@ -157,10 +157,10 @@ String Helpers::Format(const WCHAR* format, ...)
 	::vswprintf_s(buf, 4096, format, ap);
 	va_end(ap);
 
-	return String(buf);
+	return wstring(buf);
 }
 
-String Helpers::DataType2String(DataType type)
+wstring Helpers::DataType2String(DataType type)
 {
 	switch (type)
 	{
@@ -181,9 +181,9 @@ String Helpers::DataType2String(DataType type)
 	}
 }
 
-String Helpers::RemoveWhiteSpace(const String& str)
+wstring Helpers::RemoveWhiteSpace(const wstring& str)
 {
-	String ret = str;
+	wstring ret = str;
 
 	ret.erase(
 		std::remove_if(ret.begin(), ret.end(), [=](WCHAR ch) { return ::isspace(ch); }),

@@ -197,7 +197,7 @@ CALL $(SolutionDir)Common\Procedures\GenProcs.bat</Command>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="ClientPacketHandler.cpp" />
+    <ClCompile Include="ServerPacketHandler.cpp" />
     <ClCompile Include="Room.cpp" />
     <ClCompile Include="Struct.pb.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
@@ -214,7 +214,7 @@ CALL $(SolutionDir)Common\Procedures\GenProcs.bat</Command>
     <ClInclude Include="pch.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Protocol.pb.h" />
-    <ClInclude Include="ClientPacketHandler.h" />
+    <ClInclude Include="ServerPacketHandler.h" />
     <ClInclude Include="Room.h" />
     <ClInclude Include="Struct.pb.h" />
   </ItemGroup>
