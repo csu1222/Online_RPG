@@ -4,3 +4,25 @@
 최신의 표준 라이브러리도 충분히 성능이 좋기 때문에 굳이 직접 만든 라이브러리를 사용할 필요가 없다고 합니다. 
 
 바뀌는 점은 메모리 풀을 삭제하고 표준 new delete를 사용할 것면서 관련 코드를 뺍니다 
+
+
+언리얼엔진 프로젝트와 C++ IOCP 서버를 Protobuf 연동할것입니다. 
+서버쪽 라이브러리를 가져와야하는데 기본적인 C++ 프로젝트와는 속성창이 다릅니다. 
+언리얼엔진 프로젝트 위치에도 Protobuf를 가져와야하는데 이전 서버에서 사용하던 google 폴더와 libprotobuf.lib 같은 파일을 가져옵니다. 
+그리고 ProtobufCore.build.cs 파일도 만들어야 합니다. 내용은 어느 디렉토리를 참조할것인지 지정해줍니다. 이 코드가 이전 서버에서 Visual Studio 설정에서 경로를 추가하던 부분입니다. 
+
+프로토버프를 사용하는 큰이유중 하나는 프로토 파일로 패킷구조를 설계하고 protoc.exe 로 컴파일할때 옵션을 주면 C++ 이던지 C# 이던지 알아서 변환을 해주기 때문에 
+C++ 서버와 유니티를 같이 사용하는게 더 용이해집니다. 
+
+서버에서 언리얼엔진으로 가져올것은 proto 파일자체가아니라 서버에서 proto파일을 컴파일한 결과물들을 가져오면 됩니다. 
+
+서버에서 가져온 파일들은 일단 Libraries 의 Include 폴더와 Libs 폴더에있는 Protobuf 폴더를 가져왔고 
+또 DummyClient 폴더에 있는 protocol.pb.cc, protocol.pb.h, enum.pb.cc, enum.pb.h, struct.pb.cc, struct.pb.h 와 ClientPacketHandler.h, ClientPacketHandler.cpp 
+여기에 또 ServerCore 폴더에 있는 BufferReader.h, BufferReader.cpp, BufferWriter.h, BufferWriter.cpp 를 가져왔습니다. 
+
+몇가지 오류가 있는데 컴파일과정에 경고가 생기는 부분이지만 무시해도 되기 때문에 pb.cc 파일에 include 되는 라이브러리 파일인 port_def.inc 맨마지막에 
+뜬 경고코드를 무시하도록 명령어를 적습니다. 
+
+그리고 OnlineRPG.build.cs 와 ProtobufCore.build.cs 에 추가한 파일들의 경로를 추가해줍니다. 
+
+여기까지 하면 아직 ClientPacketHandler 가 제대로 동작을 안할것인데 이부분은 일단 주석처리로 막아두고 빌드를 해서 통과 시킵니다.

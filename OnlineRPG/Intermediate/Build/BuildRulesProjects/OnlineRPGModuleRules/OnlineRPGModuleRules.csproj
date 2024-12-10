@@ -18,5 +18,6 @@
   <Compile Include="..\..\..\..\Source\OnlineRPG.Target.cs"><Link>Source\OnlineRPG.Target.cs</Link></Compile>
   <Compile Include="..\..\..\..\Source\OnlineRPGEditor.Target.cs"><Link>Source\OnlineRPGEditor.Target.cs</Link></Compile>
   <Compile Include="..\..\..\..\Source\OnlineRPG\OnlineRPG.Build.cs"><Link>Source\OnlineRPG\OnlineRPG.Build.cs</Link></Compile>
+  <Compile Include="..\..\..\..\Source\ProtobufCore\ProtobufCore.Build.cs"><Link>Source\ProtobufCore\ProtobufCore.Build.cs</Link></Compile>
   </ItemGroup>
 </Project>

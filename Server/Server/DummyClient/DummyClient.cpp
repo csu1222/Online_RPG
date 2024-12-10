@@ -44,41 +44,6 @@ public:
 
 int main()
 {
-//	ClientPacketHandler::Init();
-//
-//	this_thread::sleep_for(1s);
-//
-//	ClientServiceRef service = make_shared<ClientService>(
-//		NetAddress(L"127.0.0.1", 7777),
-//		make_shared<IocpCore>(),
-//		[=]() { return make_shared<ServerSession>(); }, // TODO : SessionManager 등
-//		1);
-//
-//	ASSERT_CRASH(service->Start());
-//
-//	for (int32 i = 0; i < 2; i++)
-//	{
-//		GThreadManager->Launch([=]()
-//			{
-//				while (true)
-//				{
-//					service->GetIocpCore()->Dispatch();
-//				}
-//			});
-//	}
-//
-//	Protocol::C_CHAT chatPkt;
-//	chatPkt.set_msg(u8"Hello World !");
-//	auto sendBuffer = ClientPacketHandler::MakeSendBuffer(chatPkt);
-//
-//	while (true)
-//	{
-//		service->Broadcast(sendBuffer);
-//		this_thread::sleep_for(1s);
-//	}
-//
-//	GThreadManager->Join();
-
 ClientPacketHandler::Init();
 
 this_thread::sleep_for(1s);

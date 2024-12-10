@@ -7,6 +7,12 @@
 /IGNORE:4221
 /NODEFAULTLIB
 "D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\OnlineRPGEditor\Development\Engine\SharedPCH.Engine.Cpp20.h.obj"
+"D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\ClientPacketHandler.cpp.obj"
 "D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\OnlineRPG.cpp.obj"
+"D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\BufferReader.cpp.obj"
+"D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\BufferWriter.cpp.obj"
+"D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\Enum.pb.cc.obj"
+"D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\Protocol.pb.cc.obj"
+"D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\Struct.pb.cc.obj"
 "D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\Default.rc2.res"
 /OUT:"D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\UnrealEditor-OnlineRPG.lib"

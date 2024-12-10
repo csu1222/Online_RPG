@@ -10,7 +10,13 @@ public class OnlineRPG : ModuleRules
 	
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
 
-		PrivateDependencyModuleNames.AddRange(new string[] {  });
+		PrivateDependencyModuleNames.AddRange(new string[] { "ProtobufCore" });
+
+		PrivateIncludePaths.AddRange(new string[] 
+		{ 
+			"OnlineRPG/", 
+			"OnlineRPG/Network/", 
+		});
 
 	}
 }
