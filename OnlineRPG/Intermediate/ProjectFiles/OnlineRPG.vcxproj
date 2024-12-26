@@ -120,6 +120,12 @@
       <AdditionalOptions>$(ClCompile_AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClInclude Include="..\..\Source\OnlineRPG\ClientPacketHandler.h"/>
+    <ClCompile Include="..\..\Source\OnlineRPG\MyActor.cpp">
+      <AdditionalIncludeDirectories>$(ClCompile_AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>$(ClCompile_ForcedIncludeFiles)</ForcedIncludeFiles>
+      <AdditionalOptions>$(ClCompile_AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\OnlineRPG\MyActor.h"/>
     <None Include="..\..\Source\OnlineRPG\OnlineRPG.Build.cs"/>
     <ClCompile Include="..\..\Source\OnlineRPG\OnlineRPG.cpp">
       <AdditionalIncludeDirectories>$(ClCompile_AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -127,6 +133,18 @@
       <AdditionalOptions>$(ClCompile_AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClInclude Include="..\..\Source\OnlineRPG\OnlineRPG.h"/>
+    <ClCompile Include="..\..\Source\OnlineRPG\OnlineRPGGameInstance.cpp">
+      <AdditionalIncludeDirectories>$(ClCompile_AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>$(ClCompile_ForcedIncludeFiles)</ForcedIncludeFiles>
+      <AdditionalOptions>$(ClCompile_AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\OnlineRPG\OnlineRPGGameInstance.h"/>
+    <ClCompile Include="..\..\Source\OnlineRPG\OnlineRPGGameModeBase.cpp">
+      <AdditionalIncludeDirectories>$(ClCompile_AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>$(ClCompile_ForcedIncludeFiles)</ForcedIncludeFiles>
+      <AdditionalOptions>$(ClCompile_AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\OnlineRPG\OnlineRPGGameModeBase.h"/>
     <ClCompile Include="..\..\Source\OnlineRPG\Network\BufferReader.cpp">
       <AdditionalIncludeDirectories>$(ClCompile_AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>$(ClCompile_ForcedIncludeFiles)</ForcedIncludeFiles>
@@ -141,6 +159,18 @@
     <ClInclude Include="..\..\Source\OnlineRPG\Network\BufferWriter.h"/>
     <None Include="..\..\Source\OnlineRPG\Network\Enum.pb.cc"/>
     <ClInclude Include="..\..\Source\OnlineRPG\Network\Enum.pb.h"/>
+    <ClCompile Include="..\..\Source\OnlineRPG\Network\NetworkWorker.cpp">
+      <AdditionalIncludeDirectories>$(ClCompile_AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>$(ClCompile_ForcedIncludeFiles)</ForcedIncludeFiles>
+      <AdditionalOptions>$(ClCompile_AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\OnlineRPG\Network\NetworkWorker.h"/>
+    <ClCompile Include="..\..\Source\OnlineRPG\Network\PacketSession.cpp">
+      <AdditionalIncludeDirectories>$(ClCompile_AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>$(ClCompile_ForcedIncludeFiles)</ForcedIncludeFiles>
+      <AdditionalOptions>$(ClCompile_AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\OnlineRPG\Network\PacketSession.h"/>
     <None Include="..\..\Source\OnlineRPG\Network\Protocol.pb.cc"/>
     <ClInclude Include="..\..\Source\OnlineRPG\Network\Protocol.pb.h"/>
     <None Include="..\..\Source\OnlineRPG\Network\Struct.pb.cc"/>

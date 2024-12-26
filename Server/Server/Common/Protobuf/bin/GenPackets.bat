@@ -24,6 +24,14 @@ XCOPY /Y Protocol.pb.h "../../../DummyClient"
 XCOPY /Y Protocol.pb.cc "../../../DummyClient"
 XCOPY /Y ClientPacketHandler.h "../../../DummyClient"
 
+XCOPY /Y Enum.pb.h "../../../../../OnlineRPG/Source/OnlineRPG/Network"
+XCOPY /Y Enum.pb.cc "../../../../../OnlineRPG/Source/OnlineRPG/Network"
+XCOPY /Y Struct.pb.h "../../../../../OnlineRPG/Source/OnlineRPG/Network"
+XCOPY /Y Struct.pb.cc "../../../../../OnlineRPG/Source/OnlineRPG/Network"
+XCOPY /Y Protocol.pb.h "../../../../../OnlineRPG/Source/OnlineRPG/Network"
+XCOPY /Y Protocol.pb.cc "../../../../../OnlineRPG/Source/OnlineRPG/Network"
+XCOPY /Y ClientPacketHandler.h "../../../../../OnlineRPG/Source/OnlineRPG"
+
 DEL /Q /F *.pb.h
 DEL /Q /F *.pb.cc
 DEL /Q /F *.h

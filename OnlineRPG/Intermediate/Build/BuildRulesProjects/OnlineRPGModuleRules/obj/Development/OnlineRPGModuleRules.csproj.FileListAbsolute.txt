@@ -1,0 +1,6 @@
+D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\BuildRulesProjects\OnlineRPGModuleRules\obj\Development\OnlineRPGModuleRules.csproj.AssemblyReference.cache
+D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\BuildRulesProjects\OnlineRPGModuleRules\obj\Development\OnlineRPGModuleRules.GeneratedMSBuildEditorConfig.editorconfig
+D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\BuildRulesProjects\OnlineRPGModuleRules\obj\Development\OnlineRPGModuleRules.AssemblyInfoInputs.cache
+D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\BuildRulesProjects\OnlineRPGModuleRules\obj\Development\OnlineRPGModuleRules.AssemblyInfo.cs
+D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\BuildRulesProjects\OnlineRPGModuleRules\obj\Development\OnlineRPGModuleRules.csproj.CoreCompileInputs.cache
+D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\BuildRulesProjects\OnlineRPGModuleRules\obj\Development\OnlineRPGModuleRules.sourcelink.json

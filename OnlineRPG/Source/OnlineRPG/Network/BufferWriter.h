@@ -22,6 +22,8 @@ public:
 
 	template<typename T>
 	T*				Reserve(uint16 count = 1);
+	//template<typename T>
+	//T* Reserve();
 
 	template<typename T>
 	BufferWriter&	operator<<(const T& src);
@@ -45,6 +47,17 @@ T* BufferWriter::Reserve(uint16 count)
 	_pos += (sizeof(T) * count);
 	return ret;
 }
+//template<typename T>
+//T* BufferWriter::Reserve()
+//{
+//	if (FreeSize() < sizeof(T))
+//		return nullptr;
+//
+//	T* ret = reinterpret_cast<T*>(&_buffer[_pos]);
+//	_pos += sizeof(T);
+//	return ret;
+//}
+
 
 template<typename T>
 BufferWriter& BufferWriter::operator<<(const T& src)

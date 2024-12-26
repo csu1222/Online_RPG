@@ -36,6 +36,12 @@
     <ClInclude Include="..\..\Source\OnlineRPG\ClientPacketHandler.h">
       <Filter>Source\OnlineRPG</Filter>
     </ClInclude>
+    <ClCompile Include="..\..\Source\OnlineRPG\MyActor.cpp">
+      <Filter>Source\OnlineRPG</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\OnlineRPG\MyActor.h">
+      <Filter>Source\OnlineRPG</Filter>
+    </ClInclude>
     <None Include="..\..\Source\OnlineRPG\OnlineRPG.Build.cs">
       <Filter>Source\OnlineRPG</Filter>
     </None>
@@ -43,6 +49,18 @@
       <Filter>Source\OnlineRPG</Filter>
     </ClCompile>
     <ClInclude Include="..\..\Source\OnlineRPG\OnlineRPG.h">
+      <Filter>Source\OnlineRPG</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\OnlineRPG\OnlineRPGGameInstance.cpp">
+      <Filter>Source\OnlineRPG</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\OnlineRPG\OnlineRPGGameInstance.h">
+      <Filter>Source\OnlineRPG</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\OnlineRPG\OnlineRPGGameModeBase.cpp">
+      <Filter>Source\OnlineRPG</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\OnlineRPG\OnlineRPGGameModeBase.h">
       <Filter>Source\OnlineRPG</Filter>
     </ClInclude>
     <Filter Include="Source\OnlineRPG\Network">
@@ -64,6 +82,18 @@
       <Filter>Source\OnlineRPG\Network</Filter>
     </None>
     <ClInclude Include="..\..\Source\OnlineRPG\Network\Enum.pb.h">
+      <Filter>Source\OnlineRPG\Network</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\OnlineRPG\Network\NetworkWorker.cpp">
+      <Filter>Source\OnlineRPG\Network</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\OnlineRPG\Network\NetworkWorker.h">
+      <Filter>Source\OnlineRPG\Network</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\OnlineRPG\Network\PacketSession.cpp">
+      <Filter>Source\OnlineRPG\Network</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\OnlineRPG\Network\PacketSession.h">
       <Filter>Source\OnlineRPG\Network</Filter>
     </ClInclude>
     <None Include="..\..\Source\OnlineRPG\Network\Protocol.pb.cc">

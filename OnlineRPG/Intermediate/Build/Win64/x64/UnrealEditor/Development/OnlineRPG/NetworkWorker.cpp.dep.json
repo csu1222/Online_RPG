@@ -1,0 +1,19 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "d:\\cpp_game\\portfolio\\onlinerpg\\source\\onlinerpg\\network\\networkworker.cpp",
+        "ProvidedModule": "",
+        "PCH": "d:\\cpp_game\\portfolio\\onlinerpg\\intermediate\\build\\win64\\x64\\onlinerpgeditor\\development\\engine\\sharedpch.engine.cpp20.h.pch",
+        "Includes": [
+            "d:\\cpp_game\\portfolio\\onlinerpg\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\onlinerpg\\definitions.onlinerpg.h",
+            "d:\\cpp_game\\portfolio\\onlinerpg\\source\\onlinerpg\\network\\networkworker.h",
+            "d:\\cpp_game\\portfolio\\onlinerpg\\source\\onlinerpg\\onlinerpg.h",
+            "d:\\program files\\epic games\\ue_5.3\\engine\\source\\runtime\\sockets\\public\\sockets.h",
+            "d:\\program files\\epic games\\ue_5.3\\engine\\source\\runtime\\core\\public\\serialization\\arraywriter.h",
+            "d:\\program files\\epic games\\ue_5.3\\engine\\source\\runtime\\core\\public\\serialization\\bufferarchive.h",
+            "d:\\cpp_game\\portfolio\\onlinerpg\\source\\onlinerpg\\network\\packetsession.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}
