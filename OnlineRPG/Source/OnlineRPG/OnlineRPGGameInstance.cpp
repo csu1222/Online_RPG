@@ -7,6 +7,8 @@
 #include "Serialization/ArrayWriter.h"
 #include "SocketSubsystem.h"
 #include "PacketSession.h"
+#include "Network/Protocol.pb.h"
+#include "ClientPacketHandler.h"
 
 void UOnlineRPGGameInstance::ConnectToGameServer()
 {
@@ -36,6 +38,13 @@ void UOnlineRPGGameInstance::ConnectToGameServer()
 		// Session
 		GameServerSession = MakeShared<PacketSession>(Socket);
 		GameServerSession->Run();
+
+		// TEMP : Lobby에서 캐릭터 선택창 등
+		{
+			Protocol::C_LOGIN pkt;
+			SendBufferRef SendBuffer = ClientPacketHandler::MakeSendBuffer(pkt);
+			SendPacket(SendBuffer);
+		}
 	}
 	else
 	{
@@ -45,12 +54,18 @@ void UOnlineRPGGameInstance::ConnectToGameServer()
 
 void UOnlineRPGGameInstance::DisconnectFromGameServer()
 {
-	if (Socket)
-	{
-		ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get();
-		SocketSubsystem->DestroySocket(Socket);
-		Socket = nullptr;
-	}
+	if (Socket == nullptr || GameServerSession == nullptr)
+		return;
+
+	Protocol::C_LEAVE_GAME LeavePkt;
+	SEND_PACKET(LeavePkt);
+
+	//if (Socket)
+	//{
+	//	ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get();
+	//	SocketSubsystem->DestroySocket(Socket);
+	//	Socket = nullptr;
+	//}
 }
 
 void UOnlineRPGGameInstance::HandleRecvPackets()
@@ -67,4 +82,63 @@ void UOnlineRPGGameInstance::SendPacket(SendBufferRef SendBuffer)
 		return;
 
 	GameServerSession->SendPacket(SendBuffer);
+}
+
+void UOnlineRPGGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo)
+{
+	if (Socket == nullptr || GameServerSession == nullptr)
+		return;
+	
+	auto* World = GetWorld();
+	if (World == nullptr)
+		return;
+
+	// 중복 처리 체크
+	const uint64 ObjectId = PlayerInfo.object_id();
+	if (Players.Find(ObjectId) != nullptr)
+		return;
+
+	FVector SpawnLocation(PlayerInfo.x(), PlayerInfo.y(), PlayerInfo.z());
+	AActor* Actor = World->SpawnActor(PlayerClass, &SpawnLocation);
+
+	Players.Add(PlayerInfo.object_id(), Actor);
+}
+
+void UOnlineRPGGameInstance::HandleSpawn(const Protocol::S_ENTER_GAME& EnterGamePkt)
+{
+	HandleSpawn(EnterGamePkt.player());
+}
+
+void UOnlineRPGGameInstance::HandleSpawn(const Protocol::S_SPAWN& SpawnPkt)
+{
+	for (auto& Player : SpawnPkt.players())
+	{
+		HandleSpawn(Player);
+	}
+}
+
+void UOnlineRPGGameInstance::HandleDespawn(uint64 ObjectId)
+{
+	if (Socket == nullptr || GameServerSession == nullptr)
+		return;
+
+	auto* World = GetWorld();
+	if (World == nullptr)
+		return;
+
+	// TODO : Despawn 처리
+
+	AActor** FindActor = Players.Find(ObjectId);
+	if (FindActor == nullptr)
+		return;
+
+	World->DestroyActor(*FindActor);
+}
+
+void UOnlineRPGGameInstance::HandleDespawn(const Protocol::S_DESPAWN& DespawnPkt)
+{
+	for (auto ObjectId : DespawnPkt.object_ids())
+	{
+		HandleDespawn(ObjectId);
+	}
 }

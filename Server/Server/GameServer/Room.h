@@ -4,13 +4,25 @@
 class Room : public JobQueue
 {
 public:
+	Room();
+	virtual ~Room();
+
+	bool HandleEnterPlayerLocked(PlayerRef player);
+	bool HandleLeavePlayerLocked(PlayerRef player);
+
+private:
+	bool EnterPlayer(PlayerRef player);
+	bool LeavePlayer(uint64 objectId);
+
+	USE_LOCK;
+public:
 	// 싱글쓰레드 환경인마냥 코딩
 	void Enter(PlayerRef player);
 	void Leave(PlayerRef player);
-	void Broadcast(SendBufferRef sendBuffer);
+	void Broadcast(SendBufferRef sendBuffer, uint64 exceptId = 0);
 
 private:
-	map<uint64, PlayerRef> _players;
+	unordered_map<uint64, PlayerRef> _players;
 };
 
-extern shared_ptr<Room> GRoom;
+extern RoomRef GRoom;

@@ -1,6 +1,8 @@
 #pragma once
 #include "Session.h"
 
+class Player;
+
 class GameSession : public PacketSession
 {
 public:
@@ -17,6 +19,6 @@ public:
 public:
 	vector<PlayerRef> _players;
 
-	PlayerRef _currentPlayer;
+	atomic<PlayerRef> _currentPlayer;
 	weak_ptr<class Room> _room;
 };
