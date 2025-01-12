@@ -144,7 +144,7 @@ bool Handle_C_LEAVE_GAME(PacketSessionRef& session, Protocol::C_LEAVE_GAME& pkt)
 {
 	auto gameSession = static_pointer_cast<GameSession>(session);
 
-	auto player = gameSession->_currentPlayer.load();
+	PlayerRef player = gameSession->_currentPlayer.load();
 	if (player == nullptr)
 		return false;
 
@@ -157,8 +157,20 @@ bool Handle_C_LEAVE_GAME(PacketSessionRef& session, Protocol::C_LEAVE_GAME& pkt)
 	return true;
 }
 
-bool Handle_C_SPAWN(PacketSessionRef& session, Protocol::C_SPAWN& pkt)
+bool Handle_C_MOVE(PacketSessionRef& session, Protocol::C_MOVE& pkt)
 {
+	auto gameSession = static_pointer_cast<GameSession>(session);
+
+	auto player = gameSession->_currentPlayer.load();
+	if (player == nullptr)
+		return false;
+
+	RoomRef room = player->room.load().lock();
+	if (room == nullptr)
+		return false;
+
+	room->HandleMoveLocked(pkt);
+
 	return true;
 }
 

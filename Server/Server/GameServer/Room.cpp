@@ -19,10 +19,10 @@ bool Room::HandleEnterPlayerLocked(PlayerRef player)
 
 	bool success = EnterPlayer(player);
 
-	// 랜덤위치 스폰
+	// 랜덤 위치
 	player->playerInfo->set_x(Utils::GetRandom(0.f, 500.f));
 	player->playerInfo->set_y(Utils::GetRandom(0.f, 500.f));
-	player->playerInfo->set_z(Utils::GetRandom(0.f, 500.f));
+	player->playerInfo->set_z(100.f);
 	player->playerInfo->set_yaw(Utils::GetRandom(0.f, 100.f));
 
 	// 방에 입장했다고 알림
@@ -99,6 +99,32 @@ bool Room::HandleLeavePlayerLocked(PlayerRef player)
 	return success;
 }
 
+void Room::HandleMoveLocked(Protocol::C_MOVE& pkt)
+{
+	WRITE_LOCK;
+
+	const uint64 objectId = pkt.info().object_id();
+
+	if (_players.find(objectId) == _players.end())
+		return;
+	
+	// 적용
+	PlayerRef player = _players[objectId];
+	player->playerInfo->CopyFrom(pkt.info());
+
+	// 이동
+	{
+		Protocol::S_MOVE movePkt;
+		{
+			Protocol::PlayerInfo* info = movePkt.mutable_info();
+			info->CopyFrom(pkt.info());
+		}
+
+		SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(movePkt);
+		Broadcast(sendBuffer);
+	}
+}
+
 bool Room::EnterPlayer(PlayerRef player)
 {
 	if (_players.find(player->playerInfo->object_id()) != _players.end())
@@ -123,16 +149,6 @@ bool Room::LeavePlayer(uint64 objectId)
 	_players.erase(objectId);
 
 	return true;
-}
-
-void Room::Enter(PlayerRef player)
-{
-	_players[player->playerInfo->object_id()] = player;
-}
-
-void Room::Leave(PlayerRef player)
-{
-	_players.erase(player->playerInfo->object_id());
 }
 
 void Room::Broadcast(SendBufferRef sendBuffer, uint64 exceptId)

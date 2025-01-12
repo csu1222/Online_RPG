@@ -1,6 +1,7 @@
 /I "."
 /I "D:\CPP_Game\Portfolio\OnlineRPG\Source\OnlineRPG"
 /I "D:\CPP_Game\Portfolio\OnlineRPG\Source\OnlineRPG\Network"
+/I "D:\CPP_Game\Portfolio\OnlineRPG\Source\OnlineRPG\Game"
 /I "D:\CPP_Game\Portfolio\OnlineRPG\Source\ProtobufCore\Include"
 /I "..\Intermediate\Build\Win64\UnrealEditor\Inc\Engine\UHT"
 /I "..\Shaders\Shared"
@@ -261,6 +262,8 @@
 /I "Developer\WidgetRegistration\Public"
 /I "D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\UnrealEditor\Inc\OnlineRPG\UHT"
 /I "D:\CPP_Game\Portfolio\OnlineRPG\Source"
+/I "..\Plugins\EnhancedInput\Intermediate\Build\Win64\UnrealEditor\Inc\EnhancedInput\UHT"
+/I "..\Plugins\EnhancedInput\Source\EnhancedInput\Public"
 /external:W0
 /external:I "D:\CPP_Game\Portfolio\OnlineRPG\Source\ProtobufCore\Include"
 /external:I "ThirdParty\mimalloc\include"

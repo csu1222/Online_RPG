@@ -7,6 +7,7 @@
 #include "OnlineRPG.h"
 #include "OnlineRPGGameInstance.generated.h"
 
+class AOR_Player;
 /**
  * 
  */
@@ -31,12 +32,14 @@ public:
 	// 패킷처리
 
 	// HandleSpawn 3가지 버전
-	void HandleSpawn(const Protocol::PlayerInfo& PlayerInfo);
+	void HandleSpawn(const Protocol::PlayerInfo& PlayerInfo , bool IsMine);
 	void HandleSpawn(const Protocol::S_ENTER_GAME& EnterGamePkt);
 	void HandleSpawn(const Protocol::S_SPAWN& SpawnPkt);
 
 	void HandleDespawn(uint64 ObjectId);
 	void HandleDespawn(const Protocol::S_DESPAWN& DespawnPkt);
+
+	void HandleMove(const Protocol::S_MOVE& MovePkt);
 
 public:
 	// GameServer
@@ -46,7 +49,7 @@ public:
 	TSharedPtr<class PacketSession> GameServerSession;
 public:
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<AActor> PlayerClass;
-
-	TMap<uint64, AActor*> Players;
+	TSubclassOf<AOR_Player>		OtherPlayerClass;
+	AOR_Player*					MyPlayer;
+	TMap<uint64, AOR_Player*>	Players;
 };

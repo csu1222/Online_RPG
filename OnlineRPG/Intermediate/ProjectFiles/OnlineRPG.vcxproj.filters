@@ -36,12 +36,6 @@
     <ClInclude Include="..\..\Source\OnlineRPG\ClientPacketHandler.h">
       <Filter>Source\OnlineRPG</Filter>
     </ClInclude>
-    <ClCompile Include="..\..\Source\OnlineRPG\MyActor.cpp">
-      <Filter>Source\OnlineRPG</Filter>
-    </ClCompile>
-    <ClInclude Include="..\..\Source\OnlineRPG\MyActor.h">
-      <Filter>Source\OnlineRPG</Filter>
-    </ClInclude>
     <None Include="..\..\Source\OnlineRPG\OnlineRPG.Build.cs">
       <Filter>Source\OnlineRPG</Filter>
     </None>
@@ -62,6 +56,21 @@
     </ClCompile>
     <ClInclude Include="..\..\Source\OnlineRPG\OnlineRPGGameModeBase.h">
       <Filter>Source\OnlineRPG</Filter>
+    </ClInclude>
+    <Filter Include="Source\OnlineRPG\Game">
+      <UniqueIdentifier>{F307627D-B4C0-326E-A8E2-0377A16B132A}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\OnlineRPG\Game\OR_MyPlayer.cpp">
+      <Filter>Source\OnlineRPG\Game</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\OnlineRPG\Game\OR_MyPlayer.h">
+      <Filter>Source\OnlineRPG\Game</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\OnlineRPG\Game\OR_Player.cpp">
+      <Filter>Source\OnlineRPG\Game</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\OnlineRPG\Game\OR_Player.h">
+      <Filter>Source\OnlineRPG\Game</Filter>
     </ClInclude>
     <Filter Include="Source\OnlineRPG\Network">
       <UniqueIdentifier>{30096A3C-0401-3FA9-A131-C915C3755C24}</UniqueIdentifier>

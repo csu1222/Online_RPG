@@ -2696,22 +2696,6 @@
           "bin/placeholder/EpicGames.UHT.dll": {}
         }
       },
-      "MarketplaceRules/1.0.0": {
-        "type": "project",
-        "framework": ".NETCoreApp,Version=v6.0",
-        "dependencies": {
-          "EpicGames.Build": "1.0.0",
-          "UE5ProgramRules": "1.0.0",
-          "UE5Rules": "1.0.0",
-          "UnrealBuildTool": "1.0.0"
-        },
-        "compile": {
-          "bin/placeholder/MarketplaceRules.dll": {}
-        },
-        "runtime": {
-          "bin/placeholder/MarketplaceRules.dll": {}
-        }
-      },
       "UE5ProgramRules/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v6.0",
@@ -8033,11 +8017,6 @@
       "path": "../../../../../../../Program Files/Epic Games/UE_5.3/Engine/Source/Programs/Shared/EpicGames.UHT/EpicGames.UHT.csproj",
       "msbuildProject": "../../../../../../../Program Files/Epic Games/UE_5.3/Engine/Source/Programs/Shared/EpicGames.UHT/EpicGames.UHT.csproj"
     },
-    "MarketplaceRules/1.0.0": {
-      "type": "project",
-      "path": "../../../../../../../Program Files/Epic Games/UE_5.3/Engine/Intermediate/Build/BuildRulesProjects/MarketplaceRules/MarketplaceRules.csproj",
-      "msbuildProject": "../../../../../../../Program Files/Epic Games/UE_5.3/Engine/Intermediate/Build/BuildRulesProjects/MarketplaceRules/MarketplaceRules.csproj"
-    },
     "UE5ProgramRules/1.0.0": {
       "type": "project",
       "path": "../../../../../../../Program Files/Epic Games/UE_5.3/Engine/Intermediate/Build/BuildRulesProjects/UE5ProgramRules/UE5ProgramRules.csproj",
@@ -8057,7 +8036,6 @@
   "projectFileDependencyGroups": {
     "net6.0": [
       "EpicGames.Build >= 1.0.0",
-      "MarketplaceRules >= 1.0.0",
       "UE5ProgramRules >= 1.0.0",
       "UE5Rules >= 1.0.0",
       "UnrealBuildTool >= 1.0.0"
@@ -8096,9 +8074,6 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "projectReferences": {
-            "D:\\Program Files\\Epic Games\\UE_5.3\\Engine\\Intermediate\\Build\\BuildRulesProjects\\MarketplaceRules\\MarketplaceRules.csproj": {
-              "projectPath": "D:\\Program Files\\Epic Games\\UE_5.3\\Engine\\Intermediate\\Build\\BuildRulesProjects\\MarketplaceRules\\MarketplaceRules.csproj"
-            },
             "D:\\Program Files\\Epic Games\\UE_5.3\\Engine\\Intermediate\\Build\\BuildRulesProjects\\UE5ProgramRules\\UE5ProgramRules.csproj": {
               "projectPath": "D:\\Program Files\\Epic Games\\UE_5.3\\Engine\\Intermediate\\Build\\BuildRulesProjects\\UE5ProgramRules\\UE5ProgramRules.csproj"
             },

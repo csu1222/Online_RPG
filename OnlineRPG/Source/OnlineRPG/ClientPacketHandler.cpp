@@ -20,7 +20,7 @@ bool Handle_S_LOGIN(PacketSessionRef& session, Protocol::S_LOGIN& pkt)
 
 	for (int32 i = 0; i < pkt.players_size(); i++)
 	{
-		auto& Player = pkt.players(i);
+		const Protocol::PlayerInfo& Player = pkt.players(i);
 	}
 
 	// 로비에서 캐릭터 선택해서 인덱스 전송
@@ -35,7 +35,7 @@ bool Handle_S_ENTER_GAME(PacketSessionRef& session, Protocol::S_ENTER_GAME& pkt)
 {
 	if (auto* GameInstance = Cast<UOnlineRPGGameInstance>(GWorld->GetGameInstance()))
 	{
-		GameInstance->HandleSpawn(pkt.player());
+		GameInstance->HandleSpawn(pkt);
 	}
 	return true;
 }
@@ -65,6 +65,15 @@ bool Handle_S_DESPAWN(PacketSessionRef& session, Protocol::S_DESPAWN& pkt)
 	if (auto* GameInstance = Cast<UOnlineRPGGameInstance>(GWorld->GetGameInstance()))
 	{
 		GameInstance->HandleDespawn(pkt);
+	}
+	return true;
+}
+
+bool Handle_S_MOVE(PacketSessionRef& session, Protocol::S_MOVE& pkt)
+{
+	if (auto* GameInstance = Cast<UOnlineRPGGameInstance>(GWorld->GetGameInstance()))
+	{
+		GameInstance->HandleMove(pkt);
 	}
 	return true;
 }

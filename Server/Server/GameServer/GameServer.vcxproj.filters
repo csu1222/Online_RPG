@@ -16,6 +16,9 @@
     <Filter Include="Utils">
       <UniqueIdentifier>{f8a50aae-da09-4e74-bd11-911fe393c0c2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Protocol\Proto">
+      <UniqueIdentifier>{8d059311-4adf-4c24-a230-7afd39fdea89}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameServer.cpp">
@@ -94,20 +97,20 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Common\Protobuf\bin\Protocol.proto">
-      <Filter>Protocol</Filter>
-    </None>
-    <None Include="..\Common\Protobuf\bin\Struct.proto">
-      <Filter>Protocol</Filter>
-    </None>
-    <None Include="..\Common\Protobuf\bin\Enum.proto">
-      <Filter>Protocol</Filter>
-    </None>
     <None Include="..\Common\Procedures\GenProcs.bat">
       <Filter>DB</Filter>
     </None>
     <None Include="..\Common\Protobuf\bin\GenPackets.bat">
       <Filter>Protocol</Filter>
+    </None>
+    <None Include="..\Common\Protobuf\bin\Enum.proto">
+      <Filter>Protocol\Proto</Filter>
+    </None>
+    <None Include="..\Common\Protobuf\bin\Protocol.proto">
+      <Filter>Protocol\Proto</Filter>
+    </None>
+    <None Include="..\Common\Protobuf\bin\Struct.proto">
+      <Filter>Protocol\Proto</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

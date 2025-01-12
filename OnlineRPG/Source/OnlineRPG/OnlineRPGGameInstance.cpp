@@ -9,6 +9,7 @@
 #include "PacketSession.h"
 #include "Network/Protocol.pb.h"
 #include "ClientPacketHandler.h"
+#include "OR_MyPlayer.h"
 
 void UOnlineRPGGameInstance::ConnectToGameServer()
 {
@@ -84,7 +85,7 @@ void UOnlineRPGGameInstance::SendPacket(SendBufferRef SendBuffer)
 	GameServerSession->SendPacket(SendBuffer);
 }
 
-void UOnlineRPGGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo)
+void UOnlineRPGGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool IsMine)
 {
 	if (Socket == nullptr || GameServerSession == nullptr)
 		return;
@@ -99,21 +100,38 @@ void UOnlineRPGGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo)
 		return;
 
 	FVector SpawnLocation(PlayerInfo.x(), PlayerInfo.y(), PlayerInfo.z());
-	AActor* Actor = World->SpawnActor(PlayerClass, &SpawnLocation);
 
-	Players.Add(PlayerInfo.object_id(), Actor);
+	if (IsMine)
+	{
+		// 내 캐릭터
+		auto* PC = UGameplayStatics::GetPlayerController(this, 0);
+		AOR_Player* Player = Cast<AOR_Player>(PC->GetPawn());
+		if (Player == nullptr)
+			return;
+
+		Player->SetPlayerInfo(PlayerInfo);
+		MyPlayer = Player;
+		Players.Add(PlayerInfo.object_id(), Player);
+	}
+	else
+	{
+		// 다른 플레이어
+		AOR_Player* OtherPlayer = Cast<AOR_Player>(World->SpawnActor(OtherPlayerClass, &SpawnLocation));
+		OtherPlayer->SetPlayerInfo(PlayerInfo);
+		Players.Add(PlayerInfo.object_id(), OtherPlayer);
+	}
 }
 
 void UOnlineRPGGameInstance::HandleSpawn(const Protocol::S_ENTER_GAME& EnterGamePkt)
 {
-	HandleSpawn(EnterGamePkt.player());
+	HandleSpawn(EnterGamePkt.player(), true);
 }
 
 void UOnlineRPGGameInstance::HandleSpawn(const Protocol::S_SPAWN& SpawnPkt)
 {
 	for (auto& Player : SpawnPkt.players())
 	{
-		HandleSpawn(Player);
+		HandleSpawn(Player, false);
 	}
 }
 
@@ -128,7 +146,7 @@ void UOnlineRPGGameInstance::HandleDespawn(uint64 ObjectId)
 
 	// TODO : Despawn 처리
 
-	AActor** FindActor = Players.Find(ObjectId);
+	AOR_Player** FindActor = Players.Find(ObjectId);
 	if (FindActor == nullptr)
 		return;
 
@@ -141,4 +159,26 @@ void UOnlineRPGGameInstance::HandleDespawn(const Protocol::S_DESPAWN& DespawnPkt
 	{
 		HandleDespawn(ObjectId);
 	}
+}
+
+void UOnlineRPGGameInstance::HandleMove(const Protocol::S_MOVE& MovePkt)
+{
+	if (Socket == nullptr || GameServerSession == nullptr)
+		return;
+
+	auto* World = GetWorld();
+	if (World == nullptr)
+		return;
+
+	const uint64 ObjectId = MovePkt.info().object_id();
+	AOR_Player** FindActor = Players.Find(ObjectId);
+	if (FindActor == nullptr)
+		return;
+
+	AOR_Player* Player = *FindActor;
+	if (Player->IsMyPlayer())
+		return;
+
+	const Protocol::PlayerInfo& Info = MovePkt.info();
+	Player->SetDestInfo(Info);
 }

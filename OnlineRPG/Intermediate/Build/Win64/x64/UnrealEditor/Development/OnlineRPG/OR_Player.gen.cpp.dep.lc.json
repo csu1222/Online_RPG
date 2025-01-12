@@ -1,0 +1,23 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "d:\\cpp_game\\portfolio\\onlinerpg\\intermediate\\build\\win64\\unrealeditor\\inc\\onlinerpg\\uht\\or_player.gen.cpp",
+        "ProvidedModule": "",
+        "PCH": "d:\\cpp_game\\portfolio\\onlinerpg\\intermediate\\build\\win64\\x64\\onlinerpgeditor\\development\\engine\\sharedpch.engine.cpp20.h.pch",
+        "Includes": [
+            "d:\\cpp_game\\portfolio\\onlinerpg\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\onlinerpg\\definitions.onlinerpg.h",
+            "d:\\cpp_game\\portfolio\\onlinerpg\\source\\onlinerpg\\game\\or_player.h",
+            "d:\\program files\\epic games\\ue_5.3\\engine\\source\\runtime\\engine\\classes\\gameframework\\character.h",
+            "d:\\program files\\epic games\\ue_5.3\\engine\\source\\runtime\\engine\\classes\\gameframework\\charactermovementreplication.h",
+            "d:\\program files\\epic games\\ue_5.3\\engine\\source\\runtime\\experimental\\iris\\core\\public\\iris\\serialization\\irisobjectreferencepackagemap.h",
+            "d:\\program files\\epic games\\ue_5.3\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\iriscore\\uht\\irisobjectreferencepackagemap.generated.h",
+            "d:\\program files\\epic games\\ue_5.3\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\charactermovementreplication.generated.h",
+            "d:\\program files\\epic games\\ue_5.3\\engine\\source\\runtime\\engine\\classes\\gameframework\\rootmotionsource.h",
+            "d:\\program files\\epic games\\ue_5.3\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\rootmotionsource.generated.h",
+            "d:\\program files\\epic games\\ue_5.3\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\character.generated.h",
+            "d:\\cpp_game\\portfolio\\onlinerpg\\intermediate\\build\\win64\\unrealeditor\\inc\\onlinerpg\\uht\\or_player.generated.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

@@ -10,8 +10,8 @@ PRAGMA_DISABLE_DEPRECATION_WARNINGS
 void EmptyLinkFunctionForGeneratedCodeOnlineRPGGameInstance() {}
 // Cross Module References
 	COREUOBJECT_API UClass* Z_Construct_UClass_UClass();
-	ENGINE_API UClass* Z_Construct_UClass_AActor_NoRegister();
 	ENGINE_API UClass* Z_Construct_UClass_UGameInstance();
+	ONLINERPG_API UClass* Z_Construct_UClass_AOR_Player_NoRegister();
 	ONLINERPG_API UClass* Z_Construct_UClass_UOnlineRPGGameInstance();
 	ONLINERPG_API UClass* Z_Construct_UClass_UOnlineRPGGameInstance_NoRegister();
 	UPackage* Z_Construct_UPackage__Script_OnlineRPG();
@@ -126,9 +126,9 @@ void EmptyLinkFunctionForGeneratedCodeOnlineRPGGameInstance() {}
 		static const UECodeGen_Private::FMetaDataPairParam Class_MetaDataParams[];
 #endif
 #if WITH_METADATA
-		static const UECodeGen_Private::FMetaDataPairParam NewProp_PlayerClass_MetaData[];
+		static const UECodeGen_Private::FMetaDataPairParam NewProp_OtherPlayerClass_MetaData[];
 #endif
-		static const UECodeGen_Private::FClassPropertyParams NewProp_PlayerClass;
+		static const UECodeGen_Private::FClassPropertyParams NewProp_OtherPlayerClass;
 		static const UECodeGen_Private::FPropertyParamsBase* const PropPointers[];
 		static const FCppClassTypeInfoStatic StaticCppClassTypeInfo;
 		static const UECodeGen_Private::FClassParams ClassParams;
@@ -154,14 +154,14 @@ void EmptyLinkFunctionForGeneratedCodeOnlineRPGGameInstance() {}
 	};
 #endif
 #if WITH_METADATA
-	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UClass_UOnlineRPGGameInstance_Statics::NewProp_PlayerClass_MetaData[] = {
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UClass_UOnlineRPGGameInstance_Statics::NewProp_OtherPlayerClass_MetaData[] = {
 		{ "Category", "OnlineRPGGameInstance" },
 		{ "ModuleRelativePath", "OnlineRPGGameInstance.h" },
 	};
 #endif
-	const UECodeGen_Private::FClassPropertyParams Z_Construct_UClass_UOnlineRPGGameInstance_Statics::NewProp_PlayerClass = { "PlayerClass", nullptr, (EPropertyFlags)0x0014000000000001, UECodeGen_Private::EPropertyGenFlags::Class, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UOnlineRPGGameInstance, PlayerClass), Z_Construct_UClass_UClass, Z_Construct_UClass_AActor_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_UOnlineRPGGameInstance_Statics::NewProp_PlayerClass_MetaData), Z_Construct_UClass_UOnlineRPGGameInstance_Statics::NewProp_PlayerClass_MetaData) };
+	const UECodeGen_Private::FClassPropertyParams Z_Construct_UClass_UOnlineRPGGameInstance_Statics::NewProp_OtherPlayerClass = { "OtherPlayerClass", nullptr, (EPropertyFlags)0x0014000000000001, UECodeGen_Private::EPropertyGenFlags::Class, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UOnlineRPGGameInstance, OtherPlayerClass), Z_Construct_UClass_UClass, Z_Construct_UClass_AOR_Player_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_UOnlineRPGGameInstance_Statics::NewProp_OtherPlayerClass_MetaData), Z_Construct_UClass_UOnlineRPGGameInstance_Statics::NewProp_OtherPlayerClass_MetaData) };
 	const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UClass_UOnlineRPGGameInstance_Statics::PropPointers[] = {
-		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UOnlineRPGGameInstance_Statics::NewProp_PlayerClass,
+		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UOnlineRPGGameInstance_Statics::NewProp_OtherPlayerClass,
 	};
 	const FCppClassTypeInfoStatic Z_Construct_UClass_UOnlineRPGGameInstance_Statics::StaticCppClassTypeInfo = {
 		TCppClassTypeTraits<UOnlineRPGGameInstance>::IsAbstract,
@@ -202,9 +202,9 @@ void EmptyLinkFunctionForGeneratedCodeOnlineRPGGameInstance() {}
 		static const FClassRegisterCompiledInInfo ClassInfo[];
 	};
 	const FClassRegisterCompiledInInfo Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_OnlineRPG_Source_OnlineRPG_OnlineRPGGameInstance_h_Statics::ClassInfo[] = {
-		{ Z_Construct_UClass_UOnlineRPGGameInstance, UOnlineRPGGameInstance::StaticClass, TEXT("UOnlineRPGGameInstance"), &Z_Registration_Info_UClass_UOnlineRPGGameInstance, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(UOnlineRPGGameInstance), 3474424614U) },
+		{ Z_Construct_UClass_UOnlineRPGGameInstance, UOnlineRPGGameInstance::StaticClass, TEXT("UOnlineRPGGameInstance"), &Z_Registration_Info_UClass_UOnlineRPGGameInstance, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(UOnlineRPGGameInstance), 2697432701U) },
 	};
-	static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_OnlineRPG_Source_OnlineRPG_OnlineRPGGameInstance_h_579147173(TEXT("/Script/OnlineRPG"),
+	static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_OnlineRPG_Source_OnlineRPG_OnlineRPGGameInstance_h_2140257166(TEXT("/Script/OnlineRPG"),
 		Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_OnlineRPG_Source_OnlineRPG_OnlineRPGGameInstance_h_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_OnlineRPG_Source_OnlineRPG_OnlineRPGGameInstance_h_Statics::ClassInfo),
 		nullptr, 0,
 		nullptr, 0);

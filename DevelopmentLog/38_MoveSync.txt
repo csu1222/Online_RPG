@@ -1,0 +1,45 @@
+
+먼저 테스트로 그냥 실린더를 가지고 했던 부분을 언리얼엔진에서 기본 제공하는 메쉬와 애니메이션으로 바꿨습니다. 
+
+Third Person 에셋을 사용했고 언리얼 엔진에서 CPP 파일로 OR_Player, OR_MyPlayer 라는 두가지 클래스를 만들었습니다. 
+OR은 제 프로젝트명인 OnlineRPG의 약자이고 Player는 월드에 접속하는 모든 플레이어들 MyPlayer는 클라이언트 자신이 컨트롤하는 플레이어입니다. 
+
+이 OR_MyPlayer, OR_Player 두 클래스의 코드는 기본적으로 Third Person 프로젝트의 코드를 가져옵니다. 
+
+그 중에서 OR_Player 가 부모 클래스가 될것이고 이 클라입장에서 나 말고 다른 플레이어들이 가지고 있어야 할 코드를 생각해보면 이동, 카메라, 스프링암,
+인풋 컴포넌트, 시선 등의 기능은 MyPlayer만 가지고 있어도 될것 같습니다. 남는 코드는 생성자, 소멸자, Begin Play, Tick 과 
+정보를 세팅하는 SetPlayerInfo, SetDestInfo 그리고 플레이어 정보를 꺼내는 GetPlayerInfo 정도가 있을겁니다. 
+
+반면 MyPlayer가 가지고 있을 코드는 나머지 카메라, 스프링암, 입력과 이동, 시선에 관련된 코드들도 가지고 있게 됩니다. 
+
+이 OR_MyPlayer, OR_Player 를 프로젝트에서 다른 폴더로 빼서 관리했다면 그 폴더도 참조하도록 프로젝트.Build.cs 파일에 추가해줘야합니다.
+
+
+그리고 나서 다시 언리얼 엔진을 켜서 위의 두 파일을 기반으로 블루프린트 클래스를 만들어 줍니다. 
+각각 BP_Player, BP_MyPlayer 라고 만든 후 이 블루프린트를 열어서 Third Person의 메쉬와 에니메이션을 세팅해줍니다. 
+추가로 직접 컨트롤을 할 BP_MyPlayer 는 입력 옵션에서 사용할 입력파일들을 세팅해줘야합니다. 
+
+기본적으로 이 BP_MyPlayer, BP_Player를 스폰하도록 하기위해서는 두가지 방법이 있는데 기본 게임모드가 기본적으로 기초 폰을 생성하게 되는데 이 폰을 삭제하고 거기에 BP_MyPlayer
+를 다시 생성하도록 하는방법과 아니면 직접 GameMode를 만들어 여기서 첨부터 BP_MyPlayer를 스폰하도록 하는방법이 있습니다. 
+
+두번째 방법으로 GameModeBase를 상속받은 BP_GameMode를 만들고 여기서 기본 PawnClass 를 BP_Player 로 설정합니다. 이전에 사용할 GameMode 클래스도 BP_GameMode 로 설정해야합니다. 
+그 후 BP_GameInstance 에서 BP_Player를 스폰하도록합니다. 
+
+
+다음은 비주얼 스튜디오로 가서 코드를 수정해야합니다. 
+무슨 코드를 수정해야하냐면 OnlineRPGGameInstance 인데 여기서 ClientPacketHandler 로 들어온 패킷이 S_ENTER_GAME 이나 S_SPAWN 이면 OnlineRPGGameInstance::HandleSpawn 으로 들어오게 되어있습니다. 
+이 중에 S_ENTER_GAME 패킷일 경우는 자기자신인 경우이기 때문에 OR_MyPlayer 로 스폰해주어야하고 S_SPAWN 패킷으로 들어오면 OR_Player로 스폰해주도록 하면 되겠습니다. 
+
+기존 HandleSpawn 함수는 세가지 버전이 있었는데 Protocol::PlayerInfo 를 받던지 S_ENTER_GAME 패킷을 받던지 S_SPAWN패킷을 받을 경우입니다. 
+이중에 S_ENTER_GAME, S_SPAWN 패킷을 받는버전은 각 상황에 맞게 한번만 HandleSpawn 을 하던지 여러번 호출하던지 합니다. 
+
+어느 패킷으로부터 HandleSpawn이 호출되었는지를 구별하기 위해 PlayerInfo 를 받는 버전에 파라미터를 bool 타입으로 하나 더 받아주고 이 값에 따라 어떤 클래스로 스폰할지를 구별해줍니다. 
+S_ENTER_GAME 패킷으로 들어오면 두번째 인자로 true를 주고 S_SPAWN 으로 들어오면 false 를 주는겁니다. 
+
+그 후 HandleSpawn 에 if else 문으로 각 상황에 맞는 스폰을 합니다. 
+
+이 수정을 하면서 이전에 플레이어들을 그냥 AActor 타입으로 사용하고 있던걸 AOR_Player 타입으로 바꿔줍니다. 변경사항을 프로젝트에 다 적용해주고 
+또 플레이어들을 Players 라고 TMap 으로 관리하고 있었지만 자기 자신은 특별히 따로 다시 관리해야 사용하기 편하기 때문에 MyPlayer도 멤버 변수로 하나 들어줍니다. 
+
+이렇게 수정하면 다른 곳에 에러가 하나 더 나는데 ClientPacketHandler 쪽에서 HandleSpawn 을 호출할때 PlayerInfo를 주는 부분입니다. 이제는 bool도 하나 줘야해서 
+그냥 받은 패킷을 그대로 줘서 걸러지도록 해줘야합니다. 

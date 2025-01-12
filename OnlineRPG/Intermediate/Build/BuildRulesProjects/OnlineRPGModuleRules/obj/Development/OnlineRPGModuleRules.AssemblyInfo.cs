@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("OnlineRPGModuleRules")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Development")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+228f703bc61b8a43a719438ea78f29ff3ce468c2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f85d66c92d54610f1efd799818715daa7e6558a7")]
 [assembly: System.Reflection.AssemblyProductAttribute("OnlineRPGModuleRules")]
 [assembly: System.Reflection.AssemblyTitleAttribute("OnlineRPGModuleRules")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
