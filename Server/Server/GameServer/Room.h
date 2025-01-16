@@ -7,16 +7,17 @@ public:
 	Room();
 	virtual ~Room();
 
-	bool HandleEnterPlayerLocked(PlayerRef player);
-	bool HandleLeavePlayerLocked(PlayerRef player);
+	bool HandleEnterPlayer(PlayerRef player);
+	bool HandleLeavePlayer(PlayerRef player);
 
-	void HandleMoveLocked(Protocol::C_MOVE& pkt);
+	void HandleMove(Protocol::C_MOVE pkt);
+
+	RoomRef GetRoomRef();
 
 private:
 	bool EnterPlayer(PlayerRef player);
 	bool LeavePlayer(uint64 objectId);
 
-	USE_LOCK;
 public:
 	// 싱글쓰레드 환경인마냥 코딩
 	void Broadcast(SendBufferRef sendBuffer, uint64 exceptId = 0);

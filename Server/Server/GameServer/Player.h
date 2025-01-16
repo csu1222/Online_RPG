@@ -14,7 +14,7 @@ public:
 	string					name;
 	Protocol::PlayerType	type = Protocol::PLAYER_TYPE_NONE;
 	Protocol::PlayerInfo*	playerInfo = nullptr;
-	weak_ptr<GameSession>			ownerSession; // Cycle
+	weak_ptr<GameSession>	ownerSession; // Cycle
 
 public:
 	atomic<weak_ptr<Room>>		room;

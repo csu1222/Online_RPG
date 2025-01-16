@@ -5,9 +5,11 @@ d:\cpp_game\portfolio\server\server\gameserver\x64\debug\pch.obj
 d:\cpp_game\portfolio\server\server\gameserver\x64\debug\struct.pb.obj
 d:\cpp_game\portfolio\server\server\gameserver\x64\debug\protocol.pb.obj
 d:\cpp_game\portfolio\server\server\gameserver\x64\debug\enum.pb.obj
+d:\cpp_game\portfolio\server\server\gameserver\x64\debug\utils.obj
 d:\cpp_game\portfolio\server\server\gameserver\x64\debug\room.obj
 d:\cpp_game\portfolio\server\server\gameserver\x64\debug\serverpackethandler.obj
 d:\cpp_game\portfolio\server\server\gameserver\x64\debug\player.obj
+d:\cpp_game\portfolio\server\server\gameserver\x64\debug\objectutils.obj
 d:\cpp_game\portfolio\server\server\gameserver\x64\debug\gamesessionmanager.obj
 d:\cpp_game\portfolio\server\server\gameserver\x64\debug\gamesession.obj
 d:\cpp_game\portfolio\server\server\gameserver\x64\debug\gameserver.obj

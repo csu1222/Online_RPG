@@ -13,9 +13,14 @@ public:
 	T Pop()
 	{
 		WRITE_LOCK;
+
+		return PopNoLock();
+	}
+
+	T PopNoLock()
+	{
 		if (_items.empty())
 			return T();
-
 		T ret = _items.front();
 		_items.pop();
 		return ret;
@@ -24,7 +29,7 @@ public:
 	void PopAll(OUT vector<T>& items)
 	{
 		WRITE_LOCK;
-		while (T item = Pop())
+		while (T item = PopNoLock())
 			items.push_back(item);
 	}
 

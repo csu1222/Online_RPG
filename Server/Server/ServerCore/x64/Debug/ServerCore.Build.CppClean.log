@@ -1,6 +1,7 @@
-d:\cpp_game\portfolio\server\server\servercore\x64\debug\servercore.pch
 d:\cpp_game\portfolio\server\server\libraries\libs\servercore\debug\servercore.pdb
 d:\cpp_game\portfolio\server\server\libraries\libs\servercore\debug\servercore.idb
+d:\cpp_game\portfolio\server\server\servercore\x64\debug\xmlparser.obj
+d:\cpp_game\portfolio\server\server\servercore\x64\debug\servercore.pch
 d:\cpp_game\portfolio\server\server\servercore\x64\debug\pch.obj
 d:\cpp_game\portfolio\server\server\servercore\x64\debug\jobtimer.obj
 d:\cpp_game\portfolio\server\server\servercore\x64\debug\jobqueue.obj
@@ -22,7 +23,6 @@ d:\cpp_game\portfolio\server\server\servercore\x64\debug\consolelog.obj
 d:\cpp_game\portfolio\server\server\servercore\x64\debug\bufferwriter.obj
 d:\cpp_game\portfolio\server\server\servercore\x64\debug\bufferreader.obj
 d:\cpp_game\portfolio\server\server\servercore\x64\debug\allocator.obj
-d:\cpp_game\portfolio\server\server\servercore\x64\debug\xmlparser.obj
 d:\cpp_game\portfolio\server\server\servercore\x64\debug\threadmanager.obj
 d:\cpp_game\portfolio\server\server\servercore\x64\debug\socketutils.obj
 d:\cpp_game\portfolio\server\server\servercore\x64\debug\session.obj
