@@ -32,11 +32,12 @@ public:
 	// 패킷처리
 
 	// HandleSpawn 3가지 버전
-	void HandleSpawn(const Protocol::PlayerInfo& PlayerInfo , bool IsMine);
+	void HandleSpawn(const Protocol::ObjectInfo& ObjectInfo , bool IsMine);
 	void HandleSpawn(const Protocol::S_ENTER_GAME& EnterGamePkt);
 	void HandleSpawn(const Protocol::S_SPAWN& SpawnPkt);
 
 	void HandleDespawn(uint64 ObjectId);
+	void HandleDespawn(const Protocol::S_LEAVE_GAME& LeavePkt);
 	void HandleDespawn(const Protocol::S_DESPAWN& DespawnPkt);
 
 	void HandleMove(const Protocol::S_MOVE& MovePkt);

@@ -56,44 +56,103 @@ PROTOBUF_NAMESPACE_OPEN
 PROTOBUF_NAMESPACE_CLOSE
 namespace Protocol {
 
-enum PlayerType : int {
-  PLAYER_TYPE_NONE = 0,
-  PLAYER_TYPE_KNIGHT = 1,
-  PLAYER_TYPE_MAGE = 2,
-  PLAYER_TYPE_ARCHER = 3,
-  PlayerType_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::min(),
-  PlayerType_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::max()
+enum ObjectType : int {
+  OBJECT_TYPE_NONE = 0,
+  OBJECT_TYPE_CREATURE = 1,
+  OBJECT_TYPE_PROJECTILE = 2,
+  OBJECT_TYPE_ENV = 3,
+  ObjectType_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::min(),
+  ObjectType_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::max()
 };
-bool PlayerType_IsValid(int value);
-constexpr PlayerType PlayerType_MIN = PLAYER_TYPE_NONE;
-constexpr PlayerType PlayerType_MAX = PLAYER_TYPE_ARCHER;
-constexpr int PlayerType_ARRAYSIZE = PlayerType_MAX + 1;
+bool ObjectType_IsValid(int value);
+constexpr ObjectType ObjectType_MIN = OBJECT_TYPE_NONE;
+constexpr ObjectType ObjectType_MAX = OBJECT_TYPE_ENV;
+constexpr int ObjectType_ARRAYSIZE = ObjectType_MAX + 1;
 
-const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* PlayerType_descriptor();
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* ObjectType_descriptor();
 template<typename T>
-inline const std::string& PlayerType_Name(T enum_t_value) {
-  static_assert(::std::is_same<T, PlayerType>::value ||
+inline const std::string& ObjectType_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, ObjectType>::value ||
     ::std::is_integral<T>::value,
-    "Incorrect type passed to function PlayerType_Name.");
+    "Incorrect type passed to function ObjectType_Name.");
   return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
-    PlayerType_descriptor(), enum_t_value);
+    ObjectType_descriptor(), enum_t_value);
 }
-inline bool PlayerType_Parse(
-    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, PlayerType* value) {
-  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<PlayerType>(
-    PlayerType_descriptor(), name, value);
+inline bool ObjectType_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, ObjectType* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<ObjectType>(
+    ObjectType_descriptor(), name, value);
+}
+enum CreatureType : int {
+  CREATURE_TYPE_NONE = 0,
+  CREATURE_TYPE_PLAYER = 1,
+  CREATURE_TYPE_MONSTER = 2,
+  CREATURE_TYPE_NPC = 3,
+  CreatureType_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::min(),
+  CreatureType_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::max()
+};
+bool CreatureType_IsValid(int value);
+constexpr CreatureType CreatureType_MIN = CREATURE_TYPE_NONE;
+constexpr CreatureType CreatureType_MAX = CREATURE_TYPE_NPC;
+constexpr int CreatureType_ARRAYSIZE = CreatureType_MAX + 1;
+
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* CreatureType_descriptor();
+template<typename T>
+inline const std::string& CreatureType_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, CreatureType>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function CreatureType_Name.");
+  return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
+    CreatureType_descriptor(), enum_t_value);
+}
+inline bool CreatureType_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, CreatureType* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<CreatureType>(
+    CreatureType_descriptor(), name, value);
+}
+enum WeaponType : int {
+  WEAPON_TYPE_NONE = 0,
+  WEAPON_TYPE_SWORD = 1,
+  WEAPON_TYPE_AXE_AND_SHILD = 2,
+  WEAPON_TYPE_DAGGER = 3,
+  WeaponType_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::min(),
+  WeaponType_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::max()
+};
+bool WeaponType_IsValid(int value);
+constexpr WeaponType WeaponType_MIN = WEAPON_TYPE_NONE;
+constexpr WeaponType WeaponType_MAX = WEAPON_TYPE_DAGGER;
+constexpr int WeaponType_ARRAYSIZE = WeaponType_MAX + 1;
+
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* WeaponType_descriptor();
+template<typename T>
+inline const std::string& WeaponType_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, WeaponType>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function WeaponType_Name.");
+  return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
+    WeaponType_descriptor(), enum_t_value);
+}
+inline bool WeaponType_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, WeaponType* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<WeaponType>(
+    WeaponType_descriptor(), name, value);
 }
 enum MoveState : int {
   MOVE_STATE_NONE = 0,
   MOVE_STATE_IDLE = 1,
   MOVE_STATE_RUN = 2,
   MOVE_STATE_JUMP = 3,
+  MOVE_STATE_SKILL = 4,
+  MOVE_STATE_ROLL = 5,
+  MOVE_STATE_BACK_STEP = 6,
+  MOVE_STATE_GUARD = 7,
+  MOVE_STATE_CHARGE = 8,
   MoveState_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::min(),
   MoveState_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::max()
 };
 bool MoveState_IsValid(int value);
 constexpr MoveState MoveState_MIN = MOVE_STATE_NONE;
-constexpr MoveState MoveState_MAX = MOVE_STATE_JUMP;
+constexpr MoveState MoveState_MAX = MOVE_STATE_CHARGE;
 constexpr int MoveState_ARRAYSIZE = MoveState_MAX + 1;
 
 const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* MoveState_descriptor();
@@ -132,10 +191,20 @@ inline bool MoveState_Parse(
 
 PROTOBUF_NAMESPACE_OPEN
 
-template <> struct is_proto_enum< ::Protocol::PlayerType> : ::std::true_type {};
+template <> struct is_proto_enum< ::Protocol::ObjectType> : ::std::true_type {};
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::Protocol::PlayerType>() {
-  return ::Protocol::PlayerType_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::Protocol::ObjectType>() {
+  return ::Protocol::ObjectType_descriptor();
+}
+template <> struct is_proto_enum< ::Protocol::CreatureType> : ::std::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::Protocol::CreatureType>() {
+  return ::Protocol::CreatureType_descriptor();
+}
+template <> struct is_proto_enum< ::Protocol::WeaponType> : ::std::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::Protocol::WeaponType>() {
+  return ::Protocol::WeaponType_descriptor();
 }
 template <> struct is_proto_enum< ::Protocol::MoveState> : ::std::true_type {};
 template <>

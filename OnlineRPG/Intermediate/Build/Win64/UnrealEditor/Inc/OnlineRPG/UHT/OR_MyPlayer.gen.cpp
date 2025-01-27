@@ -56,6 +56,10 @@ void EmptyLinkFunctionForGeneratedCodeOR_MyPlayer() {}
 		static const UECodeGen_Private::FMetaDataPairParam NewProp_LookAction_MetaData[];
 #endif
 		static const UECodeGen_Private::FObjectPropertyParams NewProp_LookAction;
+#if WITH_METADATA
+		static const UECodeGen_Private::FMetaDataPairParam NewProp_InteracteAction_MetaData[];
+#endif
+		static const UECodeGen_Private::FObjectPropertyParams NewProp_InteracteAction;
 		static const UECodeGen_Private::FPropertyParamsBase* const PropPointers[];
 		static const FCppClassTypeInfoStatic StaticCppClassTypeInfo;
 		static const UECodeGen_Private::FClassParams ClassParams;
@@ -161,6 +165,20 @@ void EmptyLinkFunctionForGeneratedCodeOR_MyPlayer() {}
 	};
 #endif
 	const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_AOR_MyPlayer_Statics::NewProp_LookAction = { "LookAction", nullptr, (EPropertyFlags)0x0020080000000015, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(AOR_MyPlayer, LookAction), Z_Construct_UClass_UInputAction_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_AOR_MyPlayer_Statics::NewProp_LookAction_MetaData), Z_Construct_UClass_AOR_MyPlayer_Statics::NewProp_LookAction_MetaData) };
+#if WITH_METADATA
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UClass_AOR_MyPlayer_Statics::NewProp_InteracteAction_MetaData[] = {
+		{ "AllowPrivateAccess", "true" },
+		{ "Category", "Input" },
+#if !UE_BUILD_SHIPPING
+		{ "Comment", "/** Interacte Input Action */" },
+#endif
+		{ "ModuleRelativePath", "Game/OR_MyPlayer.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "Interacte Input Action" },
+#endif
+	};
+#endif
+	const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_AOR_MyPlayer_Statics::NewProp_InteracteAction = { "InteracteAction", nullptr, (EPropertyFlags)0x0020080000000015, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(AOR_MyPlayer, InteracteAction), Z_Construct_UClass_UInputAction_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_AOR_MyPlayer_Statics::NewProp_InteracteAction_MetaData), Z_Construct_UClass_AOR_MyPlayer_Statics::NewProp_InteracteAction_MetaData) };
 	const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UClass_AOR_MyPlayer_Statics::PropPointers[] = {
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AOR_MyPlayer_Statics::NewProp_CameraBoom,
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AOR_MyPlayer_Statics::NewProp_FollowCamera,
@@ -168,6 +186,7 @@ void EmptyLinkFunctionForGeneratedCodeOR_MyPlayer() {}
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AOR_MyPlayer_Statics::NewProp_JumpAction,
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AOR_MyPlayer_Statics::NewProp_MoveAction,
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AOR_MyPlayer_Statics::NewProp_LookAction,
+		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AOR_MyPlayer_Statics::NewProp_InteracteAction,
 	};
 	const FCppClassTypeInfoStatic Z_Construct_UClass_AOR_MyPlayer_Statics::StaticCppClassTypeInfo = {
 		TCppClassTypeTraits<AOR_MyPlayer>::IsAbstract,
@@ -207,9 +226,9 @@ void EmptyLinkFunctionForGeneratedCodeOR_MyPlayer() {}
 		static const FClassRegisterCompiledInInfo ClassInfo[];
 	};
 	const FClassRegisterCompiledInInfo Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_OnlineRPG_Source_OnlineRPG_Game_OR_MyPlayer_h_Statics::ClassInfo[] = {
-		{ Z_Construct_UClass_AOR_MyPlayer, AOR_MyPlayer::StaticClass, TEXT("AOR_MyPlayer"), &Z_Registration_Info_UClass_AOR_MyPlayer, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(AOR_MyPlayer), 4035516465U) },
+		{ Z_Construct_UClass_AOR_MyPlayer, AOR_MyPlayer::StaticClass, TEXT("AOR_MyPlayer"), &Z_Registration_Info_UClass_AOR_MyPlayer, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(AOR_MyPlayer), 3030118120U) },
 	};
-	static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_OnlineRPG_Source_OnlineRPG_Game_OR_MyPlayer_h_987208432(TEXT("/Script/OnlineRPG"),
+	static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_OnlineRPG_Source_OnlineRPG_Game_OR_MyPlayer_h_3895268502(TEXT("/Script/OnlineRPG"),
 		Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_OnlineRPG_Source_OnlineRPG_Game_OR_MyPlayer_h_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_OnlineRPG_Source_OnlineRPG_Game_OR_MyPlayer_h_Statics::ClassInfo),
 		nullptr, 0,
 		nullptr, 0);

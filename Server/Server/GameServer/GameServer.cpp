@@ -62,6 +62,8 @@ int main()
 	// Main Thread
 	//DoWorkerJob(service);
 
+	GRoom->DoAsync(&Room::UpdateTick);
+
 	while (true)
 	{/*
 		Protocol::S_CHAT pkt;
@@ -72,9 +74,6 @@ int main()
 		this_thread::sleep_for(1s);
 	}
 
-	Protocol::S_LOGIN pkt;
-
-	auto sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
 
 	GThreadManager->Join();
 }

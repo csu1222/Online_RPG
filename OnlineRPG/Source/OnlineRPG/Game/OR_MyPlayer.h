@@ -33,6 +33,7 @@ public:
 protected:
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
+	void Interacte(const FInputActionValue& Value);
 
 protected:
 	/** Camera boom positioning the camera behind the character */
@@ -58,6 +59,10 @@ protected:
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
+
+	/** Interacte Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* InteracteAction;
 
 protected:
 	const float MOVE_PACKET_SEND_DELAY = 0.2f;

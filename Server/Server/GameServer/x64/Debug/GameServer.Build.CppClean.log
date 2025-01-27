@@ -1,10 +1,5 @@
-d:\cpp_game\portfolio\server\server\gameserver\x64\debug\gameserver.pch
 d:\cpp_game\portfolio\server\server\gameserver\x64\debug\vc143.pdb
 d:\cpp_game\portfolio\server\server\gameserver\x64\debug\vc143.idb
-d:\cpp_game\portfolio\server\server\gameserver\x64\debug\pch.obj
-d:\cpp_game\portfolio\server\server\gameserver\x64\debug\struct.pb.obj
-d:\cpp_game\portfolio\server\server\gameserver\x64\debug\protocol.pb.obj
-d:\cpp_game\portfolio\server\server\gameserver\x64\debug\enum.pb.obj
 d:\cpp_game\portfolio\server\server\gameserver\x64\debug\utils.obj
 d:\cpp_game\portfolio\server\server\gameserver\x64\debug\room.obj
 d:\cpp_game\portfolio\server\server\gameserver\x64\debug\serverpackethandler.obj
@@ -13,6 +8,14 @@ d:\cpp_game\portfolio\server\server\gameserver\x64\debug\objectutils.obj
 d:\cpp_game\portfolio\server\server\gameserver\x64\debug\gamesessionmanager.obj
 d:\cpp_game\portfolio\server\server\gameserver\x64\debug\gamesession.obj
 d:\cpp_game\portfolio\server\server\gameserver\x64\debug\gameserver.obj
+d:\cpp_game\portfolio\server\server\gameserver\x64\debug\struct.pb.obj
+d:\cpp_game\portfolio\server\server\gameserver\x64\debug\protocol.pb.obj
+d:\cpp_game\portfolio\server\server\gameserver\x64\debug\enum.pb.obj
+d:\cpp_game\portfolio\server\server\gameserver\x64\debug\gameserver.pch
+d:\cpp_game\portfolio\server\server\gameserver\x64\debug\pch.obj
+d:\cpp_game\portfolio\server\server\gameserver\x64\debug\object.obj
+d:\cpp_game\portfolio\server\server\gameserver\x64\debug\monster.obj
+d:\cpp_game\portfolio\server\server\gameserver\x64\debug\creature.obj
 d:\cpp_game\portfolio\server\server\binary\debug\gameserver.exe
 d:\cpp_game\portfolio\server\server\binary\debug\gameserver.pdb
 d:\cpp_game\portfolio\server\server\gameserver\x64\debug\gameserver.ilk

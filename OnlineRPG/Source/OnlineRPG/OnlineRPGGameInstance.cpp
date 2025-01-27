@@ -85,7 +85,7 @@ void UOnlineRPGGameInstance::SendPacket(SendBufferRef SendBuffer)
 	GameServerSession->SendPacket(SendBuffer);
 }
 
-void UOnlineRPGGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool IsMine)
+void UOnlineRPGGameInstance::HandleSpawn(const Protocol::ObjectInfo& ObjectInfo, bool IsMine)
 {
 	if (Socket == nullptr || GameServerSession == nullptr)
 		return;
@@ -95,11 +95,12 @@ void UOnlineRPGGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo,
 		return;
 
 	// 중복 처리 체크
-	const uint64 ObjectId = PlayerInfo.object_id();
+	const uint64 ObjectId = ObjectInfo.object_id();
 	if (Players.Find(ObjectId) != nullptr)
 		return;
 
-	FVector SpawnLocation(PlayerInfo.x(), PlayerInfo.y(), PlayerInfo.z());
+	Protocol::PosInfo PosInfo = ObjectInfo.pos_info();
+	FVector SpawnLocation(PosInfo.x(), PosInfo.y(), PosInfo.z());
 
 	if (IsMine)
 	{
@@ -109,16 +110,16 @@ void UOnlineRPGGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo,
 		if (Player == nullptr)
 			return;
 
-		Player->SetPlayerInfo(PlayerInfo);
+		Player->SetPlayerInfo(PosInfo);
 		MyPlayer = Player;
-		Players.Add(PlayerInfo.object_id(), Player);
+		Players.Add(ObjectInfo.object_id(), Player);
 	}
 	else
 	{
 		// 다른 플레이어
 		AOR_Player* OtherPlayer = Cast<AOR_Player>(World->SpawnActor(OtherPlayerClass, &SpawnLocation));
-		OtherPlayer->SetPlayerInfo(PlayerInfo);
-		Players.Add(PlayerInfo.object_id(), OtherPlayer);
+		OtherPlayer->SetPlayerInfo(PosInfo);
+		Players.Add(ObjectInfo.object_id(), OtherPlayer);
 	}
 }
 
@@ -150,7 +151,16 @@ void UOnlineRPGGameInstance::HandleDespawn(uint64 ObjectId)
 	if (FindActor == nullptr)
 		return;
 
+	Players.Remove(ObjectId);
+
 	World->DestroyActor(*FindActor);
+}
+
+void UOnlineRPGGameInstance::HandleDespawn(const Protocol::S_LEAVE_GAME& LeavePkt)
+{
+	uint64 ObjectId = LeavePkt.object_id();
+
+	HandleDespawn(ObjectId);
 }
 
 void UOnlineRPGGameInstance::HandleDespawn(const Protocol::S_DESPAWN& DespawnPkt)
@@ -179,6 +189,6 @@ void UOnlineRPGGameInstance::HandleMove(const Protocol::S_MOVE& MovePkt)
 	if (Player->IsMyPlayer())
 		return;
 
-	const Protocol::PlayerInfo& Info = MovePkt.info();
+	const Protocol::PosInfo& Info = MovePkt.info();
 	Player->SetDestInfo(Info);
 }

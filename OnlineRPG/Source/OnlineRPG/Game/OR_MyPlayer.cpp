@@ -61,6 +61,9 @@ void AOR_MyPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 		//Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AOR_MyPlayer::Look);
 
+		//Interate
+		EnhancedInputComponent->BindAction(InteracteAction, ETriggerEvent::Triggered, this, &AOR_MyPlayer::Interacte);
+		EnhancedInputComponent->BindAction(InteracteAction, ETriggerEvent::Completed, this, &AOR_MyPlayer::Interacte);
 	}
 
 }
@@ -94,8 +97,8 @@ void AOR_MyPlayer::Tick(float DeltaTime)
 
 		// 현재 위치 정보
 		{
-			Protocol::PlayerInfo* Info = MovePkt.mutable_info();
-			Info->CopyFrom(*PlayerInfo);
+			Protocol::PosInfo* Info = MovePkt.mutable_info();
+			Info->CopyFrom(*CurrentPosInfo);
 			Info->set_yaw(DesiredYaw);
 			Info->set_state(GetMoveState());
 		}
@@ -151,5 +154,24 @@ void AOR_MyPlayer::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void AOR_MyPlayer::Interacte(const FInputActionValue& Value)
+{
+	bool bInteratePressed = Value.Get<bool>();
+
+	if (Controller != nullptr)
+	{
+		if (bInteratePressed)
+		{
+			// Interate
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Interacte Input Down...")));
+		}
+		else
+		{
+			// Stop Interate
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Interacte Input Up...")));
+		}
 	}
 }

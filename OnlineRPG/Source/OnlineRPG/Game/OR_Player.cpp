@@ -11,6 +11,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "OR_MyPlayer.h"
+#include "OnlineRPGGameInstance.h"
 
 // Sets default values
 AOR_Player::AOR_Player()
@@ -37,17 +38,20 @@ AOR_Player::AOR_Player()
 
 	GetCharacterMovement()->bRunPhysicsWithNoController = true;
 
-	PlayerInfo = new Protocol::PlayerInfo();
-	DestInfo = new Protocol::PlayerInfo();
+	CurrentPosInfo = new Protocol::PosInfo();
+	DestPosInfo = new Protocol::PosInfo();
+	PlayerInfo = new Protocol::ObjectInfo();
 
 }
 
 AOR_Player::~AOR_Player()
 {
+	delete CurrentPosInfo;
+	delete DestPosInfo;
 	delete PlayerInfo;
-	delete DestInfo;
+	CurrentPosInfo = nullptr;
+	DestPosInfo = nullptr;
 	PlayerInfo = nullptr;
-	DestInfo = nullptr;
 }
 
 // Called when the game starts or when spawned
@@ -57,10 +61,10 @@ void AOR_Player::BeginPlay()
 
 	{
 		FVector Location = GetActorLocation();
-		DestInfo->set_x(Location.X);
-		DestInfo->set_y(Location.Y);
-		DestInfo->set_z(Location.Z);
-		DestInfo->set_yaw(GetControlRotation().Yaw);
+		DestPosInfo->set_x(Location.X);
+		DestPosInfo->set_y(Location.Y);
+		DestPosInfo->set_z(Location.Z);
+		DestPosInfo->set_yaw(GetControlRotation().Yaw);
 
 		SetMoveState(Protocol::MOVE_STATE_IDLE);
 	}
@@ -73,10 +77,10 @@ void AOR_Player::Tick(float DeltaSeconds)
 
 	{
 		FVector Location = GetActorLocation();
-		PlayerInfo->set_x(Location.X);
-		PlayerInfo->set_y(Location.Y);
-		PlayerInfo->set_z(Location.Z);
-		PlayerInfo->set_yaw(GetControlRotation().Yaw);
+		CurrentPosInfo->set_x(Location.X);
+		CurrentPosInfo->set_y(Location.Y);
+		CurrentPosInfo->set_z(Location.Z);
+		CurrentPosInfo->set_yaw(GetControlRotation().Yaw);
 	}
 
 	if (IsMyPlayer() == false)
@@ -94,11 +98,11 @@ void AOR_Player::Tick(float DeltaSeconds)
 
 		//SetActorLocation(NextLocation);
 		
-		const Protocol::MoveState State = PlayerInfo->state();
+		const Protocol::MoveState State = CurrentPosInfo->state();
 
 		if (State == Protocol::MOVE_STATE_RUN)
 		{
-			SetActorRotation(FRotator(0, DestInfo->yaw(), 0));
+			SetActorRotation(FRotator(0, DestPosInfo->yaw(), 0));
 			AddMovementInput(GetActorForwardVector());
 		}
 		else
@@ -114,38 +118,39 @@ bool AOR_Player::IsMyPlayer()
 	return Cast<AOR_MyPlayer>(this) != nullptr;
 }
 
+
 void AOR_Player::SetMoveState(Protocol::MoveState State)
 {
-	if (PlayerInfo->state() == State)
+	if (CurrentPosInfo->state() == State)
 		return;
 
-	PlayerInfo->set_state(State);
+	CurrentPosInfo->set_state(State);
 
 	// TODO
 }
 
-void AOR_Player::SetPlayerInfo(const Protocol::PlayerInfo& Info)
+void AOR_Player::SetPlayerInfo(const Protocol::PosInfo& Info)
 {
-	if (PlayerInfo->object_id() != 0)
+	if (CurrentPosInfo->object_id() != 0)
 	{
-		assert(PlayerInfo->object_id() == Info.object_id());
+		assert(CurrentPosInfo->object_id() == Info.object_id());
 	}
 
-	PlayerInfo->CopyFrom(Info);
+	CurrentPosInfo->CopyFrom(Info);
 
 	FVector Location(Info.x(), Info.y(), Info.z());
 	SetActorLocation(Location);
 }
 
-void AOR_Player::SetDestInfo(const Protocol::PlayerInfo& Info)
+void AOR_Player::SetDestInfo(const Protocol::PosInfo& Info)
 {
-	if (PlayerInfo->object_id() != 0)
+	if (CurrentPosInfo->object_id() != 0)
 	{
-		assert(PlayerInfo->object_id() == Info.object_id());
+		assert(CurrentPosInfo->object_id() == Info.object_id());
 	}
 
 	// Dest에 최종 상태 복사.
-	DestInfo->CopyFrom(Info);
+	DestPosInfo->CopyFrom(Info);
 
 	// 상태만 바로 적용하자.
 	SetMoveState(Info.state());

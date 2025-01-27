@@ -7,23 +7,28 @@ public:
 	Room();
 	virtual ~Room();
 
+public:
+	bool EnterRoom(ObjectRef object, bool randPos = true);
+	bool LeaveRoom(ObjectRef object);
+
 	bool HandleEnterPlayer(PlayerRef player);
 	bool HandleLeavePlayer(PlayerRef player);
-
 	void HandleMove(Protocol::C_MOVE pkt);
 
+public:
+	void UpdateTick();
 	RoomRef GetRoomRef();
 
 private:
-	bool EnterPlayer(PlayerRef player);
-	bool LeavePlayer(uint64 objectId);
+	bool AddObject(ObjectRef object);
+	bool RemoveObject(uint64 objectId);
 
 public:
 	// 싱글쓰레드 환경인마냥 코딩
 	void Broadcast(SendBufferRef sendBuffer, uint64 exceptId = 0);
 
 private:
-	unordered_map<uint64, PlayerRef> _players;
+	unordered_map<uint64, ObjectRef> _objects;
 };
 
 extern RoomRef GRoom;
