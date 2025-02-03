@@ -1,0 +1,52 @@
+
+상호작용을 하려면 무엇을 고를 수 있어야 하는데 이때 어떤 방식으로 무엇이든 선택해야 하는데 
+
+트리거 볼륨이라는 볼륨을 배치하고 이 볼륨과 상호작용하는 방식은 어떤 위치에 가면 상호작용이 되는것입니다. 
+또 다른 방식은 화면 중앙에 레이를 쏴서 부딛히는 거리를 계산하는 방식은 에임으로 상호작용할 오브젝트를 고를 수 있습니다. 
+
+이 중에 에임으로 선택하는 방식을 구현해볼겁니다. 레이캐스팅이라고 합니다. 
+
+레이캐스팅을 하는 간단한 방법으로 Single Line Trace By Channel 블루프린트 노드로 구현할 수 있습니다. 
+이 노드는 시작점과 끝점을 잇는 레이캐스팅을해 채널을 기준으로 충돌을 판정합니다. 
+
+채널로 충돌을 판정하는것 외에도 오브젝트 타입으로 충돌을 판정하는 것도 있는데 이걸로 상호작용가능한 사물들을 골라 줄 수 있을것 같습니다. 
+
+AActor를 상속받은 OR_ENV를 만들고 또 OR_ENV를 상속받은 OR_ItrENV(OnlineRPG_Intreractive Environment) 를 만들었습니다. 
+상호작용 가능한 사물과 그렇지 않은 사물을 나눠 상속받아 만들 수 있을겁니다. 
+
+OR_ItrENV를 상속받은 BP_InteractiveENV 를 만듭니다. 또 BP_InteractiveENV를 상속받은 BP_StandingSword를 만들었습니다. 
+BP_StandingSword는 플레이어가 무기를 고를때 사용할겁니다. 
+
+일단 모든 상호작용이 되는 물체들은 자기 자신의 메쉬를 가질것이고 또 레이캐스팅할때 어느정도 가까이 에이밍을 해도 그 오브젝트가 선택되도록 하기 위한 
+박스 형태의 콜리전 컴포넌트를 BP_InteractiveENV 가 기본적으로 가지고 있게 하겠습니다. 
+
+콜리전 채널을 하나 만들건데 선택범위를 SelectSpace라고 이름 지었는데 이 SelectSpace가 가질 콜리전 프리셋을 만들겁니다. 
+언리얼엔진에서 편집->프로젝트세팅->콜리전->ObjectChannel 을 추가하는데 InteractingObject 를 블록으로 만들고 프리셋에 같은 이름으로 만듭니다. 
+그 후 SelectSpace의 콜리전 프리셋을 InteractingObject 로 설정합니다. 
+
+레이캐스팅을 C++ 함수로도 만들 수 있는데 함수를 선언할때 
+UFUNCTION(BlueprintCallable)
+void CheckObjectToAimed(); 
+이렇게 선언하면 C++ 함수도 블루 프린트로 사용할 수 있습니다. 
+정의 부에서도 
+void AOR_MyPlayer::CheckObjectToAimed()
+{
+	// Trace
+	FHitResult HitResult;
+	const FVector Start = FollowCamera->GetComponentLocation();
+	const FVector End = Start + FollowCamera->GetForwardVector() * AimedRange;
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(this);
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, CollisionParams))
+	{
+		if (HitResult.GetActor()->IsValidLowLevel())
+		{
+			// TODO : Aimed 처리
+			AActor* HitActor = HitResult.GetActor();
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Hit Actor : %s"), *HitActor->GetName()));
+			float HitedRange = (HitResult.ImpactPoint - Start).Size();
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Hited Range : %f"), HitedRange));
+		}
+	}
+}
+이렇게 사용하면 됩니다. 

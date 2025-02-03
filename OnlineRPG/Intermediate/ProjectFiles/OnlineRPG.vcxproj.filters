@@ -60,6 +60,18 @@
     <Filter Include="Source\OnlineRPG\Game">
       <UniqueIdentifier>{F307627D-B4C0-326E-A8E2-0377A16B132A}</UniqueIdentifier>
     </Filter>
+    <ClCompile Include="..\..\Source\OnlineRPG\Game\OR_Env.cpp">
+      <Filter>Source\OnlineRPG\Game</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\OnlineRPG\Game\OR_Env.h">
+      <Filter>Source\OnlineRPG\Game</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\OnlineRPG\Game\OR_Env_ItrAble.cpp">
+      <Filter>Source\OnlineRPG\Game</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\OnlineRPG\Game\OR_Env_ItrAble.h">
+      <Filter>Source\OnlineRPG\Game</Filter>
+    </ClInclude>
     <ClCompile Include="..\..\Source\OnlineRPG\Game\OR_MyPlayer.cpp">
       <Filter>Source\OnlineRPG\Game</Filter>
     </ClCompile>

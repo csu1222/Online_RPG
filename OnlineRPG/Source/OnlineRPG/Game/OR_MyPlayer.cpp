@@ -175,3 +175,24 @@ void AOR_MyPlayer::Interacte(const FInputActionValue& Value)
 		}
 	}
 }
+
+void AOR_MyPlayer::CheckObjectToAimed()
+{
+	// Trace
+	FHitResult HitResult;
+	const FVector Start = FollowCamera->GetComponentLocation();
+	const FVector End = Start + FollowCamera->GetForwardVector() * AimedRange;
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(this);
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, CollisionParams))
+	{
+		if (HitResult.GetActor()->IsValidLowLevel())
+		{
+			// TODO : Aimed Ã³¸®
+			AActor* HitActor = HitResult.GetActor();
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Hit Actor : %s"), *HitActor->GetName()));
+			float HitedRange = (HitResult.ImpactPoint - Start).Size();
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Hited Range : %f"), HitedRange));
+		}
+	}
+}

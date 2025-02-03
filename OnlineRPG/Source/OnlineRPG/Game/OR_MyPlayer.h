@@ -65,6 +65,10 @@ protected:
 	class UInputAction* InteracteAction;
 
 protected:
+	UFUNCTION(BlueprintCallable)
+	void CheckObjectToAimed();
+
+protected:
 	const float MOVE_PACKET_SEND_DELAY = 0.2f;
 	float MovePacketSendTimer = MOVE_PACKET_SEND_DELAY;
 
@@ -75,4 +79,7 @@ protected:
 
 	// Dirty Flag Test
 	FVector2D LastDesiredInput;
+
+	// Aimed
+	float AimedRange = 1500.f;
 };
