@@ -2,6 +2,7 @@
 
 
 #include "Game/OR_MyPlayer.h"
+#include "Game/OR_Env_ItrAble.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -12,6 +13,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "OnlineRPG.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "typeinfo"
+#include "OR_MyPlayer.h"
 
 AOR_MyPlayer::AOR_MyPlayer()
 {
@@ -167,6 +170,9 @@ void AOR_MyPlayer::Interacte(const FInputActionValue& Value)
 		{
 			// Interate
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Interacte Input Down...")));
+
+			// lay cast
+			CheckAimedObject();
 		}
 		else
 		{
@@ -176,12 +182,13 @@ void AOR_MyPlayer::Interacte(const FInputActionValue& Value)
 	}
 }
 
-void AOR_MyPlayer::CheckObjectToAimed()
+void AOR_MyPlayer::CheckAimedObject()
 {
 	// Trace
 	FHitResult HitResult;
+	const FVector PlayerLocation = GetActorLocation();
 	const FVector Start = FollowCamera->GetComponentLocation();
-	const FVector End = Start + FollowCamera->GetForwardVector() * AimedRange;
+	const FVector End = Start + FollowCamera->GetForwardVector() * Aimed_Range;
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(this);
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, CollisionParams))
@@ -189,10 +196,43 @@ void AOR_MyPlayer::CheckObjectToAimed()
 		if (HitResult.GetActor()->IsValidLowLevel())
 		{
 			// TODO : Aimed 처리
+
+			// Debug, Hit Actor, Range
 			AActor* HitActor = HitResult.GetActor();
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Hit Actor : %s"), *HitActor->GetName()));
-			float HitedRange = (HitResult.ImpactPoint - Start).Size();
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Hited Range : %f"), HitedRange));
+
+			// Hit 된 Actor의 클래스를 확인
+			AOR_Env_ItrAble* ItrAble = Cast<AOR_Env_ItrAble>(HitActor);
+			bool CanCast = (ItrAble != nullptr);
+
+			// log
+			auto* HitedClass = HitActor->GetClass();
+			float HitedRange = GetDistanceBetweenMeAndTarget(HitResult);
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Hited Actor class : %s, Hited Range : %f, Cast Result : %s"), *HitActor->GetName(), HitedRange, CanCast ? TEXT("true") : TEXT("false")));
 		}
 	}
 }
+
+float AOR_MyPlayer::GetDistanceBetweenMeAndTarget(const FHitResult HitResult)
+{
+	const FVector PlayerLocation = GetActorLocation();
+	FVector HitLocation = HitResult.ImpactPoint;
+
+	return (HitLocation - PlayerLocation).Size();
+}
+
+bool AOR_MyPlayer::CanInteracte(const FHitResult HitResult, AOR_Env_ItrAble* Interactable)
+{
+	bool Result = false;
+	AActor* HitActor = HitResult.GetActor();
+	AOR_Env_ItrAble* ItrAble = Cast<AOR_Env_ItrAble>(HitActor);
+	if (ItrAble != nullptr)
+	{
+		Result = true;
+	}
+	return Result;
+}
+
+//void AOR_MyPlayer::DoInteracte(AOR_Env_ItrAble* targetObject)
+//{
+//}

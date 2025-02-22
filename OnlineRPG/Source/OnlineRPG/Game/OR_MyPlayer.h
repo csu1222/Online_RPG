@@ -2,10 +2,11 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "OnlineRPG.h"
 #include "Game/OR_Player.h"
 #include "InputActionValue.h"
 #include "OR_MyPlayer.generated.h"
+// #include "OR_Env_ItrAble.h"
 
 /**
  * 
@@ -30,7 +31,9 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
+
 protected:
+	// Input Actions
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void Interacte(const FInputActionValue& Value);
@@ -65,8 +68,15 @@ protected:
 	class UInputAction* InteracteAction;
 
 protected:
+	// Interacte Action
 	UFUNCTION(BlueprintCallable)
-	void CheckObjectToAimed();
+	void CheckAimedObject();
+
+	UFUNCTION(BlueprintCallable)
+	float GetDistanceBetweenMeAndTarget(const FHitResult HitResult);
+
+	UFUNCTION(BlueprintCallable)
+	bool CanInteracte(const FHitResult HitResult, AOR_Env_ItrAble* Interactable);
 
 protected:
 	const float MOVE_PACKET_SEND_DELAY = 0.2f;
@@ -81,5 +91,5 @@ protected:
 	FVector2D LastDesiredInput;
 
 	// Aimed
-	float AimedRange = 1500.f;
+	float Aimed_Range = 1500.f;
 };

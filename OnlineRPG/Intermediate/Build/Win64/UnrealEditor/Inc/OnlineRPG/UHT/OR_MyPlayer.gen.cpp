@@ -6,34 +6,111 @@
 
 #include "UObject/GeneratedCppIncludes.h"
 #include "OnlineRPG/Game/OR_MyPlayer.h"
+#include "../../Source/Runtime/Engine/Classes/Engine/HitResult.h"
 PRAGMA_DISABLE_DEPRECATION_WARNINGS
 void EmptyLinkFunctionForGeneratedCodeOR_MyPlayer() {}
 // Cross Module References
 	ENGINE_API UClass* Z_Construct_UClass_UCameraComponent_NoRegister();
 	ENGINE_API UClass* Z_Construct_UClass_USpringArmComponent_NoRegister();
+	ENGINE_API UScriptStruct* Z_Construct_UScriptStruct_FHitResult();
 	ENHANCEDINPUT_API UClass* Z_Construct_UClass_UInputAction_NoRegister();
 	ENHANCEDINPUT_API UClass* Z_Construct_UClass_UInputMappingContext_NoRegister();
+	ONLINERPG_API UClass* Z_Construct_UClass_AOR_Env_ItrAble_NoRegister();
 	ONLINERPG_API UClass* Z_Construct_UClass_AOR_MyPlayer();
 	ONLINERPG_API UClass* Z_Construct_UClass_AOR_MyPlayer_NoRegister();
 	ONLINERPG_API UClass* Z_Construct_UClass_AOR_Player();
 	UPackage* Z_Construct_UPackage__Script_OnlineRPG();
 // End Cross Module References
-	DEFINE_FUNCTION(AOR_MyPlayer::execCheckObjectToAimed)
+	DEFINE_FUNCTION(AOR_MyPlayer::execCanInteracte)
+	{
+		P_GET_STRUCT(FHitResult,Z_Param_HitResult);
+		P_GET_OBJECT(AOR_Env_ItrAble,Z_Param_Interactable);
+		P_FINISH;
+		P_NATIVE_BEGIN;
+		*(bool*)Z_Param__Result=P_THIS->CanInteracte(Z_Param_HitResult,Z_Param_Interactable);
+		P_NATIVE_END;
+	}
+	DEFINE_FUNCTION(AOR_MyPlayer::execGetDistanceBetweenMeAndTarget)
+	{
+		P_GET_STRUCT(FHitResult,Z_Param_HitResult);
+		P_FINISH;
+		P_NATIVE_BEGIN;
+		*(float*)Z_Param__Result=P_THIS->GetDistanceBetweenMeAndTarget(Z_Param_HitResult);
+		P_NATIVE_END;
+	}
+	DEFINE_FUNCTION(AOR_MyPlayer::execCheckAimedObject)
 	{
 		P_FINISH;
 		P_NATIVE_BEGIN;
-		P_THIS->CheckObjectToAimed();
+		P_THIS->CheckAimedObject();
 		P_NATIVE_END;
 	}
 	void AOR_MyPlayer::StaticRegisterNativesAOR_MyPlayer()
 	{
 		UClass* Class = AOR_MyPlayer::StaticClass();
 		static const FNameNativePtrPair Funcs[] = {
-			{ "CheckObjectToAimed", &AOR_MyPlayer::execCheckObjectToAimed },
+			{ "CanInteracte", &AOR_MyPlayer::execCanInteracte },
+			{ "CheckAimedObject", &AOR_MyPlayer::execCheckAimedObject },
+			{ "GetDistanceBetweenMeAndTarget", &AOR_MyPlayer::execGetDistanceBetweenMeAndTarget },
 		};
 		FNativeFunctionRegistrar::RegisterFunctions(Class, Funcs, UE_ARRAY_COUNT(Funcs));
 	}
-	struct Z_Construct_UFunction_AOR_MyPlayer_CheckObjectToAimed_Statics
+	struct Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics
+	{
+		struct OR_MyPlayer_eventCanInteracte_Parms
+		{
+			FHitResult HitResult;
+			AOR_Env_ItrAble* Interactable;
+			bool ReturnValue;
+		};
+#if WITH_METADATA
+		static const UECodeGen_Private::FMetaDataPairParam NewProp_HitResult_MetaData[];
+#endif
+		static const UECodeGen_Private::FStructPropertyParams NewProp_HitResult;
+		static const UECodeGen_Private::FObjectPropertyParams NewProp_Interactable;
+		static void NewProp_ReturnValue_SetBit(void* Obj);
+		static const UECodeGen_Private::FBoolPropertyParams NewProp_ReturnValue;
+		static const UECodeGen_Private::FPropertyParamsBase* const PropPointers[];
+#if WITH_METADATA
+		static const UECodeGen_Private::FMetaDataPairParam Function_MetaDataParams[];
+#endif
+		static const UECodeGen_Private::FFunctionParams FuncParams;
+	};
+#if WITH_METADATA
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics::NewProp_HitResult_MetaData[] = {
+		{ "NativeConst", "" },
+	};
+#endif
+	const UECodeGen_Private::FStructPropertyParams Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics::NewProp_HitResult = { "HitResult", nullptr, (EPropertyFlags)0x0010008000000082, UECodeGen_Private::EPropertyGenFlags::Struct, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(OR_MyPlayer_eventCanInteracte_Parms, HitResult), Z_Construct_UScriptStruct_FHitResult, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics::NewProp_HitResult_MetaData), Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics::NewProp_HitResult_MetaData) }; // 1891709922
+	const UECodeGen_Private::FObjectPropertyParams Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics::NewProp_Interactable = { "Interactable", nullptr, (EPropertyFlags)0x0010000000000080, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(OR_MyPlayer_eventCanInteracte_Parms, Interactable), Z_Construct_UClass_AOR_Env_ItrAble_NoRegister, METADATA_PARAMS(0, nullptr) };
+	void Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics::NewProp_ReturnValue_SetBit(void* Obj)
+	{
+		((OR_MyPlayer_eventCanInteracte_Parms*)Obj)->ReturnValue = 1;
+	}
+	const UECodeGen_Private::FBoolPropertyParams Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics::NewProp_ReturnValue = { "ReturnValue", nullptr, (EPropertyFlags)0x0010000000000580, UECodeGen_Private::EPropertyGenFlags::Bool | UECodeGen_Private::EPropertyGenFlags::NativeBool, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, sizeof(bool), sizeof(OR_MyPlayer_eventCanInteracte_Parms), &Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics::NewProp_ReturnValue_SetBit, METADATA_PARAMS(0, nullptr) };
+	const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics::PropPointers[] = {
+		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics::NewProp_HitResult,
+		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics::NewProp_Interactable,
+		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics::NewProp_ReturnValue,
+	};
+#if WITH_METADATA
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics::Function_MetaDataParams[] = {
+		{ "ModuleRelativePath", "Game/OR_MyPlayer.h" },
+	};
+#endif
+	const UECodeGen_Private::FFunctionParams Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics::FuncParams = { (UObject*(*)())Z_Construct_UClass_AOR_MyPlayer, nullptr, "CanInteracte", nullptr, nullptr, Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics::PropPointers, UE_ARRAY_COUNT(Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics::PropPointers), sizeof(Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics::OR_MyPlayer_eventCanInteracte_Parms), RF_Public|RF_Transient|RF_MarkAsNative, (EFunctionFlags)0x04080401, 0, 0, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics::Function_MetaDataParams), Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics::Function_MetaDataParams) };
+	static_assert(UE_ARRAY_COUNT(Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics::PropPointers) < 2048);
+	static_assert(sizeof(Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics::OR_MyPlayer_eventCanInteracte_Parms) < MAX_uint16);
+	UFunction* Z_Construct_UFunction_AOR_MyPlayer_CanInteracte()
+	{
+		static UFunction* ReturnFunction = nullptr;
+		if (!ReturnFunction)
+		{
+			UECodeGen_Private::ConstructUFunction(&ReturnFunction, Z_Construct_UFunction_AOR_MyPlayer_CanInteracte_Statics::FuncParams);
+		}
+		return ReturnFunction;
+	}
+	struct Z_Construct_UFunction_AOR_MyPlayer_CheckAimedObject_Statics
 	{
 #if WITH_METADATA
 		static const UECodeGen_Private::FMetaDataPairParam Function_MetaDataParams[];
@@ -41,17 +118,69 @@ void EmptyLinkFunctionForGeneratedCodeOR_MyPlayer() {}
 		static const UECodeGen_Private::FFunctionParams FuncParams;
 	};
 #if WITH_METADATA
-	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UFunction_AOR_MyPlayer_CheckObjectToAimed_Statics::Function_MetaDataParams[] = {
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UFunction_AOR_MyPlayer_CheckAimedObject_Statics::Function_MetaDataParams[] = {
+#if !UE_BUILD_SHIPPING
+		{ "Comment", "// Interacte Action\n" },
+#endif
 		{ "ModuleRelativePath", "Game/OR_MyPlayer.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "Interacte Action" },
+#endif
 	};
 #endif
-	const UECodeGen_Private::FFunctionParams Z_Construct_UFunction_AOR_MyPlayer_CheckObjectToAimed_Statics::FuncParams = { (UObject*(*)())Z_Construct_UClass_AOR_MyPlayer, nullptr, "CheckObjectToAimed", nullptr, nullptr, nullptr, 0, 0, RF_Public|RF_Transient|RF_MarkAsNative, (EFunctionFlags)0x04080401, 0, 0, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UFunction_AOR_MyPlayer_CheckObjectToAimed_Statics::Function_MetaDataParams), Z_Construct_UFunction_AOR_MyPlayer_CheckObjectToAimed_Statics::Function_MetaDataParams) };
-	UFunction* Z_Construct_UFunction_AOR_MyPlayer_CheckObjectToAimed()
+	const UECodeGen_Private::FFunctionParams Z_Construct_UFunction_AOR_MyPlayer_CheckAimedObject_Statics::FuncParams = { (UObject*(*)())Z_Construct_UClass_AOR_MyPlayer, nullptr, "CheckAimedObject", nullptr, nullptr, nullptr, 0, 0, RF_Public|RF_Transient|RF_MarkAsNative, (EFunctionFlags)0x04080401, 0, 0, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UFunction_AOR_MyPlayer_CheckAimedObject_Statics::Function_MetaDataParams), Z_Construct_UFunction_AOR_MyPlayer_CheckAimedObject_Statics::Function_MetaDataParams) };
+	UFunction* Z_Construct_UFunction_AOR_MyPlayer_CheckAimedObject()
 	{
 		static UFunction* ReturnFunction = nullptr;
 		if (!ReturnFunction)
 		{
-			UECodeGen_Private::ConstructUFunction(&ReturnFunction, Z_Construct_UFunction_AOR_MyPlayer_CheckObjectToAimed_Statics::FuncParams);
+			UECodeGen_Private::ConstructUFunction(&ReturnFunction, Z_Construct_UFunction_AOR_MyPlayer_CheckAimedObject_Statics::FuncParams);
+		}
+		return ReturnFunction;
+	}
+	struct Z_Construct_UFunction_AOR_MyPlayer_GetDistanceBetweenMeAndTarget_Statics
+	{
+		struct OR_MyPlayer_eventGetDistanceBetweenMeAndTarget_Parms
+		{
+			FHitResult HitResult;
+			float ReturnValue;
+		};
+#if WITH_METADATA
+		static const UECodeGen_Private::FMetaDataPairParam NewProp_HitResult_MetaData[];
+#endif
+		static const UECodeGen_Private::FStructPropertyParams NewProp_HitResult;
+		static const UECodeGen_Private::FFloatPropertyParams NewProp_ReturnValue;
+		static const UECodeGen_Private::FPropertyParamsBase* const PropPointers[];
+#if WITH_METADATA
+		static const UECodeGen_Private::FMetaDataPairParam Function_MetaDataParams[];
+#endif
+		static const UECodeGen_Private::FFunctionParams FuncParams;
+	};
+#if WITH_METADATA
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UFunction_AOR_MyPlayer_GetDistanceBetweenMeAndTarget_Statics::NewProp_HitResult_MetaData[] = {
+		{ "NativeConst", "" },
+	};
+#endif
+	const UECodeGen_Private::FStructPropertyParams Z_Construct_UFunction_AOR_MyPlayer_GetDistanceBetweenMeAndTarget_Statics::NewProp_HitResult = { "HitResult", nullptr, (EPropertyFlags)0x0010008000000082, UECodeGen_Private::EPropertyGenFlags::Struct, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(OR_MyPlayer_eventGetDistanceBetweenMeAndTarget_Parms, HitResult), Z_Construct_UScriptStruct_FHitResult, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UFunction_AOR_MyPlayer_GetDistanceBetweenMeAndTarget_Statics::NewProp_HitResult_MetaData), Z_Construct_UFunction_AOR_MyPlayer_GetDistanceBetweenMeAndTarget_Statics::NewProp_HitResult_MetaData) }; // 1891709922
+	const UECodeGen_Private::FFloatPropertyParams Z_Construct_UFunction_AOR_MyPlayer_GetDistanceBetweenMeAndTarget_Statics::NewProp_ReturnValue = { "ReturnValue", nullptr, (EPropertyFlags)0x0010000000000580, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(OR_MyPlayer_eventGetDistanceBetweenMeAndTarget_Parms, ReturnValue), METADATA_PARAMS(0, nullptr) };
+	const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UFunction_AOR_MyPlayer_GetDistanceBetweenMeAndTarget_Statics::PropPointers[] = {
+		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UFunction_AOR_MyPlayer_GetDistanceBetweenMeAndTarget_Statics::NewProp_HitResult,
+		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UFunction_AOR_MyPlayer_GetDistanceBetweenMeAndTarget_Statics::NewProp_ReturnValue,
+	};
+#if WITH_METADATA
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UFunction_AOR_MyPlayer_GetDistanceBetweenMeAndTarget_Statics::Function_MetaDataParams[] = {
+		{ "ModuleRelativePath", "Game/OR_MyPlayer.h" },
+	};
+#endif
+	const UECodeGen_Private::FFunctionParams Z_Construct_UFunction_AOR_MyPlayer_GetDistanceBetweenMeAndTarget_Statics::FuncParams = { (UObject*(*)())Z_Construct_UClass_AOR_MyPlayer, nullptr, "GetDistanceBetweenMeAndTarget", nullptr, nullptr, Z_Construct_UFunction_AOR_MyPlayer_GetDistanceBetweenMeAndTarget_Statics::PropPointers, UE_ARRAY_COUNT(Z_Construct_UFunction_AOR_MyPlayer_GetDistanceBetweenMeAndTarget_Statics::PropPointers), sizeof(Z_Construct_UFunction_AOR_MyPlayer_GetDistanceBetweenMeAndTarget_Statics::OR_MyPlayer_eventGetDistanceBetweenMeAndTarget_Parms), RF_Public|RF_Transient|RF_MarkAsNative, (EFunctionFlags)0x04080401, 0, 0, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UFunction_AOR_MyPlayer_GetDistanceBetweenMeAndTarget_Statics::Function_MetaDataParams), Z_Construct_UFunction_AOR_MyPlayer_GetDistanceBetweenMeAndTarget_Statics::Function_MetaDataParams) };
+	static_assert(UE_ARRAY_COUNT(Z_Construct_UFunction_AOR_MyPlayer_GetDistanceBetweenMeAndTarget_Statics::PropPointers) < 2048);
+	static_assert(sizeof(Z_Construct_UFunction_AOR_MyPlayer_GetDistanceBetweenMeAndTarget_Statics::OR_MyPlayer_eventGetDistanceBetweenMeAndTarget_Parms) < MAX_uint16);
+	UFunction* Z_Construct_UFunction_AOR_MyPlayer_GetDistanceBetweenMeAndTarget()
+	{
+		static UFunction* ReturnFunction = nullptr;
+		if (!ReturnFunction)
+		{
+			UECodeGen_Private::ConstructUFunction(&ReturnFunction, Z_Construct_UFunction_AOR_MyPlayer_GetDistanceBetweenMeAndTarget_Statics::FuncParams);
 		}
 		return ReturnFunction;
 	}
@@ -105,7 +234,9 @@ void EmptyLinkFunctionForGeneratedCodeOR_MyPlayer() {}
 	};
 	static_assert(UE_ARRAY_COUNT(Z_Construct_UClass_AOR_MyPlayer_Statics::DependentSingletons) < 16);
 	const FClassFunctionLinkInfo Z_Construct_UClass_AOR_MyPlayer_Statics::FuncInfo[] = {
-		{ &Z_Construct_UFunction_AOR_MyPlayer_CheckObjectToAimed, "CheckObjectToAimed" }, // 79095930
+		{ &Z_Construct_UFunction_AOR_MyPlayer_CanInteracte, "CanInteracte" }, // 3179705694
+		{ &Z_Construct_UFunction_AOR_MyPlayer_CheckAimedObject, "CheckAimedObject" }, // 3832804990
+		{ &Z_Construct_UFunction_AOR_MyPlayer_GetDistanceBetweenMeAndTarget, "GetDistanceBetweenMeAndTarget" }, // 1459963350
 	};
 	static_assert(UE_ARRAY_COUNT(Z_Construct_UClass_AOR_MyPlayer_Statics::FuncInfo) < 2048);
 #if WITH_METADATA
@@ -265,9 +396,9 @@ void EmptyLinkFunctionForGeneratedCodeOR_MyPlayer() {}
 		static const FClassRegisterCompiledInInfo ClassInfo[];
 	};
 	const FClassRegisterCompiledInInfo Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_OnlineRPG_Source_OnlineRPG_Game_OR_MyPlayer_h_Statics::ClassInfo[] = {
-		{ Z_Construct_UClass_AOR_MyPlayer, AOR_MyPlayer::StaticClass, TEXT("AOR_MyPlayer"), &Z_Registration_Info_UClass_AOR_MyPlayer, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(AOR_MyPlayer), 3514990393U) },
+		{ Z_Construct_UClass_AOR_MyPlayer, AOR_MyPlayer::StaticClass, TEXT("AOR_MyPlayer"), &Z_Registration_Info_UClass_AOR_MyPlayer, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(AOR_MyPlayer), 2301783515U) },
 	};
-	static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_OnlineRPG_Source_OnlineRPG_Game_OR_MyPlayer_h_4199537445(TEXT("/Script/OnlineRPG"),
+	static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_OnlineRPG_Source_OnlineRPG_Game_OR_MyPlayer_h_1670930552(TEXT("/Script/OnlineRPG"),
 		Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_OnlineRPG_Source_OnlineRPG_Game_OR_MyPlayer_h_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_OnlineRPG_Source_OnlineRPG_Game_OR_MyPlayer_h_Statics::ClassInfo),
 		nullptr, 0,
 		nullptr, 0);

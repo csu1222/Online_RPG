@@ -2,7 +2,18 @@
 
 #pragma once
 
+
+// 언리얼 기본 헤더
 #include "CoreMinimal.h"
+#include "EngineMinimal.h"
+#include "CoreUObject.h"
+#include "Engine.h"
+#include "InputCore.h"
+#include "Sockets.h"
+#include "Networking.h"
+
+// 인게임 공유 헤더
+#include "OR_Env_ItrAble.h"
 
 struct PacketHeader
 {
@@ -28,11 +39,13 @@ private:
 	int32			_writeSize = 0;
 };
 
+
 #define USING_SHARED_PTR(name)	using name##Ref = TSharedPtr<class name>;
 
 USING_SHARED_PTR(Session);
 USING_SHARED_PTR(PacketSession);
 USING_SHARED_PTR(SendBuffer);
+USING_SHARED_PTR(OR_Env_ItrAble);
 
 #include "ClientPacketHandler.h"
 #include "OnlineRPGGameInstance.h"

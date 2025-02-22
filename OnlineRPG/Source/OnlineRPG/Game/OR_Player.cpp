@@ -136,7 +136,16 @@ void AOR_Player::SetPlayerInfo(const Protocol::PosInfo& Info)
 		assert(CurrentPosInfo->object_id() == Info.object_id());
 	}
 
-	CurrentPosInfo->CopyFrom(Info);
+	if (CurrentPosInfo != nullptr)
+	{
+		CurrentPosInfo->CopyFrom(Info);
+	}
+	else
+	{
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("CurrentPosInfo is nullptr, This Player ID : %llu"), Info.object_id()));
+		return;
+	}
+
 
 	FVector Location(Info.x(), Info.y(), Info.z());
 	SetActorLocation(Location);

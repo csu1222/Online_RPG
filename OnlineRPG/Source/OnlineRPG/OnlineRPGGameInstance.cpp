@@ -102,6 +102,9 @@ void UOnlineRPGGameInstance::HandleSpawn(const Protocol::ObjectInfo& ObjectInfo,
 	Protocol::PosInfo PosInfo = ObjectInfo.pos_info();
 	FVector SpawnLocation(PosInfo.x(), PosInfo.y(), PosInfo.z());
 
+	// 플레이어 생성시점 ID 체크
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("CurrentPosInfo is nullptr, This Player ID : %llu"), ObjectInfo.object_id()));
+	
 	if (IsMine)
 	{
 		// 내 캐릭터
@@ -138,15 +141,18 @@ void UOnlineRPGGameInstance::HandleSpawn(const Protocol::S_SPAWN& SpawnPkt)
 
 void UOnlineRPGGameInstance::HandleDespawn(uint64 ObjectId)
 {
+	// 소켓과 세션이 없으면 처리하지 않음
 	if (Socket == nullptr || GameServerSession == nullptr)
 		return;
 
+	// 월드가 없으면 처리하지 않음
 	auto* World = GetWorld();
 	if (World == nullptr)
 		return;
 
 	// TODO : Despawn 처리
 
+	// 플레이어 찾기와 Players에 없으면 처리하지 않음
 	AOR_Player** FindActor = Players.Find(ObjectId);
 	if (FindActor == nullptr)
 		return;

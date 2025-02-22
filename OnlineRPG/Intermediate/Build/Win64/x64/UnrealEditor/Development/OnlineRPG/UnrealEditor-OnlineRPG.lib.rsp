@@ -6,13 +6,14 @@
 /NAME:"UnrealEditor-OnlineRPG.dll"
 /IGNORE:4221
 /NODEFAULTLIB
-"D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\OnlineRPGEditor\Development\Engine\SharedPCH.Engine.Cpp20.h.obj"
+"D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\PCH.OnlineRPG.h.obj"
 "D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\OnlineRPG.init.gen.cpp.obj"
 "D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\OnlineRPGGameInstance.gen.cpp.obj"
 "D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\OnlineRPGGameModeBase.gen.cpp.obj"
 "D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\OR_Env.gen.cpp.obj"
 "D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\OR_Env_ItrAble.gen.cpp.obj"
 "D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\OR_MyPlayer.gen.cpp.obj"
+"D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\OR_Object.gen.cpp.obj"
 "D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\OR_Player.gen.cpp.obj"
 "D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\ClientPacketHandler.cpp.obj"
 "D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\OnlineRPG.cpp.obj"
@@ -21,6 +22,7 @@
 "D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\OR_Env.cpp.obj"
 "D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\OR_Env_ItrAble.cpp.obj"
 "D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\OR_MyPlayer.cpp.obj"
+"D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\OR_Object.cpp.obj"
 "D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\OR_Player.cpp.obj"
 "D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\BufferReader.cpp.obj"
 "D:\CPP_Game\Portfolio\OnlineRPG\Intermediate\Build\Win64\x64\UnrealEditor\Development\OnlineRPG\BufferWriter.cpp.obj"

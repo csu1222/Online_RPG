@@ -7,8 +7,9 @@ public class OnlineRPG : ModuleRules
 	public OnlineRPG(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "Sockets", "Networking", "EnhancedInput" });
+        PrivatePCHHeaderFile = "OnlineRPG.h";
+
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "Sockets", "Networking", "EnhancedInput" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { "ProtobufCore" });
 

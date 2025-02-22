@@ -78,6 +78,12 @@
     <ClInclude Include="..\..\Source\OnlineRPG\Game\OR_MyPlayer.h">
       <Filter>Source\OnlineRPG\Game</Filter>
     </ClInclude>
+    <ClCompile Include="..\..\Source\OnlineRPG\Game\OR_Object.cpp">
+      <Filter>Source\OnlineRPG\Game</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\OnlineRPG\Game\OR_Object.h">
+      <Filter>Source\OnlineRPG\Game</Filter>
+    </ClInclude>
     <ClCompile Include="..\..\Source\OnlineRPG\Game\OR_Player.cpp">
       <Filter>Source\OnlineRPG\Game</Filter>
     </ClCompile>
