@@ -1,0 +1,221 @@
+## 목표 : 몬스터를 스폰하기 
+서버쪽에서 플레이어를 만드는 유틸리티 파일이 있었습니다. 
+ObjectUtil 파일인데 static Atomic<int64> s_PlayerIdGenerator 가 있는데 이건 플레이어를 하나 생성할때 마다 1씩 증가 시켜 
+아이디를 발급하도록 합니다. 
+아이디를 발급하고 플레이어 객체를 만들고 아이디를 입력한 후 이 플레이어의 세션을 설정하고 세션에도 이 플레이어를 들고 있게 해줬습니다. 
+
+이 CreatePlayer 함수처럼 CreateMonster 를 만들겁니다. 그런데 몬스터도 몬스터의 아이디를 발급받을겁니다. 
+
+생각해보니 플레이어 몬스터가 포함된 크리쳐들은 공통적으로 들고 있어야 할 자료가 있을 거 같습니다. struct.proto 파일에 
+CreatureInfo 라는 message를 새로 만들었습니다. 여기에는 CreatureType, WeaponType, MonsterType, hp, max_hp, mp, max_mp, 
+attack, defence, speed 라는 정보들을 들고 있게 하겠습니다. 
+
+다시 CreateMonster 함수로 가서 마저 만들어보겠습니다. 
+아이디를 발급할때 플레이어의 아이디와 동시에 몬스터 아이디도 관리할 수 있고 아니면 아이디를 플레이어 아이디 몬스터 아이디를 따로 관리 
+할 수 있을겁니다. 거기에 아이디를 같이 관리하게되면 그냥 차례대로 하나씩 발급하거나 아니면 int64의 크기를 이용해 앞 4비트에 비트플레그로 종류를 
+나눌 수도 있습니다. 
+
+enum ObjectType : int64
+{
+	PLAYER = 0x1,  // 0001
+	MONSTER = 0x2, // 0010
+	// 추가 타입은 여기서 정의
+};
+
+static int64 GenerateId(ObjectType type)
+{
+    int64 uniqueId = s_IdGenerator.fetch_add(1); // 고유 ID 생성
+    return (static_cast<int64>(type) << 60) | uniqueId; // 상위 4비트에 타입 설정
+}
+
+static ObjectType GetTypeFromId(int64 id)
+{
+    return static_cast<ObjectType>((id >> 60) & 0xF); // 상위 4비트 추출
+}
+
+ObjectType이라는 enum으로 크리쳐 타입을 두고 이걸 int64의 상위 4비트에 넣어서 관리를 하겠습니다. 그리고 GenerateId로 비트플레그 시프트를 활용해 아이디를 만들고 GetTypeFromId으로 
+아이디로 해당 타입을 가져옵니다. 
+
+그리고 이 GenerateId 를 CreatePlayer 와 CreateMonster 둘 모두에 사용했습니다. 그리고 각각 shared_ptr 객체로 빈 객체를 만들고 그 안에 생성한 아이디를 부여하고 빈 객체를 반환했습니다. 
+
+
+## 목표 : 스폰되는 크리쳐의 스탯같은 데이터를 부여하기 
+
+플레이어나 몬스터 같은 크리쳐를 생성하기는 했는데 각 크리쳐마다 스탯들이 있을텐데 이건 어떻게 관리해야할지 생각해봤습니다. 
+
+CreatureData 라는 클래스를 만들어서 Protocol::CreatureInfo 를 들고 있게 했습니다 그냥 크리쳐들이 직접 CreatureInfo를 사용해도 될거 같지만 지금은 혹시 하위 상속을 하면서 사용할지 몰라
+이렇게 만들었습니다. 
+
+이 CreatureData 는 Player,Monster의 부모 클래스인 Creature 클래스에서 들고 있도록 할것입니다. 
+Creature 에서 SetData, GetData 라는 멤버 함수를 만들어 WCHAR* 로 설정할 스탯을 고르고 float 로 값을 설정하도록 했습니다. 
+
+bool Creature::SetData(WCHAR* SetDataName, float SetDataValue)
+{
+    static const std::map<std::wstring, std::function<void(float)>> setterMap = {
+        {L"Hp",     [this](float v) { creatureData->creatureInfo->set_hp(v); }},
+        {L"MaxHp",  [this](float v) { creatureData->creatureInfo->set_max_hp(v); }},
+        {L"Mp",     [this](float v) { creatureData->creatureInfo->set_mp(v); }},
+        {L"MaxMp",  [this](float v) { creatureData->creatureInfo->set_max_hp(v); }},
+        {L"Attack", [this](float v) { creatureData->creatureInfo->set_attack(v); }},
+        {L"Defense",[this](float v) { creatureData->creatureInfo->set_defense(v); }},
+        {L"Speed",  [this](float v) { creatureData->creatureInfo->set_speed(v); }},
+        // 필요한 속성 계속 추가
+    };
+
+    if (SetDataName == nullptr || SetDataValue < 0.f)
+        return false;
+
+    auto it = setterMap.find(SetDataName);
+    if (it != setterMap.end())
+    {
+        it->second(SetDataValue);
+        return true;
+    }
+    return false;
+}
+
+float Creature::GetData(WCHAR* GetDataName)
+{
+	float v = 0.f; // 기본값 설정, 필요에 따라 수정
+
+    v = creatureData->creatureInfo->hp();
+    static const std::map<std::wstring, std::function<float()>> getterMap =
+    {
+        {L"Hp",     [this]() { return creatureData->creatureInfo->hp(); }},
+        {L"MaxHp",  [this]() { return creatureData->creatureInfo->max_hp(); }},
+        {L"Mp",     [this]() { return creatureData->creatureInfo->mp(); }},
+        {L"MaxMp",  [this]() { return creatureData->creatureInfo->max_hp(); }},
+        {L"Attack", [this]() { return creatureData->creatureInfo->attack(); }},
+        {L"Defense",[this]() { return creatureData->creatureInfo->defense(); }},
+        {L"Speed",  [this]() { return creatureData->creatureInfo->speed(); }},
+        // 필요한 속성 계속 추가
+    };
+
+    if (GetDataName == nullptr)
+        return 0.f;
+
+    auto it = getterMap.find(GetDataName);
+    if (it != getterMap.end())
+    {
+        return it->second();
+    }
+
+    return 0.f;
+}
+
+## 목표 : 몬스터를 자동으로 스폰시키는 기능 만들기 
+
+몬스터를 일정시간마다 최대 몬스터 수에 모자라도록 존재하면 자동으로 스폰해주고 싶습니다. Room에서 관리하면 될거 같아서 Room::UpdateTick에 코드를 추가했습니다. 
+
+class Room : public JobQueue
+{
+    // ... 
+
+    
+protected:
+	// UpdateTick()에서 사용
+	float _nowTickCount = 0.0f; // 현재 틱 카운트 (초 단위)
+	float _beforeTickCount = 0.0f; // 이전 틱 카운트 (초 단위)
+	int MAX_MONSTER_COUNT = 10; // 최대 몬스터 수
+	atomic<int> _monsterCountAtomic = 0; // 현재 몬스터 수
+
+private:
+	unordered_map<uint64, ObjectRef> _objects;
+	unordered_map<uint64, PlayerRef> _players; // 플레이어 목록
+	unordered_map<uint64, MonsterRef> _monsters; // 몬스터 목록
+
+	const float ROOM_MONSTER_SPAWN_DELAY = 0.5f; // 몬스터 스폰 딜레이 (초)
+	float _spawnTimer = ROOM_MONSTER_SPAWN_DELAY; // 몬스터 스폰 타이머
+
+}
+
+이런 변수들을 Room에 추가하고 UpdateTick 에서 
+
+void Room::UpdateTick()
+{
+	// TODO : 룸 업데이트 로직
+
+	// 몬스터 스폰 타이머 업데이트
+	_beforeTickCount = _nowTickCount;
+	ULONGLONG tick = GetTickCount64();
+	_nowTickCount = static_cast<float>(tick);
+
+	float deltaTime = (_nowTickCount - _beforeTickCount) / 1000.f; // 초 단위로 변환
+
+	_spawnTimer -= deltaTime;
+
+	if (_spawnTimer <= 0.0f)
+	{
+		if ( _monsterCountAtomic.load() < MAX_MONSTER_COUNT )
+		{
+			// 몬스터 스폰
+			MonsterRef monster = ObjectUtils::CreateMonster(GetRoomRef());
+
+			if (HandleSpawnMonster(monster))
+			{
+				string monsterId = Utils::FloatToString(monster->GetData(L"Id"));
+				// 몬스터 스폰 성공 로그
+				cout << "Monster Spawned : " << monster->objectInfo->object_id() << endl;
+				cout << "Monster Count : " << _monsterCountAtomic.load() << endl;
+			}
+			else
+			{
+				string monsterId = Utils::FloatToString(monster->GetData(L"Id"));
+				// 몬스터 스폰 실패 로그
+				cout << "Monster Spawn Failed : " << monsterId << endl;
+				// TODO : 몬스터 스폰 실패 처리
+				_monsterCountAtomic.fetch_sub(1); // 실패시 몬스터 수 감소
+			}
+		}
+
+		BroadcastToSpawnedMonsters();
+
+		// 타이머 초기화
+		_spawnTimer = ROOM_MONSTER_SPAWN_DELAY;
+	}
+
+	// 0.1 초 마다 다시 업데이트
+	DoTimer(100, &Room::UpdateTick);
+}
+이렇게 코드를 추가했습니다. 
+UpdateTick 이 실행이 되면서 Room 에 있는 플레이어들에게 몬스터들을 스폰하도록 만들고 싶었습니다. 
+
+Room::BroadcastToSpawnedMonsters 를 통해 클라이언트에 전달하게 되는데 ClientPacketHandler 에서 Handle_S_SPAWN에서부터 A1GameInstance::HandleSpawn 으로 들어가서 
+ObjectInfo에 담긴 CreatureType 가져와서 조건문으로 플레이어일때와 몬스터일때를 나눴습니다. 몬스터일때 World->SpawnActor(MonsterClass, &SpawnLocation) 을 해서 스폰을 할겁니다. 
+
+그런데 이때 계속 MonsterClass 가 Nullptr 로 잡히는 에러가 생기는데 그 이유가 A1GameInstance 에서 MonsterClass 를 UPROPERTY(EditAnywhere) 를 붙히고 언리얼 에디터 안에서 
+A1GameInstance를 상속한 BP_GameInstance 에서 Monster Class를 BP_Monster로 설정해야 했습니다. 
+
+하지만 이 상태로 실행해보면 맵 한가운데에 몬스터 한마리만 스폰됩니다. 
+서버에서 분명 최대 몬스터 수를 10으로 두고 스폰하도록 했고 또 그 위치를 랜덤하게 스폰하도록 했는데 제대로 스폰이 되지 않았습니다. 그 이유는 서버쪽 코드에서 몬스터 스폰 코드를 계속 
+보내야하는데 중간에 리턴이 되는 코드가 있어서 그랬습니다. 이부분을 수정하고 다시 테스트를 해봤습니다. 
+
+이 후 다시 버그가 나는데 클라이언트 코드중 A1Monster::SetMonsterPosInfo 에서 CurrentPosInfo->object_id() 가 nullptr라고 나와서 버그가 납니다 
+왜 이런지 찾아보니 서버로 부터 받은 몬스터들의 좌표가 너무 가까워서 콜리전이 겹쳐서 제대로 스폰이 되지 않아서 인것 같습니다. 
+이 경우는 파라미터를 다르게 넣어주면 된다고 비쥬얼스튜디오 AI에서 추천을 했습니다. 
+FActorSpawnParameters Params;
+Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+AA1Monster* Monster = Cast<AA1Monster>(World->SpawnActor(MonsterClass, SpawnLocation, FRotator::ZeroRotator, Params));
+이렇게 하라고 하지만 실제로 해보면 SpawnActor의 인자갯수가 안맞는다고 뜹니다. 
+두번째 세번째 인자를 포인터가 아니라 값으로 넘겨주면 통과 된다고는 하는데 이것도 문법에러가 납니다. 그래서 이 인자를 가지고 해결하는 방법 말고 
+서버에서 몬스터를 스폰하는 코드자체에서 몬스터의 좌표를 체크해 조정후 브로드 캐스팅을 해주면 될것 같습니다. 
+그 과정을 의사코드로 작성해보면 
+
+1. Room::UpdateTick은 일정 시간마다 자신을 호출하는 함수이다. 
+2. 이 때 다시 몬스터도 몬스터의 스폰 시간을 따로 가지면서 스폰 함수가 호출이 됩니다. 
+3. 몬스터 스폰 함수에서는 몬스터가 생성됨과 함께 몬스터의 총 수를 카운트하는 아토믹 변수를 1 증가 시킵니다. 
+4. 몬스터를 룸에 추가 하기 전에 이미 들어가 있는 몬스터들과 좌표를 비교해 일정 거리 안에 있도록 생성되었는지를 체크해 만약 너무 가깝다면 새로 생성될 
+몬스터의 좌표를 다시 랜덤으로 지정해 다시 체크합니다. 
+5. 좌표가 안겹치는게 확인 되었으면 몬스터 생성후 룸에서 관리하는 unordered_map인 _objects 와 _monsters에 추가됩니다. 
+6. 이 몬스터 카운트와 _monsters 의 총갯수를 체크해 둘이 같은지를 체크하면서 몬스터 생성과 룸에 추가 과정중 누락된 시행이 있는지 체크 
+
+여기에 추가 개선사항으로 스폰이나 디스폰, 좌표재설정 같은 일감들을 Job으로 만들어 JobQueue로 관리하는 것과 
+_objects, _monsters 두 컨테이너에서 동시에 Monster 객체를 같이 들고 있는것 보다 _objects 에만 아이디와 객체의 페어로 관리하고 _monster는 아이디만 관리해 
+인덱스로 사용하는 방법이 있습니다. 
+
+## 에러 발생 
+어느 순간 부터 A1 프로젝트를 Visual Studio로 실행할 때 Navigation System 쪽에서 에러가 자꾸 뜨는데 NavSys 라고 하는 함수내 변수가 계속 null 이었습니다. 
+새로 테스트 프로젝트를 만들어 조금씩 만져가면서 어디서 문제가 생겼는지 확인해보니 언리얼에디터에서 Map 을 따로 Maps 라는 폴더를 하나 더 만들어 거기로 이동시킨후 사용하려고 했는데 
+이게 문제였습니다. 원래 있던 콘텐츠 폴더 아래에 다시 이동시켜서 실행해보면 에러가 뜨지 않았습니다. 
+이걸 보면 아마 Map의 네비게이션쪽에서 Map의 경로가 컨텐츠 아래로 다 포함시키는게 아니라 컨텐츠 폴더하나에서 감지 할 수 있었어야 하는것 같습니다.
+##

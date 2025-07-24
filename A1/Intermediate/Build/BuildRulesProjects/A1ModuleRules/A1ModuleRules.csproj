@@ -17,5 +17,6 @@
   <Compile Include="..\..\..\..\Source\A1.Target.cs"><Link>Source\A1.Target.cs</Link></Compile>
   <Compile Include="..\..\..\..\Source\A1Editor.Target.cs"><Link>Source\A1Editor.Target.cs</Link></Compile>
   <Compile Include="..\..\..\..\Source\A1\A1.Build.cs"><Link>Source\A1\A1.Build.cs</Link></Compile>
+  <Compile Include="..\..\..\..\Source\ProtobufCore\ProtobufCore.Build.cs"><Link>Source\ProtobufCore\ProtobufCore.Build.cs</Link></Compile>
   </ItemGroup>
 </Project>

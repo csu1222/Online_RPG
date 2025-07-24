@@ -1,0 +1,19 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "d:\\cpp_game\\portfolio\\a1\\intermediate\\build\\win64\\unrealgame\\inc\\a1\\uht\\a1gamemodebase.gen.cpp",
+        "ProvidedModule": "",
+        "PCH": "d:\\cpp_game\\portfolio\\a1\\intermediate\\build\\win64\\x64\\a1\\shipping\\engine\\sharedpch.engine.project.valapi.cpp20.h.pch",
+        "Includes": [
+            "d:\\cpp_game\\portfolio\\a1\\intermediate\\build\\win64\\x64\\unrealgame\\shipping\\a1\\definitions.a1.h",
+            "d:\\cpp_game\\portfolio\\a1\\source\\a1\\a1gamemodebase.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\source\\runtime\\engine\\classes\\gameframework\\gamemodebase.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\source\\runtime\\engine\\classes\\engine\\serverstatreplicator.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\intermediate\\build\\win64\\unrealgame\\inc\\engine\\uht\\serverstatreplicator.generated.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\intermediate\\build\\win64\\unrealgame\\inc\\engine\\uht\\gamemodebase.generated.h",
+            "d:\\cpp_game\\portfolio\\a1\\intermediate\\build\\win64\\unrealgame\\inc\\a1\\uht\\a1gamemodebase.generated.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

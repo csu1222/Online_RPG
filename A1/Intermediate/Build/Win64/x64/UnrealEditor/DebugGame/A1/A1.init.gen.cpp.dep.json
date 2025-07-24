@@ -1,0 +1,13 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "d:\\cpp_game\\portfolio\\a1\\intermediate\\build\\win64\\unrealeditor\\inc\\a1\\uht\\a1.init.gen.cpp",
+        "ProvidedModule": "",
+        "PCH": "d:\\cpp_game\\portfolio\\a1\\intermediate\\build\\win64\\x64\\a1editor\\debuggame\\unrealed\\sharedpch.unrealed.project.nonoptimized.valapi.cpp20.h.pch",
+        "Includes": [
+            "d:\\cpp_game\\portfolio\\a1\\intermediate\\build\\win64\\x64\\unrealeditor\\debuggame\\a1\\definitions.a1.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

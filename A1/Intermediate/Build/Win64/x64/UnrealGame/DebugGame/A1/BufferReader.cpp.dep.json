@@ -1,0 +1,14 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "d:\\cpp_game\\portfolio\\a1\\source\\a1\\network\\bufferreader.cpp",
+        "ProvidedModule": "",
+        "PCH": "d:\\cpp_game\\portfolio\\a1\\intermediate\\build\\win64\\x64\\a1\\debuggame\\engine\\sharedpch.engine.project.nonoptimized.valapi.cpp20.h.pch",
+        "Includes": [
+            "d:\\cpp_game\\portfolio\\a1\\intermediate\\build\\win64\\x64\\unrealgame\\debuggame\\a1\\definitions.a1.h",
+            "d:\\cpp_game\\portfolio\\a1\\source\\a1\\network\\bufferreader.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}
