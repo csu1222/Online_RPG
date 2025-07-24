@@ -25,6 +25,14 @@ enum WeaponType
 	WEAPON_TYPE_DAGGER = 3;
 }
 
+enum MonsterType
+{
+	MONSTER_TYPE_NONE = 0;
+	MONSTER_TYPE_ELECTRO_SLIME = 1;
+	MONSTER_TYPE_WATER_SLIME = 2;
+	MONSTER_TYPE_DUCK = 3;
+}
+
 enum MoveState
 {
 	MOVE_STATE_NONE = 0;

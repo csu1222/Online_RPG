@@ -35,15 +35,36 @@ struct PosInfoDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PosInfoDefaultTypeInternal _PosInfo_default_instance_;
-constexpr ObjectInfo::ObjectInfo(
+constexpr CreatureInfo::CreatureInfo(
   ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
-  : pos_info_(nullptr)
-  , object_id_(uint64_t{0u})
-  , object_type_(0)
-
-  , creature_type_(0)
+  : creature_type_(0)
 
   , weapon_type_(0)
+
+  , monster_type_(0)
+
+  , hp_(0)
+  , max_hp_(0)
+  , mp_(0)
+  , max_mp_(0)
+  , attack_(0)
+  , defense_(0)
+  , speed_(0){}
+struct CreatureInfoDefaultTypeInternal {
+  constexpr CreatureInfoDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~CreatureInfoDefaultTypeInternal() {}
+  union {
+    CreatureInfo _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT CreatureInfoDefaultTypeInternal _CreatureInfo_default_instance_;
+constexpr ObjectInfo::ObjectInfo(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : creature_info_(nullptr)
+  , pos_info_(nullptr)
+  , object_id_(uint64_t{0u})
+  , object_type_(0)
 {}
 struct ObjectInfoDefaultTypeInternal {
   constexpr ObjectInfoDefaultTypeInternal()
@@ -55,7 +76,7 @@ struct ObjectInfoDefaultTypeInternal {
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT ObjectInfoDefaultTypeInternal _ObjectInfo_default_instance_;
 }  // namespace Protocol
-static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_Struct_2eproto[2];
+static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_Struct_2eproto[3];
 static constexpr ::PROTOBUF_NAMESPACE_ID::EnumDescriptor const** file_level_enum_descriptors_Struct_2eproto = nullptr;
 static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_Struct_2eproto = nullptr;
 
@@ -72,23 +93,39 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_Struct_2eproto::offsets[] PROT
   PROTOBUF_FIELD_OFFSET(::Protocol::PosInfo, yaw_),
   PROTOBUF_FIELD_OFFSET(::Protocol::PosInfo, state_),
   ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::Protocol::CreatureInfo, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  PROTOBUF_FIELD_OFFSET(::Protocol::CreatureInfo, creature_type_),
+  PROTOBUF_FIELD_OFFSET(::Protocol::CreatureInfo, weapon_type_),
+  PROTOBUF_FIELD_OFFSET(::Protocol::CreatureInfo, monster_type_),
+  PROTOBUF_FIELD_OFFSET(::Protocol::CreatureInfo, hp_),
+  PROTOBUF_FIELD_OFFSET(::Protocol::CreatureInfo, max_hp_),
+  PROTOBUF_FIELD_OFFSET(::Protocol::CreatureInfo, mp_),
+  PROTOBUF_FIELD_OFFSET(::Protocol::CreatureInfo, max_mp_),
+  PROTOBUF_FIELD_OFFSET(::Protocol::CreatureInfo, attack_),
+  PROTOBUF_FIELD_OFFSET(::Protocol::CreatureInfo, defense_),
+  PROTOBUF_FIELD_OFFSET(::Protocol::CreatureInfo, speed_),
+  ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::Protocol::ObjectInfo, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
   PROTOBUF_FIELD_OFFSET(::Protocol::ObjectInfo, object_id_),
   PROTOBUF_FIELD_OFFSET(::Protocol::ObjectInfo, object_type_),
-  PROTOBUF_FIELD_OFFSET(::Protocol::ObjectInfo, creature_type_),
-  PROTOBUF_FIELD_OFFSET(::Protocol::ObjectInfo, weapon_type_),
+  PROTOBUF_FIELD_OFFSET(::Protocol::ObjectInfo, creature_info_),
   PROTOBUF_FIELD_OFFSET(::Protocol::ObjectInfo, pos_info_),
 };
 static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, sizeof(::Protocol::PosInfo)},
-  { 11, -1, sizeof(::Protocol::ObjectInfo)},
+  { 11, -1, sizeof(::Protocol::CreatureInfo)},
+  { 26, -1, sizeof(::Protocol::ObjectInfo)},
 };
 
 static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::Protocol::_PosInfo_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::Protocol::_CreatureInfo_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::Protocol::_ObjectInfo_default_instance_),
 };
 
@@ -96,20 +133,26 @@ const char descriptor_table_protodef_Struct_2eproto[] PROTOBUF_SECTION_VARIABLE(
   "\n\014Struct.proto\022\010Protocol\032\nEnum.proto\"n\n\007"
   "PosInfo\022\021\n\tobject_id\030\001 \001(\004\022\t\n\001x\030\002 \001(\002\022\t\n"
   "\001y\030\003 \001(\002\022\t\n\001z\030\004 \001(\002\022\013\n\003yaw\030\005 \001(\002\022\"\n\005stat"
-  "e\030\006 \001(\0162\023.Protocol.MoveState\"\311\001\n\nObjectI"
-  "nfo\022\021\n\tobject_id\030\001 \001(\004\022)\n\013object_type\030\002 "
-  "\001(\0162\024.Protocol.ObjectType\022-\n\rcreature_ty"
-  "pe\030\003 \001(\0162\026.Protocol.CreatureType\022)\n\013weap"
-  "on_type\030\004 \001(\0162\024.Protocol.WeaponType\022#\n\010p"
-  "os_info\030\005 \001(\0132\021.Protocol.PosInfob\006proto3"
+  "e\030\006 \001(\0162\023.Protocol.MoveState\"\375\001\n\014Creatur"
+  "eInfo\022-\n\rcreature_type\030\001 \001(\0162\026.Protocol."
+  "CreatureType\022)\n\013weapon_type\030\002 \001(\0162\024.Prot"
+  "ocol.WeaponType\022+\n\014monster_type\030\003 \001(\0162\025."
+  "Protocol.MonsterType\022\n\n\002hp\030\004 \001(\002\022\016\n\006max_"
+  "hp\030\005 \001(\002\022\n\n\002mp\030\006 \001(\002\022\016\n\006max_mp\030\007 \001(\002\022\016\n\006"
+  "attack\030\010 \001(\002\022\017\n\007defense\030\t \001(\002\022\r\n\005speed\030\n"
+  " \001(\002\"\236\001\n\nObjectInfo\022\021\n\tobject_id\030\001 \001(\004\022)"
+  "\n\013object_type\030\002 \001(\0162\024.Protocol.ObjectTyp"
+  "e\022-\n\rcreature_info\030\003 \001(\0132\026.Protocol.Crea"
+  "tureInfo\022#\n\010pos_info\030\004 \001(\0132\021.Protocol.Po"
+  "sInfob\006proto3"
   ;
 static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_Struct_2eproto_deps[1] = {
   &::descriptor_table_Enum_2eproto,
 };
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_Struct_2eproto_once;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_Struct_2eproto = {
-  false, false, 360, descriptor_table_protodef_Struct_2eproto, "Struct.proto", 
-  &descriptor_table_Struct_2eproto_once, descriptor_table_Struct_2eproto_deps, 1, 2,
+  false, false, 573, descriptor_table_protodef_Struct_2eproto, "Struct.proto", 
+  &descriptor_table_Struct_2eproto_once, descriptor_table_Struct_2eproto_deps, 1, 3,
   schemas, file_default_instances, TableStruct_Struct_2eproto::offsets,
   file_level_metadata_Struct_2eproto, file_level_enum_descriptors_Struct_2eproto, file_level_service_descriptors_Struct_2eproto,
 };
@@ -433,11 +476,414 @@ void PosInfo::InternalSwap(PosInfo* other) {
 
 // ===================================================================
 
+class CreatureInfo::_Internal {
+ public:
+};
+
+CreatureInfo::CreatureInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
+  SharedCtor();
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:Protocol.CreatureInfo)
+}
+CreatureInfo::CreatureInfo(const CreatureInfo& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  ::memcpy(&creature_type_, &from.creature_type_,
+    static_cast<size_t>(reinterpret_cast<char*>(&speed_) -
+    reinterpret_cast<char*>(&creature_type_)) + sizeof(speed_));
+  // @@protoc_insertion_point(copy_constructor:Protocol.CreatureInfo)
+}
+
+void CreatureInfo::SharedCtor() {
+::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
+    reinterpret_cast<char*>(&creature_type_) - reinterpret_cast<char*>(this)),
+    0, static_cast<size_t>(reinterpret_cast<char*>(&speed_) -
+    reinterpret_cast<char*>(&creature_type_)) + sizeof(speed_));
+}
+
+CreatureInfo::~CreatureInfo() {
+  // @@protoc_insertion_point(destructor:Protocol.CreatureInfo)
+  SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+void CreatureInfo::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+}
+
+void CreatureInfo::ArenaDtor(void* object) {
+  CreatureInfo* _this = reinterpret_cast< CreatureInfo* >(object);
+  (void)_this;
+}
+void CreatureInfo::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
+void CreatureInfo::SetCachedSize(int size) const {
+  _cached_size_.Set(size);
+}
+
+void CreatureInfo::Clear() {
+// @@protoc_insertion_point(message_clear_start:Protocol.CreatureInfo)
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  ::memset(&creature_type_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&speed_) -
+      reinterpret_cast<char*>(&creature_type_)) + sizeof(speed_));
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+const char* CreatureInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // .Protocol.CreatureType creature_type = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+          _internal_set_creature_type(static_cast<::Protocol::CreatureType>(val));
+        } else goto handle_unusual;
+        continue;
+      // .Protocol.WeaponType weapon_type = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+          _internal_set_weapon_type(static_cast<::Protocol::WeaponType>(val));
+        } else goto handle_unusual;
+        continue;
+      // .Protocol.MonsterType monster_type = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
+          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+          _internal_set_monster_type(static_cast<::Protocol::MonsterType>(val));
+        } else goto handle_unusual;
+        continue;
+      // float hp = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 37)) {
+          hp_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
+          ptr += sizeof(float);
+        } else goto handle_unusual;
+        continue;
+      // float max_hp = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 45)) {
+          max_hp_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
+          ptr += sizeof(float);
+        } else goto handle_unusual;
+        continue;
+      // float mp = 6;
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 53)) {
+          mp_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
+          ptr += sizeof(float);
+        } else goto handle_unusual;
+        continue;
+      // float max_mp = 7;
+      case 7:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 61)) {
+          max_mp_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
+          ptr += sizeof(float);
+        } else goto handle_unusual;
+        continue;
+      // float attack = 8;
+      case 8:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 69)) {
+          attack_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
+          ptr += sizeof(float);
+        } else goto handle_unusual;
+        continue;
+      // float defense = 9;
+      case 9:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 77)) {
+          defense_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
+          ptr += sizeof(float);
+        } else goto handle_unusual;
+        continue;
+      // float speed = 10;
+      case 10:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 85)) {
+          speed_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
+          ptr += sizeof(float);
+        } else goto handle_unusual;
+        continue;
+      default: {
+      handle_unusual:
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
+          ctx->SetLastTag(tag);
+          goto success;
+        }
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
+      }
+    }  // switch
+  }  // while
+success:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto success;
+#undef CHK_
+}
+
+::PROTOBUF_NAMESPACE_ID::uint8* CreatureInfo::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:Protocol.CreatureInfo)
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // .Protocol.CreatureType creature_type = 1;
+  if (this->creature_type() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+      1, this->_internal_creature_type(), target);
+  }
+
+  // .Protocol.WeaponType weapon_type = 2;
+  if (this->weapon_type() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+      2, this->_internal_weapon_type(), target);
+  }
+
+  // .Protocol.MonsterType monster_type = 3;
+  if (this->monster_type() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+      3, this->_internal_monster_type(), target);
+  }
+
+  // float hp = 4;
+  if (!(this->hp() <= 0 && this->hp() >= 0)) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteFloatToArray(4, this->_internal_hp(), target);
+  }
+
+  // float max_hp = 5;
+  if (!(this->max_hp() <= 0 && this->max_hp() >= 0)) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteFloatToArray(5, this->_internal_max_hp(), target);
+  }
+
+  // float mp = 6;
+  if (!(this->mp() <= 0 && this->mp() >= 0)) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteFloatToArray(6, this->_internal_mp(), target);
+  }
+
+  // float max_mp = 7;
+  if (!(this->max_mp() <= 0 && this->max_mp() >= 0)) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteFloatToArray(7, this->_internal_max_mp(), target);
+  }
+
+  // float attack = 8;
+  if (!(this->attack() <= 0 && this->attack() >= 0)) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteFloatToArray(8, this->_internal_attack(), target);
+  }
+
+  // float defense = 9;
+  if (!(this->defense() <= 0 && this->defense() >= 0)) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteFloatToArray(9, this->_internal_defense(), target);
+  }
+
+  // float speed = 10;
+  if (!(this->speed() <= 0 && this->speed() >= 0)) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteFloatToArray(10, this->_internal_speed(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:Protocol.CreatureInfo)
+  return target;
+}
+
+size_t CreatureInfo::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:Protocol.CreatureInfo)
+  size_t total_size = 0;
+
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // .Protocol.CreatureType creature_type = 1;
+  if (this->creature_type() != 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_creature_type());
+  }
+
+  // .Protocol.WeaponType weapon_type = 2;
+  if (this->weapon_type() != 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_weapon_type());
+  }
+
+  // .Protocol.MonsterType monster_type = 3;
+  if (this->monster_type() != 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_monster_type());
+  }
+
+  // float hp = 4;
+  if (!(this->hp() <= 0 && this->hp() >= 0)) {
+    total_size += 1 + 4;
+  }
+
+  // float max_hp = 5;
+  if (!(this->max_hp() <= 0 && this->max_hp() >= 0)) {
+    total_size += 1 + 4;
+  }
+
+  // float mp = 6;
+  if (!(this->mp() <= 0 && this->mp() >= 0)) {
+    total_size += 1 + 4;
+  }
+
+  // float max_mp = 7;
+  if (!(this->max_mp() <= 0 && this->max_mp() >= 0)) {
+    total_size += 1 + 4;
+  }
+
+  // float attack = 8;
+  if (!(this->attack() <= 0 && this->attack() >= 0)) {
+    total_size += 1 + 4;
+  }
+
+  // float defense = 9;
+  if (!(this->defense() <= 0 && this->defense() >= 0)) {
+    total_size += 1 + 4;
+  }
+
+  // float speed = 10;
+  if (!(this->speed() <= 0 && this->speed() >= 0)) {
+    total_size += 1 + 4;
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void CreatureInfo::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+// @@protoc_insertion_point(generalized_merge_from_start:Protocol.CreatureInfo)
+  GOOGLE_DCHECK_NE(&from, this);
+  const CreatureInfo* source =
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<CreatureInfo>(
+          &from);
+  if (source == nullptr) {
+  // @@protoc_insertion_point(generalized_merge_from_cast_fail:Protocol.CreatureInfo)
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
+  } else {
+  // @@protoc_insertion_point(generalized_merge_from_cast_success:Protocol.CreatureInfo)
+    MergeFrom(*source);
+  }
+}
+
+void CreatureInfo::MergeFrom(const CreatureInfo& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:Protocol.CreatureInfo)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from.creature_type() != 0) {
+    _internal_set_creature_type(from._internal_creature_type());
+  }
+  if (from.weapon_type() != 0) {
+    _internal_set_weapon_type(from._internal_weapon_type());
+  }
+  if (from.monster_type() != 0) {
+    _internal_set_monster_type(from._internal_monster_type());
+  }
+  if (!(from.hp() <= 0 && from.hp() >= 0)) {
+    _internal_set_hp(from._internal_hp());
+  }
+  if (!(from.max_hp() <= 0 && from.max_hp() >= 0)) {
+    _internal_set_max_hp(from._internal_max_hp());
+  }
+  if (!(from.mp() <= 0 && from.mp() >= 0)) {
+    _internal_set_mp(from._internal_mp());
+  }
+  if (!(from.max_mp() <= 0 && from.max_mp() >= 0)) {
+    _internal_set_max_mp(from._internal_max_mp());
+  }
+  if (!(from.attack() <= 0 && from.attack() >= 0)) {
+    _internal_set_attack(from._internal_attack());
+  }
+  if (!(from.defense() <= 0 && from.defense() >= 0)) {
+    _internal_set_defense(from._internal_defense());
+  }
+  if (!(from.speed() <= 0 && from.speed() >= 0)) {
+    _internal_set_speed(from._internal_speed());
+  }
+}
+
+void CreatureInfo::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+// @@protoc_insertion_point(generalized_copy_from_start:Protocol.CreatureInfo)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void CreatureInfo::CopyFrom(const CreatureInfo& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:Protocol.CreatureInfo)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool CreatureInfo::IsInitialized() const {
+  return true;
+}
+
+void CreatureInfo::InternalSwap(CreatureInfo* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(CreatureInfo, speed_)
+      + sizeof(CreatureInfo::speed_)
+      - PROTOBUF_FIELD_OFFSET(CreatureInfo, creature_type_)>(
+          reinterpret_cast<char*>(&creature_type_),
+          reinterpret_cast<char*>(&other->creature_type_));
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata CreatureInfo::GetMetadata() const {
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_Struct_2eproto_getter, &descriptor_table_Struct_2eproto_once,
+      file_level_metadata_Struct_2eproto[1]);
+}
+
+// ===================================================================
+
 class ObjectInfo::_Internal {
  public:
+  static const ::Protocol::CreatureInfo& creature_info(const ObjectInfo* msg);
   static const ::Protocol::PosInfo& pos_info(const ObjectInfo* msg);
 };
 
+const ::Protocol::CreatureInfo&
+ObjectInfo::_Internal::creature_info(const ObjectInfo* msg) {
+  return *msg->creature_info_;
+}
 const ::Protocol::PosInfo&
 ObjectInfo::_Internal::pos_info(const ObjectInfo* msg) {
   return *msg->pos_info_;
@@ -451,22 +897,27 @@ ObjectInfo::ObjectInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena)
 ObjectInfo::ObjectInfo(const ObjectInfo& from)
   : ::PROTOBUF_NAMESPACE_ID::Message() {
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  if (from._internal_has_creature_info()) {
+    creature_info_ = new ::Protocol::CreatureInfo(*from.creature_info_);
+  } else {
+    creature_info_ = nullptr;
+  }
   if (from._internal_has_pos_info()) {
     pos_info_ = new ::Protocol::PosInfo(*from.pos_info_);
   } else {
     pos_info_ = nullptr;
   }
   ::memcpy(&object_id_, &from.object_id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&weapon_type_) -
-    reinterpret_cast<char*>(&object_id_)) + sizeof(weapon_type_));
+    static_cast<size_t>(reinterpret_cast<char*>(&object_type_) -
+    reinterpret_cast<char*>(&object_id_)) + sizeof(object_type_));
   // @@protoc_insertion_point(copy_constructor:Protocol.ObjectInfo)
 }
 
 void ObjectInfo::SharedCtor() {
 ::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
-    reinterpret_cast<char*>(&pos_info_) - reinterpret_cast<char*>(this)),
-    0, static_cast<size_t>(reinterpret_cast<char*>(&weapon_type_) -
-    reinterpret_cast<char*>(&pos_info_)) + sizeof(weapon_type_));
+    reinterpret_cast<char*>(&creature_info_) - reinterpret_cast<char*>(this)),
+    0, static_cast<size_t>(reinterpret_cast<char*>(&object_type_) -
+    reinterpret_cast<char*>(&creature_info_)) + sizeof(object_type_));
 }
 
 ObjectInfo::~ObjectInfo() {
@@ -477,6 +928,7 @@ ObjectInfo::~ObjectInfo() {
 
 void ObjectInfo::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  if (this != internal_default_instance()) delete creature_info_;
   if (this != internal_default_instance()) delete pos_info_;
 }
 
@@ -496,13 +948,17 @@ void ObjectInfo::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
+  if (GetArenaForAllocation() == nullptr && creature_info_ != nullptr) {
+    delete creature_info_;
+  }
+  creature_info_ = nullptr;
   if (GetArenaForAllocation() == nullptr && pos_info_ != nullptr) {
     delete pos_info_;
   }
   pos_info_ = nullptr;
   ::memset(&object_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&weapon_type_) -
-      reinterpret_cast<char*>(&object_id_)) + sizeof(weapon_type_));
+      reinterpret_cast<char*>(&object_type_) -
+      reinterpret_cast<char*>(&object_id_)) + sizeof(object_type_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -527,25 +983,16 @@ const char* ObjectInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID:
           _internal_set_object_type(static_cast<::Protocol::ObjectType>(val));
         } else goto handle_unusual;
         continue;
-      // .Protocol.CreatureType creature_type = 3;
+      // .Protocol.CreatureInfo creature_info = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+          ptr = ctx->ParseMessage(_internal_mutable_creature_info(), ptr);
           CHK_(ptr);
-          _internal_set_creature_type(static_cast<::Protocol::CreatureType>(val));
         } else goto handle_unusual;
         continue;
-      // .Protocol.WeaponType weapon_type = 4;
+      // .Protocol.PosInfo pos_info = 4;
       case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
-          CHK_(ptr);
-          _internal_set_weapon_type(static_cast<::Protocol::WeaponType>(val));
-        } else goto handle_unusual;
-        continue;
-      // .Protocol.PosInfo pos_info = 5;
-      case 5:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 42)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34)) {
           ptr = ctx->ParseMessage(_internal_mutable_pos_info(), ptr);
           CHK_(ptr);
         } else goto handle_unusual;
@@ -592,26 +1039,20 @@ failure:
       2, this->_internal_object_type(), target);
   }
 
-  // .Protocol.CreatureType creature_type = 3;
-  if (this->creature_type() != 0) {
+  // .Protocol.CreatureInfo creature_info = 3;
+  if (this->has_creature_info()) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
-      3, this->_internal_creature_type(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(
+        3, _Internal::creature_info(this), target, stream);
   }
 
-  // .Protocol.WeaponType weapon_type = 4;
-  if (this->weapon_type() != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
-      4, this->_internal_weapon_type(), target);
-  }
-
-  // .Protocol.PosInfo pos_info = 5;
+  // .Protocol.PosInfo pos_info = 4;
   if (this->has_pos_info()) {
     target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
       InternalWriteMessage(
-        5, _Internal::pos_info(this), target, stream);
+        4, _Internal::pos_info(this), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -630,7 +1071,14 @@ size_t ObjectInfo::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // .Protocol.PosInfo pos_info = 5;
+  // .Protocol.CreatureInfo creature_info = 3;
+  if (this->has_creature_info()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+        *creature_info_);
+  }
+
+  // .Protocol.PosInfo pos_info = 4;
   if (this->has_pos_info()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
@@ -648,18 +1096,6 @@ size_t ObjectInfo::ByteSizeLong() const {
   if (this->object_type() != 0) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_object_type());
-  }
-
-  // .Protocol.CreatureType creature_type = 3;
-  if (this->creature_type() != 0) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_creature_type());
-  }
-
-  // .Protocol.WeaponType weapon_type = 4;
-  if (this->weapon_type() != 0) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_weapon_type());
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -693,6 +1129,9 @@ void ObjectInfo::MergeFrom(const ObjectInfo& from) {
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
+  if (from.has_creature_info()) {
+    _internal_mutable_creature_info()->::Protocol::CreatureInfo::MergeFrom(from._internal_creature_info());
+  }
   if (from.has_pos_info()) {
     _internal_mutable_pos_info()->::Protocol::PosInfo::MergeFrom(from._internal_pos_info());
   }
@@ -701,12 +1140,6 @@ void ObjectInfo::MergeFrom(const ObjectInfo& from) {
   }
   if (from.object_type() != 0) {
     _internal_set_object_type(from._internal_object_type());
-  }
-  if (from.creature_type() != 0) {
-    _internal_set_creature_type(from._internal_creature_type());
-  }
-  if (from.weapon_type() != 0) {
-    _internal_set_weapon_type(from._internal_weapon_type());
   }
 }
 
@@ -732,17 +1165,17 @@ void ObjectInfo::InternalSwap(ObjectInfo* other) {
   using std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(ObjectInfo, weapon_type_)
-      + sizeof(ObjectInfo::weapon_type_)
-      - PROTOBUF_FIELD_OFFSET(ObjectInfo, pos_info_)>(
-          reinterpret_cast<char*>(&pos_info_),
-          reinterpret_cast<char*>(&other->pos_info_));
+      PROTOBUF_FIELD_OFFSET(ObjectInfo, object_type_)
+      + sizeof(ObjectInfo::object_type_)
+      - PROTOBUF_FIELD_OFFSET(ObjectInfo, creature_info_)>(
+          reinterpret_cast<char*>(&creature_info_),
+          reinterpret_cast<char*>(&other->creature_info_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata ObjectInfo::GetMetadata() const {
   return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
       &descriptor_table_Struct_2eproto_getter, &descriptor_table_Struct_2eproto_once,
-      file_level_metadata_Struct_2eproto[1]);
+      file_level_metadata_Struct_2eproto[2]);
 }
 
 // @@protoc_insertion_point(namespace_scope)
@@ -750,6 +1183,9 @@ void ObjectInfo::InternalSwap(ObjectInfo* other) {
 PROTOBUF_NAMESPACE_OPEN
 template<> PROTOBUF_NOINLINE ::Protocol::PosInfo* Arena::CreateMaybeMessage< ::Protocol::PosInfo >(Arena* arena) {
   return Arena::CreateMessageInternal< ::Protocol::PosInfo >(arena);
+}
+template<> PROTOBUF_NOINLINE ::Protocol::CreatureInfo* Arena::CreateMaybeMessage< ::Protocol::CreatureInfo >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::Protocol::CreatureInfo >(arena);
 }
 template<> PROTOBUF_NOINLINE ::Protocol::ObjectInfo* Arena::CreateMaybeMessage< ::Protocol::ObjectInfo >(Arena* arena) {
   return Arena::CreateMessageInternal< ::Protocol::ObjectInfo >(arena);

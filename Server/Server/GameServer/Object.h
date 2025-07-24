@@ -6,7 +6,9 @@ public:
 	Object();
 	virtual ~Object();	
 
+	bool IsCreature();
 	bool IsPlayer();
+	bool IsMonster();
 
 public:
 	Protocol::ObjectInfo* objectInfo = nullptr;

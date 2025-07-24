@@ -1,9 +1,0 @@
-{
-	"SourceFiles": [
-		"D:\\CPP_Game\\Portfolio\\OnlineRPG\\Source\\OnlineRPG\\OnlineRPG.Build.cs",
-		"D:\\CPP_Game\\Portfolio\\OnlineRPG\\Source\\ProtobufCore\\ProtobufCore.Build.cs",
-		"D:\\CPP_Game\\Portfolio\\OnlineRPG\\Source\\OnlineRPG.Target.cs",
-		"D:\\CPP_Game\\Portfolio\\OnlineRPG\\Source\\OnlineRPGEditor.Target.cs"
-	],
-	"EngineVersion": "5.3.2"
-}

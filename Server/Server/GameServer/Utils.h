@@ -1,6 +1,6 @@
 #pragma once
 #include <random>
-
+#include <string>
 class Utils
 {
 public:
@@ -18,15 +18,21 @@ public:
 			std::uniform_int_distribution<T> distribution(min, max);
 			return distribution(generator);
 		}
-		else if constexpr (std::is_floating_point_v<T>)
+		else
 		{
 			std::uniform_real_distribution<T> distribution(min, max);
 			return distribution(generator);
 		}
-		else
-		{
-			static_assert(false, "Not supported type");
-		}
+	}
+
+	static std::string FloatToString(float value)
+	{
+		std::string str = std::to_string(value);
+		return str;
+	}
+
+	static float CalculateDistance(float x1, float y1, float x2, float y2)
+	{
+		return std::sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 	}
 };
-

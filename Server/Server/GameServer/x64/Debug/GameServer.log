@@ -3,7 +3,7 @@
   #include "Protocol.pb.h"
   
   #if UE_BUILD_DEBUG + UE_BUILD_DEVELOPMENT + UE_BUILD_TEST + UE_BUILD_SHIPPING >= 1
-  #include "OnlineRPG.h"
+  #include "A1.h"
   #endif
   
   using PacketHandlerFunc = std::function<bool(PacketSessionRef&, BYTE*, int32)>;
@@ -100,7 +100,7 @@
   #include "Protocol.pb.h"
   
   #if UE_BUILD_DEBUG + UE_BUILD_DEVELOPMENT + UE_BUILD_TEST + UE_BUILD_SHIPPING >= 1
-  #include "OnlineRPG.h"
+  #include "A1.h"
   #endif
   
   using PacketHandlerFunc = std::function<bool(PacketSessionRef&, BYTE*, int32)>;
@@ -287,6 +287,7 @@
   계속하려면 아무 키나 누르십시오 . . . 
   pch.cpp
   Creature.cpp
+  CreatureData.cpp
   GameServer.cpp
   GameSession.cpp
   GameSessionManager.cpp
@@ -294,12 +295,145 @@
   Object.cpp
   ObjectUtils.cpp
   Player.cpp
-  Room.cpp
   ServerPacketHandler.cpp
+  Room.cpp
   Utils.cpp
   코드를 생성하고 있습니다...
-  Enum.pb.cc
-  Protocol.pb.cc
-  Struct.pb.cc
-  코드를 생성하고 있습니다...
-  GameServer.vcxproj -> D:\CPP_Game\Portfolio\Server\Server\Binary\Debug\GameServer.exe
+D:\CPP_Game\Portfolio\Server\Server\GameServer\Room.cpp(267,38): error C2665: 'std::_Hash<std::_Uset_traits<_Kty,std::_Uhash_compare<_Kty,_Hasher,_Keyeq>,_Alloc,false>>::insert': 모든 인수 형식을 변환할 수 있는 오버로드된 함수가 없습니다.
+D:\CPP_Game\Portfolio\Server\Server\GameServer\Room.cpp(267,38): error C2665:         with
+D:\CPP_Game\Portfolio\Server\Server\GameServer\Room.cpp(267,38): error C2665:         [
+D:\CPP_Game\Portfolio\Server\Server\GameServer\Room.cpp(267,38): error C2665:             _Kty=uint64,
+D:\CPP_Game\Portfolio\Server\Server\GameServer\Room.cpp(267,38): error C2665:             _Hasher=std::hash<uint64>,
+D:\CPP_Game\Portfolio\Server\Server\GameServer\Room.cpp(267,38): error C2665:             _Keyeq=std::equal_to<uint64>,
+D:\CPP_Game\Portfolio\Server\Server\GameServer\Room.cpp(267,38): error C2665:             _Alloc=std::allocator<uint64>
+D:\CPP_Game\Portfolio\Server\Server\GameServer\Room.cpp(267,38): error C2665:         ]
+  (소스 파일 '/Room.cpp'을(를) 컴파일하는 중)
+      D:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xhash(1541,88):
+      'std::_Insert_return_type<std::_List_const_iterator<std::_List_val<std::_List_simple_types<_Ty>>>,std::_Node_handle<std::_List_node<unsigned __int64,std::_Default_allocator_traits<_Alloc>::void_pointer>,_Alloc,std::_Node_handle_set_base,_Kty>> std::_Hash<std::_Uset_traits<_Kty,std::_Uhash_compare<_Kty,_Hasher,_Keyeq>,_Alloc,false>>::insert(std::_Node_handle<std::_List_node<unsigned __int64,std::_Default_allocator_traits<_Alloc>::void_pointer>,_Alloc,std::_Node_handle_set_base,_Kty> &&)'일 수 있습니다.
+          with
+          [
+              _Ty=unsigned __int64,
+              _Alloc=std::allocator<uint64>,
+              _Kty=uint64,
+              _Hasher=std::hash<uint64>,
+              _Keyeq=std::equal_to<uint64>
+          ]
+          D:\CPP_Game\Portfolio\Server\Server\GameServer\Room.cpp(267,38):
+          'std::_Insert_return_type<std::_List_const_iterator<std::_List_val<std::_List_simple_types<_Ty>>>,std::_Node_handle<std::_List_node<unsigned __int64,std::_Default_allocator_traits<_Alloc>::void_pointer>,_Alloc,std::_Node_handle_set_base,_Kty>> std::_Hash<std::_Uset_traits<_Kty,std::_Uhash_compare<_Kty,_Hasher,_Keyeq>,_Alloc,false>>::insert(std::_Node_handle<std::_List_node<unsigned __int64,std::_Default_allocator_traits<_Alloc>::void_pointer>,_Alloc,std::_Node_handle_set_base,_Kty> &&)': 인수 1을(를) 'std::pair<unsigned __int64,std::shared_ptr<Monster>>'에서 'std::_Node_handle<std::_List_node<unsigned __int64,std::_Default_allocator_traits<_Alloc>::void_pointer>,_Alloc,std::_Node_handle_set_base,_Kty> &&'(으)로 변환할 수 없습니다.
+          with
+          [
+              _Ty=unsigned __int64,
+              _Alloc=std::allocator<uint64>,
+              _Kty=uint64,
+              _Hasher=std::hash<uint64>,
+              _Keyeq=std::equal_to<uint64>
+          ]
+          and
+          [
+              _Alloc=std::allocator<uint64>,
+              _Kty=uint64
+          ]
+              D:\CPP_Game\Portfolio\Server\Server\GameServer\Room.cpp(267,54):
+              원인: 'std::pair<unsigned __int64,std::shared_ptr<Monster>>'에서 'std::_Node_handle<std::_List_node<unsigned __int64,std::_Default_allocator_traits<_Alloc>::void_pointer>,_Alloc,std::_Node_handle_set_base,_Kty>'(으)로 변환할 수 없습니다.
+          with
+          [
+              _Alloc=std::allocator<uint64>,
+              _Kty=uint64
+          ]
+              D:\CPP_Game\Portfolio\Server\Server\GameServer\Room.cpp(267,54):
+              이 변환을 수행할 수 있는 사용 가능한 사용자 정의 변환 연산자가 없거나 연산자를 호출할 수 없습니다.
+      D:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xhash(976,10):
+      또는       'void std::_Hash<std::_Uset_traits<_Kty,std::_Uhash_compare<_Kty,_Hasher,_Keyeq>,_Alloc,false>>::insert(std::initializer_list<_Ty>)'
+          with
+          [
+              _Kty=uint64,
+              _Hasher=std::hash<uint64>,
+              _Keyeq=std::equal_to<uint64>,
+              _Alloc=std::allocator<uint64>,
+              _Ty=unsigned __int64
+          ]
+          D:\CPP_Game\Portfolio\Server\Server\GameServer\Room.cpp(267,38):
+          'void std::_Hash<std::_Uset_traits<_Kty,std::_Uhash_compare<_Kty,_Hasher,_Keyeq>,_Alloc,false>>::insert(std::initializer_list<_Ty>)': 인수 1을(를) 'std::pair<unsigned __int64,std::shared_ptr<Monster>>'에서 'std::initializer_list<_Ty>'(으)로 변환할 수 없습니다.
+          with
+          [
+              _Kty=uint64,
+              _Hasher=std::hash<uint64>,
+              _Keyeq=std::equal_to<uint64>,
+              _Alloc=std::allocator<uint64>,
+              _Ty=unsigned __int64
+          ]
+          and
+          [
+              _Ty=unsigned __int64
+          ]
+              D:\CPP_Game\Portfolio\Server\Server\GameServer\Room.cpp(267,54):
+              이 변환을 수행할 수 있는 사용 가능한 사용자 정의 변환 연산자가 없거나 연산자를 호출할 수 없습니다.
+      D:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xhash(942,59):
+      또는       'std::pair<std::_List_const_iterator<std::_List_val<std::_List_simple_types<_Ty>>>,bool> std::_Hash<std::_Uset_traits<_Kty,std::_Uhash_compare<_Kty,_Hasher,_Keyeq>,_Alloc,false>>::insert(unsigned __int64 &&)'
+          with
+          [
+              _Ty=unsigned __int64,
+              _Kty=uint64,
+              _Hasher=std::hash<uint64>,
+              _Keyeq=std::equal_to<uint64>,
+              _Alloc=std::allocator<uint64>
+          ]
+          D:\CPP_Game\Portfolio\Server\Server\GameServer\Room.cpp(267,38):
+          'std::pair<std::_List_const_iterator<std::_List_val<std::_List_simple_types<_Ty>>>,bool> std::_Hash<std::_Uset_traits<_Kty,std::_Uhash_compare<_Kty,_Hasher,_Keyeq>,_Alloc,false>>::insert(unsigned __int64 &&)': 인수 1을(를) 'std::pair<unsigned __int64,std::shared_ptr<Monster>>'에서 'unsigned __int64 &&'(으)로 변환할 수 없습니다.
+          with
+          [
+              _Ty=unsigned __int64,
+              _Kty=uint64,
+              _Hasher=std::hash<uint64>,
+              _Keyeq=std::equal_to<uint64>,
+              _Alloc=std::allocator<uint64>
+          ]
+              D:\CPP_Game\Portfolio\Server\Server\GameServer\Room.cpp(267,54):
+              원인: 'std::pair<unsigned __int64,std::shared_ptr<Monster>>'에서 'unsigned __int64'(으)로 변환할 수 없습니다.
+              D:\CPP_Game\Portfolio\Server\Server\GameServer\Room.cpp(267,54):
+              이 변환을 수행할 수 있는 사용 가능한 사용자 정의 변환 연산자가 없거나 연산자를 호출할 수 없습니다.
+      D:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xhash(938,59):
+      또는       'std::pair<std::_List_const_iterator<std::_List_val<std::_List_simple_types<_Ty>>>,bool> std::_Hash<std::_Uset_traits<_Kty,std::_Uhash_compare<_Kty,_Hasher,_Keyeq>,_Alloc,false>>::insert(const unsigned __int64 &)'
+          with
+          [
+              _Ty=unsigned __int64,
+              _Kty=uint64,
+              _Hasher=std::hash<uint64>,
+              _Keyeq=std::equal_to<uint64>,
+              _Alloc=std::allocator<uint64>
+          ]
+          D:\CPP_Game\Portfolio\Server\Server\GameServer\Room.cpp(267,38):
+          'std::pair<std::_List_const_iterator<std::_List_val<std::_List_simple_types<_Ty>>>,bool> std::_Hash<std::_Uset_traits<_Kty,std::_Uhash_compare<_Kty,_Hasher,_Keyeq>,_Alloc,false>>::insert(const unsigned __int64 &)': 인수 1을(를) 'std::pair<unsigned __int64,std::shared_ptr<Monster>>'에서 'const unsigned __int64 &'(으)로 변환할 수 없습니다.
+          with
+          [
+              _Ty=unsigned __int64,
+              _Kty=uint64,
+              _Hasher=std::hash<uint64>,
+              _Keyeq=std::equal_to<uint64>,
+              _Alloc=std::allocator<uint64>
+          ]
+              D:\CPP_Game\Portfolio\Server\Server\GameServer\Room.cpp(267,54):
+              원인: 'std::pair<unsigned __int64,std::shared_ptr<Monster>>'에서 'const unsigned __int64'(으)로 변환할 수 없습니다.
+              D:\CPP_Game\Portfolio\Server\Server\GameServer\Room.cpp(267,54):
+              이 변환을 수행할 수 있는 사용 가능한 사용자 정의 변환 연산자가 없거나 연산자를 호출할 수 없습니다.
+      D:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xhash(964,10):
+      또는       'void std::_Hash<std::_Uset_traits<_Kty,std::_Uhash_compare<_Kty,_Hasher,_Keyeq>,_Alloc,false>>::insert(_Iter,_Iter)'
+          with
+          [
+              _Kty=uint64,
+              _Hasher=std::hash<uint64>,
+              _Keyeq=std::equal_to<uint64>,
+              _Alloc=std::allocator<uint64>
+          ]
+          D:\CPP_Game\Portfolio\Server\Server\GameServer\Room.cpp(267,38):
+          'void std::_Hash<std::_Uset_traits<_Kty,std::_Uhash_compare<_Kty,_Hasher,_Keyeq>,_Alloc,false>>::insert(_Iter,_Iter)': 2개의 인수가 필요합니다. 1개가 제공되었습니다.
+          with
+          [
+              _Kty=uint64,
+              _Hasher=std::hash<uint64>,
+              _Keyeq=std::equal_to<uint64>,
+              _Alloc=std::allocator<uint64>
+          ]
+      D:\CPP_Game\Portfolio\Server\Server\GameServer\Room.cpp(267,38):
+      인수 목록 '(std::pair<unsigned __int64,std::shared_ptr<Monster>>)'을(를) 일치시키는 동안
+  

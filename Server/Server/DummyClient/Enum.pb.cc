@@ -18,7 +18,7 @@
 PROTOBUF_PRAGMA_INIT_SEG
 namespace Protocol {
 }  // namespace Protocol
-static const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* file_level_enum_descriptors_Enum_2eproto[4];
+static const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* file_level_enum_descriptors_Enum_2eproto[5];
 static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_Enum_2eproto = nullptr;
 const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_Enum_2eproto::offsets[1] = {};
 static constexpr ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema* schemas = nullptr;
@@ -34,16 +34,19 @@ const char descriptor_table_protodef_Enum_2eproto[] PROTOBUF_SECTION_VARIABLE(pr
   "YPE_NPC\020\003*p\n\nWeaponType\022\024\n\020WEAPON_TYPE_N"
   "ONE\020\000\022\025\n\021WEAPON_TYPE_SWORD\020\001\022\035\n\031WEAPON_T"
   "YPE_AXE_AND_SHILD\020\002\022\026\n\022WEAPON_TYPE_DAGGE"
-  "R\020\003*\320\001\n\tMoveState\022\023\n\017MOVE_STATE_NONE\020\000\022\023"
-  "\n\017MOVE_STATE_IDLE\020\001\022\022\n\016MOVE_STATE_RUN\020\002\022"
-  "\023\n\017MOVE_STATE_JUMP\020\003\022\024\n\020MOVE_STATE_SKILL"
-  "\020\004\022\023\n\017MOVE_STATE_ROLL\020\005\022\030\n\024MOVE_STATE_BA"
-  "CK_STEP\020\006\022\024\n\020MOVE_STATE_GUARD\020\007\022\025\n\021MOVE_"
-  "STATE_CHARGE\020\010b\006proto3"
+  "R\020\003*y\n\013MonsterType\022\025\n\021MONSTER_TYPE_NONE\020"
+  "\000\022\036\n\032MONSTER_TYPE_ELECTRO_SLIME\020\001\022\034\n\030MON"
+  "STER_TYPE_WATER_SLIME\020\002\022\025\n\021MONSTER_TYPE_"
+  "DUCK\020\003*\320\001\n\tMoveState\022\023\n\017MOVE_STATE_NONE\020"
+  "\000\022\023\n\017MOVE_STATE_IDLE\020\001\022\022\n\016MOVE_STATE_RUN"
+  "\020\002\022\023\n\017MOVE_STATE_JUMP\020\003\022\024\n\020MOVE_STATE_SK"
+  "ILL\020\004\022\023\n\017MOVE_STATE_ROLL\020\005\022\030\n\024MOVE_STATE"
+  "_BACK_STEP\020\006\022\024\n\020MOVE_STATE_GUARD\020\007\022\025\n\021MO"
+  "VE_STATE_CHARGE\020\010b\006proto3"
   ;
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_Enum_2eproto_once;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_Enum_2eproto = {
-  false, false, 582, descriptor_table_protodef_Enum_2eproto, "Enum.proto", 
+  false, false, 705, descriptor_table_protodef_Enum_2eproto, "Enum.proto", 
   &descriptor_table_Enum_2eproto_once, nullptr, 0, 0,
   schemas, file_default_instances, TableStruct_Enum_2eproto::offsets,
   nullptr, file_level_enum_descriptors_Enum_2eproto, file_level_service_descriptors_Enum_2eproto,
@@ -103,9 +106,25 @@ bool WeaponType_IsValid(int value) {
   }
 }
 
-const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* MoveState_descriptor() {
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* MonsterType_descriptor() {
   ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_Enum_2eproto);
   return file_level_enum_descriptors_Enum_2eproto[3];
+}
+bool MonsterType_IsValid(int value) {
+  switch (value) {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+      return true;
+    default:
+      return false;
+  }
+}
+
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* MoveState_descriptor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_Enum_2eproto);
+  return file_level_enum_descriptors_Enum_2eproto[4];
 }
 bool MoveState_IsValid(int value) {
   switch (value) {

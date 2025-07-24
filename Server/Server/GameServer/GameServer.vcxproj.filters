@@ -22,6 +22,9 @@
     <Filter Include="GameContents\Object">
       <UniqueIdentifier>{04802652-89c6-44fa-af7b-851466fad5cf}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GameContents\Data">
+      <UniqueIdentifier>{c581599b-4703-40f9-a8a5-c35ef63eb651}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameServer.cpp">
@@ -69,6 +72,9 @@
     <ClCompile Include="Player.cpp">
       <Filter>GameContents\Object</Filter>
     </ClCompile>
+    <ClCompile Include="CreatureData.cpp">
+      <Filter>GameContents\Data</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ServerPacketHandler.h">
@@ -115,6 +121,9 @@
     </ClInclude>
     <ClInclude Include="Player.h">
       <Filter>GameContents\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="CreatureData.h">
+      <Filter>GameContents\Data</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

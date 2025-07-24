@@ -10,6 +10,11 @@
 class JobQueue : public enable_shared_from_this<JobQueue>
 {
 public:
+	virtual ~JobQueue()
+	{
+		ClearJobs();
+	}
+public:
 	void DoAsync(CallbackType&& callback)
 	{
 		//Push(ObjectPool<Job>::MakeShared(std::move(callback)));

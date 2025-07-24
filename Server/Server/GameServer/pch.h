@@ -17,6 +17,7 @@
 #include "Struct.pb.h"
 #include "ServerPacketHandler.h"
 #include "Utils.h"
+#include "ObjectUtils.h"
 #include <chrono>
 
 USING_SHARED_PTR(GameSession);
@@ -25,9 +26,8 @@ USING_SHARED_PTR(Monster);
 USING_SHARED_PTR(Creature);
 USING_SHARED_PTR(Object);
 USING_SHARED_PTR(Room);
+USING_SHARED_PTR(CreatureData);
 
-using GameSessionRef = shared_ptr<class GameSession>;
-using PlayerRef = shared_ptr<class Player>;
 
 #define SEND_PACKET(pkt)													\
 	SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);	\

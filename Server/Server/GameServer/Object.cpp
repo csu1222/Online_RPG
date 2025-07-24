@@ -13,8 +13,20 @@ Object::~Object()
 	delete objectInfo;
 }
 
+bool Object::IsCreature()
+{
+	bool result = objectInfo->object_type() == Protocol::ObjectType::OBJECT_TYPE_CREATURE;
+	return result;
+}
+
 bool Object::IsPlayer()
 {
-	bool result = objectInfo->creature_type() == Protocol::CREATURE_TYPE_PLAYER;
+	bool result = objectInfo->creature_info().creature_type() == Protocol::CREATURE_TYPE_PLAYER;
+	return result;
+}
+
+bool Object::IsMonster()
+{
+	bool result = objectInfo->creature_info().creature_type() == Protocol::CREATURE_TYPE_MONSTER;
 	return result;
 }

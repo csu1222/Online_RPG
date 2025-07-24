@@ -17,6 +17,9 @@
 #include "DBSynchronizer.h"
 #include "GenProcedures.h"
 
+#include "ObjectUtils.h"
+#include "CreatureData.h"
+
 enum
 {
 	WORKER_TICK = 64
