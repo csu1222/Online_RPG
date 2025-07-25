@@ -1,0 +1,14 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "d:\\cpp_game\\portfolio\\lc1\\source\\lc1\\lc1.cpp",
+        "ProvidedModule": "",
+        "PCH": "d:\\cpp_game\\portfolio\\lc1\\intermediate\\build\\win64\\x64\\lc1editor\\development\\unrealed\\sharedpch.unrealed.project.valapi.cpp20.h.pch",
+        "Includes": [
+            "d:\\cpp_game\\portfolio\\lc1\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\lc1\\definitions.lc1.h",
+            "d:\\cpp_game\\portfolio\\lc1\\source\\lc1\\lc1.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

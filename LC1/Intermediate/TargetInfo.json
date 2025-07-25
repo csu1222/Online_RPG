@@ -1,0 +1,14 @@
+{
+	"Targets": [
+		{
+			"Name": "LC1",
+			"Path": "..\\Source\\LC1.Target.cs",
+			"Type": "Game"
+		},
+		{
+			"Name": "LC1Editor",
+			"Path": "..\\Source\\LC1Editor.Target.cs",
+			"Type": "Editor"
+		}
+	]
+}

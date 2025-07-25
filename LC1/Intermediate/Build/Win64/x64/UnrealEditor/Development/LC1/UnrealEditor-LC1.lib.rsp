@@ -1,0 +1,13 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+/DEF
+/NAME:"UnrealEditor-LC1.dll"
+/IGNORE:4221
+/NODEFAULTLIB
+"D:\CPP_Game\Portfolio\LC1\Intermediate\Build\Win64\x64\LC1Editor\Development\UnrealEd\SharedPCH.UnrealEd.Project.ValApi.Cpp20.h.obj"
+"D:\CPP_Game\Portfolio\LC1\Intermediate\Build\Win64\x64\UnrealEditor\Development\LC1\LC1.cpp.obj"
+"D:\CPP_Game\Portfolio\LC1\Intermediate\Build\Win64\x64\UnrealEditor\Development\LC1\PerModuleInline.gen.cpp.obj"
+"D:\CPP_Game\Portfolio\LC1\Intermediate\Build\Win64\x64\UnrealEditor\Development\LC1\Default.rc2.res"
+/OUT:"D:\CPP_Game\Portfolio\LC1\Intermediate\Build\Win64\x64\UnrealEditor\Development\LC1\UnrealEditor-LC1.lib"
