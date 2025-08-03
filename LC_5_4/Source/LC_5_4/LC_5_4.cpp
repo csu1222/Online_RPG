@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "LC_5_4.h"
+#include "LCLogChannels.h"
 #include "Modules/ModuleManager.h"
 
 class FLCGameModule : public FDefaultGameModuleImpl
@@ -15,7 +16,7 @@ void FLCGameModule::StartupModule()
 {
 	FDefaultGameModuleImpl::StartupModule();
 
-	UE_LOG(LogTemp, Warning, TEXT("LC module has started!"));
+	UE_LOG(LogLC, Warning, TEXT("LC module has started!"));
 }
 
 void FLCGameModule::ShutdownModule()

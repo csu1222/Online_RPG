@@ -252,10 +252,15 @@
     <None Include="..\..\LC_5_4.uproject"/>
     <None Include="..\..\Source\LC_5_4.Target.cs"/>
     <None Include="..\..\Source\LC_5_4Editor.Target.cs"/>
+    <None Include="..\..\.vsconfig"/>
     <None Include="..\..\Config\DefaultEditor.ini"/>
     <None Include="..\..\Config\DefaultEngine.ini"/>
     <None Include="..\..\Config\DefaultGame.ini"/>
     <None Include="..\..\Config\DefaultInput.ini"/>
+    <ClCompile Include="..\..\Source\LC_5_4\LCLogChannels.cpp">
+      <AdditionalIncludeDirectories>$(ClCompile_AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\LC_5_4\LCLogChannels.h"/>
     <None Include="..\..\Source\LC_5_4\LC_5_4.Build.cs"/>
     <ClCompile Include="..\..\Source\LC_5_4\LC_5_4.cpp">
       <AdditionalIncludeDirectories>$(ClCompile_AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

@@ -11,6 +11,7 @@
     <None Include="..\..\Source\LC_5_4Editor.Target.cs">
       <Filter>Source</Filter>
     </None>
+    <None Include="..\..\.vsconfig" />
     <Filter Include="Config">
       <UniqueIdentifier>{FA535FFB-25E1-3D20-B416-52F9BE21E06E}</UniqueIdentifier>
     </Filter>
@@ -29,6 +30,12 @@
     <Filter Include="Source\LC_5_4">
       <UniqueIdentifier>{7551F276-768C-3A95-A59B-E7D17627AC20}</UniqueIdentifier>
     </Filter>
+    <ClCompile Include="..\..\Source\LC_5_4\LCLogChannels.cpp">
+      <Filter>Source\LC_5_4</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\LC_5_4\LCLogChannels.h">
+      <Filter>Source\LC_5_4</Filter>
+    </ClInclude>
     <None Include="..\..\Source\LC_5_4\LC_5_4.Build.cs">
       <Filter>Source\LC_5_4</Filter>
     </None>
