@@ -7,7 +7,10 @@
 /IGNORE:4221
 /NODEFAULTLIB
 "D:\CPP_Game\Portfolio\LC_5_4\Intermediate\Build\Win64\x64\LC_5_4Editor\Development\UnrealEd\SharedPCH.UnrealEd.Project.ValApi.Cpp20.h.obj"
+"D:\CPP_Game\Portfolio\LC_5_4\Intermediate\Build\Win64\x64\UnrealEditor\Development\LC_5_4\LcAssetManager.gen.cpp.obj"
+"D:\CPP_Game\Portfolio\LC_5_4\Intermediate\Build\Win64\x64\UnrealEditor\Development\LC_5_4\LC_5_4.init.gen.cpp.obj"
 "D:\CPP_Game\Portfolio\LC_5_4\Intermediate\Build\Win64\x64\UnrealEditor\Development\LC_5_4\LCLogChannels.cpp.obj"
 "D:\CPP_Game\Portfolio\LC_5_4\Intermediate\Build\Win64\x64\UnrealEditor\Development\LC_5_4\LC_5_4.cpp.obj"
+"D:\CPP_Game\Portfolio\LC_5_4\Intermediate\Build\Win64\x64\UnrealEditor\Development\LC_5_4\LcAssetManager.cpp.obj"
 "D:\CPP_Game\Portfolio\LC_5_4\Intermediate\Build\Win64\x64\UnrealEditor\Development\LC_5_4\Default.rc2.res"
 /OUT:"D:\CPP_Game\Portfolio\LC_5_4\Intermediate\Build\Win64\x64\UnrealEditor\Development\LC_5_4\UnrealEditor-LC_5_4.lib"

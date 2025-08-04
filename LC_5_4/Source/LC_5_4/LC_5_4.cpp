@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "LC_5_4.h"
-#include "LCLogChannels.h"
+#include "LcLogChannels.h"
 #include "Modules/ModuleManager.h"
 
 class FLCGameModule : public FDefaultGameModuleImpl

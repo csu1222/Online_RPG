@@ -30,10 +30,10 @@
     <Filter Include="Source\LC_5_4">
       <UniqueIdentifier>{7551F276-768C-3A95-A59B-E7D17627AC20}</UniqueIdentifier>
     </Filter>
-    <ClCompile Include="..\..\Source\LC_5_4\LCLogChannels.cpp">
+    <ClCompile Include="..\..\Source\LC_5_4\LcLogChannels.cpp">
       <Filter>Source\LC_5_4</Filter>
     </ClCompile>
-    <ClInclude Include="..\..\Source\LC_5_4\LCLogChannels.h">
+    <ClInclude Include="..\..\Source\LC_5_4\LcLogChannels.h">
       <Filter>Source\LC_5_4</Filter>
     </ClInclude>
     <None Include="..\..\Source\LC_5_4\LC_5_4.Build.cs">
@@ -44,6 +44,15 @@
     </ClCompile>
     <ClInclude Include="..\..\Source\LC_5_4\LC_5_4.h">
       <Filter>Source\LC_5_4</Filter>
+    </ClInclude>
+    <Filter Include="Source\LC_5_4\System">
+      <UniqueIdentifier>{7ADA9773-1D28-3749-919F-FDC3782BC0C4}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\LC_5_4\System\LcAssetManager.cpp">
+      <Filter>Source\LC_5_4\System</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\LC_5_4\System\LcAssetManager.h">
+      <Filter>Source\LC_5_4\System</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
