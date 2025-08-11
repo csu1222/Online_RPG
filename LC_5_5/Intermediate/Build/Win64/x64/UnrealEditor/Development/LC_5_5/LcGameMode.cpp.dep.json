@@ -1,0 +1,19 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "d:\\cpp_game\\portfolio\\lc_5_5\\source\\lc_5_5\\gamemodes\\lcgamemode.cpp",
+        "ProvidedModule": "",
+        "PCH": "d:\\cpp_game\\portfolio\\lc_5_5\\intermediate\\build\\win64\\x64\\lc_5_5editor\\development\\unrealed\\sharedpch.unrealed.project.valapi.cpp20.h.pch",
+        "Includes": [
+            "d:\\cpp_game\\portfolio\\lc_5_5\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\lc_5_5\\definitions.lc_5_5.h",
+            "d:\\cpp_game\\portfolio\\lc_5_5\\source\\lc_5_5\\gamemodes\\lcgamemode.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\source\\runtime\\engine\\classes\\gameframework\\gamemodebase.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\source\\runtime\\engine\\classes\\engine\\serverstatreplicator.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\serverstatreplicator.generated.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\gamemodebase.generated.h",
+            "d:\\cpp_game\\portfolio\\lc_5_5\\intermediate\\build\\win64\\unrealeditor\\inc\\lc_5_5\\uht\\lcgamemode.generated.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

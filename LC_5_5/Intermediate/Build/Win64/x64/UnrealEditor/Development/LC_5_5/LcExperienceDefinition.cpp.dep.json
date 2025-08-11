@@ -1,0 +1,15 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "d:\\cpp_game\\portfolio\\lc_5_5\\source\\lc_5_5\\gamemodes\\lcexperiencedefinition.cpp",
+        "ProvidedModule": "",
+        "PCH": "d:\\cpp_game\\portfolio\\lc_5_5\\intermediate\\build\\win64\\x64\\lc_5_5editor\\development\\unrealed\\sharedpch.unrealed.project.valapi.cpp20.h.pch",
+        "Includes": [
+            "d:\\cpp_game\\portfolio\\lc_5_5\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\lc_5_5\\definitions.lc_5_5.h",
+            "d:\\cpp_game\\portfolio\\lc_5_5\\source\\lc_5_5\\gamemodes\\lcexperiencedefinition.h",
+            "d:\\cpp_game\\portfolio\\lc_5_5\\intermediate\\build\\win64\\unrealeditor\\inc\\lc_5_5\\uht\\lcexperiencedefinition.generated.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

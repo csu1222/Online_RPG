@@ -45,6 +45,36 @@
     <ClCompile Include="..\..\Source\LC_5_5\LC_5_5.h">
       <Filter>Source\LC_5_5</Filter>
     </ClCompile>
+    <Filter Include="Source\LC_5_5\Character">
+      <UniqueIdentifier>{9682EBA6-20F7-377F-B2F8-03B61E27DB38}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\LC_5_5\Character\LcPawnData.cpp">
+      <Filter>Source\LC_5_5\Character</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\Character\LcPawnData.h">
+      <Filter>Source\LC_5_5\Character</Filter>
+    </ClCompile>
+    <Filter Include="Source\LC_5_5\GameModes">
+      <UniqueIdentifier>{32A31D95-CFE1-38CC-B133-DFB9A19D4B92}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\LC_5_5\GameModes\LcExperienceDefinition.cpp">
+      <Filter>Source\LC_5_5\GameModes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\GameModes\LcExperienceDefinition.h">
+      <Filter>Source\LC_5_5\GameModes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\GameModes\LcGameModeBase.cpp">
+      <Filter>Source\LC_5_5\GameModes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\GameModes\LcGameModeBase.h">
+      <Filter>Source\LC_5_5\GameModes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\GameModes\LcUserFacingExperience.cpp">
+      <Filter>Source\LC_5_5\GameModes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\GameModes\LcUserFacingExperience.h">
+      <Filter>Source\LC_5_5\GameModes</Filter>
+    </ClCompile>
     <Filter Include="Source\LC_5_5\System">
       <UniqueIdentifier>{F0F0F1CB-253B-3870-8AC6-E7557FD84ADD}</UniqueIdentifier>
     </Filter>
