@@ -430,4 +430,31 @@ Lyra 는 에픽게임즈에서 공식으로 배포하는 게임 프로젝트로 
 	LcPawnData 는 그냥 생성자만 만들고 생성자에선 Super(ObjectInitializer) 추가합니다. 
 	LcExperienceDefinition 에서는 DefaultPawnData 와 GameFeaturesToEnable 을 들고 있는데 일단 DefaultPawnData 는 LcPawnData 을 말하는겁니다. 
 	
+	Experience 는 좀 더 가벼워진 게임모드인데 그에 필요한 데이터들도 들고 있는 형태이다 이정도로 이해하고 있으면 되겠습니다. 
+
+	원래 게임모드를 설정할때 월드 세팅에서 게임모드를 설정했는데 이것을 None으로 두고 에디터의 프로젝트 세팅에서 GameMode 를 검색해서 여기를 LcGameModeBase 로 설정하는겁니다. 
+	그래서 게임모드는 여기서 변화가 없고 앞으로는 Experience 로 모드를 변화하게끔 합니다. 
+}
+
+
+# 5 Map
+{
+	먼저 LcUserFacingExperience 를 구성하는 두가지 MapId, ExperienceId 중 Map 에 대해 알아보겠습니다. 
+
+	라이라 프로젝트를 실행시켜보면 이제 각각 포탈로 표현되어있는 여러 게임 모드들이 이제 Experience 라는걸 알 수 있습니다. 정확히는 각각 UserFacingExperience 들입니다. 
+	그리고 라이라 프로젝트의 Experience 중에서는 FrontEnd 라는 이름의 Experience 가 있는데 이건 게임모드가 아니라 게임에서 ESC 를 눌렀을때 화면, 로그인 화면 같은건데 
+	Experience 는 단순히 게임모드뿐만 아니라 UI적 화면전환으로도 사용할 수 있다는걸 알 수 있습니다. 
+
+	일단 이번에 이 Experience 들이 배치되어있는 맵 까지 만들어 보겠습니다. 
+
+	Lc 프로젝트를 실행시켜서 콘텐츠 브라우저를 봅니다. 컨텐츠 폴더 아래로 System/DefaultEditormap 경로로 폴더를 만들고 여기에 새로 빈 레벨을 만듭니다. 
+	위에서 창 옵션 버튼을 누르고 환경 라이트 믹서라는 설정창을 연 뒤 위에 뜨는 몇가지 버튼을 눌러 환경설정을 해줍니다. 다시 끄고 
+	이제 레벨을 저장해주는데 L_DefaultEditorOverview 라는 이름으로 저장해줍니다. 
+
+	다음은 바닥을 만들어줄건데 맵에 큐브를 추가한 후 로케이션을 모두 0으로 밀어준 후 스케일에서 x, y 값을 100 으로 설정해줍니다. 
+	그러면 하얀 바닥이 생기는데 라이라에서는 바닥이 주황색이었는데 이것이 메테리얼입니다. 라이라 프로젝트를 실행해서 여기서 사용한 메테리얼을 가져올겁니다. 
+
+	라이라 프로젝트의 바닥이 사용한 메테리얼을 우클릭 에셋 액션->이주 를 하는데 LC 프로젝트의 Content 폴더로 이주시킵니다. Content 가 아니면 이주가 안되거나 깨져서 이주되기도 합니다. 
+	이제 LC 프로젝트의 바닥 메테리얼을 가져온걸로 설정해주고 프로젝트 세팅에서 시작맵과 기본맵을 L_DefaultEditorOverview 로 바꿔준 후 저장하면 
+	맵은 준비가 되었습니다. 
 }
