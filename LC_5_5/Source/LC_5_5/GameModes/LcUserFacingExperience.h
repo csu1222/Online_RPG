@@ -20,7 +20,7 @@ public:
 	FPrimaryAssetId MapID;
 
 	/** the gameplay expierence to load */
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Experience, meta = (AllowedTypes = "HakExperienceDefinition"))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Experience, meta = (AllowedTypes = "LcExperienceDefinition"))
 	FPrimaryAssetId ExperienceID;
 	
 };

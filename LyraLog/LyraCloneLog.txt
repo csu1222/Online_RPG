@@ -458,3 +458,81 @@ Lyra 는 에픽게임즈에서 공식으로 배포하는 게임 프로젝트로 
 	이제 LC 프로젝트의 바닥 메테리얼을 가져온걸로 설정해주고 프로젝트 세팅에서 시작맵과 기본맵을 L_DefaultEditorOverview 로 바꿔준 후 저장하면 
 	맵은 준비가 되었습니다. 
 }
+
+
+# 6 ExperienceList3D
+{
+	이제 라이라의 기본 맵을 만들었으니 이제 각 Experience 를 나타내는 포탈같은 것들을 만들어보겠습니다. 
+	위에서 Experience 파일들을 만들었을때 가장 먼저 만들었던 ULcUserFacingExperience 가 상속한 클래스를 보면 UPrimaryDataAsset 입니다. 즉 데이터 파일에 불과 하다는거고 
+	실제 사용되는곳이 어딘지 보면 ULcAssetManager 의 부모 클래스인 AssetManager 를 따라 들어가 설명을 읽어보면 싱글톤 패턴이면서 PrimaryAsset 을 로딩할지 언로딩할지를 
+	응답한다고 되어있습니다. 
+	즉, 저번에 에셋매니저를 만들면서 동기적 혹은 비동기적으로 로딩해 사용하게 만들었는데 그래도 상관은 없지만 언리얼에서 의도한 대로 PrimaryAsset 을 사용하면 많이 편리합니다. 
+	PrimaryAsset 은 데이터의 묶음인데 이걸 편하게 로딩할 수 있는것입니다. 
+
+	LcUserFacingExperience 파일을 언리얼엔진에서 사용하려면 엔진을 실행하고 콘텐츠 드로어에서 Playlists 폴더에다가 파일을 하나 추가해야합니다. 우클릭->기타->데이터에셋을 클릭한 후 
+	LcUserFacingExperience 을 검색해 파일을 만들면 됩니다. PrimaryAsset 이 DataAsset 을 상속 받았기 때문에 이렇게 만들어 집니다. 
+	이름을 DA_ExamplePlaylist 라고 짓고 테스트를 해볼건데 여기에 LcUserFacingExperience 의 멤버 변수들인 MapId, ExperienceId 를 설정할 수 있습니다. 
+	하지만 MapId 를 설정하려고 보니 이전에 만들었던 맵인 L_DefaultEditorOverview 맵이 보이지 않습니다.
+	그래서 스캔이라는 개념을 배워야합니다. 
+
+	스캔이란 에셋매니저가 사용하기 위해 주시를 하고 있는것을 스캔이라고 합니다. 
+	그러면 스캔과 로딩이 비슷하게 보입니다. 하지만 완벽하게 다른 개념입니다. 
+	로딩은 어떤 에셋의 크기가 작을지 클지 모르기도 하고 RAM에 모든 에셋들을 다 올려놓지 못하니깐 엔진에서는 그냥 에셋의 경로만 알고 있고 사용할때 그 경로의 에셋을 가져오는것입니다. 
+	이때 에셋의 경로로 이 에셋을 주시하고 있다고 할 수 있습니다. 
+	스캔도 에셋매니저가 이 에셋이 존재한다는 것을 알고만 있는것입니다. 
+
+	스캔은 어떻게 하냐면 언리얼 에디터의 프로젝트 세팅으로 가보면 에셋매니저 설정창이 있습니다. 이중에 스캔할 프라이머리 에셋 타입 창을 펼쳐서 설정합니다. 
+	이 중에 인덱스를 열어보면 프라이머리 에셋 타입이 Map 으로 되어있고 에셋 베이스 클래스가 World 입니다. 그리고 그 밑에 디렉터리와 특정 에셋이라는 옵션이 있는데
+	특정 옵션은 정말 딱 지정한 하나의 에셋을 스캔하는것입니다. 하나하나 직접 스캔하도록 설정하는 방법이기 때문에 너무 번거롭다면
+	디렉터리 옵션을 보면되는데 이 옵션은 어떤 폴더를 지정하면 그 폴더 아래에 있는 에셋을 스캔합니다. 
+
+	그런데 라이라 프로젝트에서는 맵을 특정 에셋 방식으로 스캔하고 있기 때문에 이대로 따라하겠습니다. 
+	설정한 후 아까 만들었던 DA_ExamplePlaylist 의 MapId 를 살펴보면 스캔이 되어 있는걸 확인 할 수 있습니다. 
+
+	Map은 설정했고 이어서 ExperienceId 를 설정해볼겁니다. 
+	LcUserFacingExperience 를 상속받은 DA_ExamplePlaylist 는 DataAsset 으로 만들었지만 Experience 는 블루 프린트로 만들어야합니다. 
+	블루프린트생성할때 LcExperienceDefinition 를 상속받아 만들어 줍니다. 이름은 B_LyraDefaultExperience 라고 하겠습니다. 열어보면 설정할 수 있는 변수가 Default Pawn Data 가 있습니다. 
+	B_LyraDefaultExperience 를 DA_ExamplePlaylist 에서 스캔하려면 다시 프로젝트 세팅의 에셋매니저에서 스캔할 프라이머리 에셋 타입을 하나 추가해 프라이머리 에셋 타입 에셋 베이스 클래스 
+	둘다 LcExperienceDefinition 으로 설정해줍니다. 그리고 그 밑에 블루프린트 클래스 보유 옵션을 활성화 합니다. 그리고 나서 언리얼 에디터를 재 실행한 후 디렉터리를 B_LyraDefaultExperience가
+	위치한 System/Experiences 로 설정하면 이제 DA_ExamplePlaylist의 ExperienceId 에 스캔이 됩니다. 
+	/* 저의 경우 스캔이 안됐었는데 왜냐면 LcUserFacingExperience.h 파일에서 ExperienceId 를 선언할때 UPROPERTY 의 인자중에 meta allowtype을 오타를 내서 인식이 안됐습니다. */
+	
+	이제 정리하자면 DA_ExamplePlaylist 라는 이름으로 UserFacingExperience 가 있고 이 안에서 MapId 로 L_DefaultEditorOverview 를 스캔해 넣고 ExperienceId 로 B_LyraDefaultExperience 
+	를 스캔해 넣었습니다. 
+
+	Content/System/DefaultEditormap 에 B_ExperienceList3D 라는 블루프린트가 있는데 이 블루프린트의 역할은 DA_ExamplePlaylist 라고 만들었던 UserFacingExperience 이것들이 몇개나 있는지
+	보고 그만큼을 맵에 소환해 줄겁니다. 지금은 한개 밖에 없는데 더 많아 지면 그 숫자 만큼 소환을 해줄겁니다. 
+	변수를 추가할건데 LcUserFacingExperience 를 리스트 형식으로 추가해서 UserFacingExperienceList 라는 이름의 변수로 들고 있을 겁니다. 그리고 Float 타입으로 PortalSpacing 이라고 들고 있겠습니다.
+	UserFacingExperienceList는 DA_ExamplePlaylist 같은 Experience 들을 담아두는 배열이고 PortalSpacing은 각 포탈간의 간격을 말합니다. PortalSpacing 값은 500.0f 로 설정하겠습니다. 
+
+	B_ExperienceList3D 에서 가장먼저 할 건 프로젝트가 가지고 있는 Experience 들을 다 가져와 UserFacingExperienceList 에 담아놔야 이후 관리를 시작할겁니다. 
+	그 전에 혹시 남아 있을 쓰레기 값을 다 비워주고 시작하면 좋겠습니다. 블루프린트의 BeginPlay 에서 UserFacingExperienceList 의 Clear 노드를 연결해 밀어줍니다. 
+	다음 노드로 Get Primary Asset Id List 라는 노드를 호출할겁니다. 이 함수는 Map, LcExperienceDefinition, PrimaryAssetLabel 카테고리를 골라 그에 해당하는 파일들을 다 긁어옵니다. 
+	이 카테고리들은 프로젝트 세팅 -> 에셋 매니저 에서 스캔하기 위해 추가했던 카테고리들입니다. 
+
+	여기서 이 카테고리중 우리가 추가하고 싶었던 LcUserFacingExperience 은 없는걸 알 수 있는데 이제는 자연스럽게 스캔하도록 카테고리를 추가하면 됩니다. 
+	이제 Get Primary Asset Id List 함수에 LcUserFacingExperience 가 뜨는걸 볼 수 있는데 여기까지는 로딩까지 진행한게 아니라 스캔까지만 진행된겁니다. 
+	로딩을 해줄겁니다. 
+
+	로딩함수는 Async Load Primary Asset List 입니다. Async 는 비동기 방식이라는건데 비동기 방식은 함수가 완료되는걸 기다리지 않고 따로 코드 진행이 된다는 뜻이었습니다. 
+	그래서 이 함수 노드에는 Complete 라는 화살표가 있는게 따로 함수가 완료되면 진행되는 화살표인겁니다. 
+	Complete 가 되면 이어서 Foreach Loop 를 하면서 가져온 LcUserFacingExperience 들을 모두 로딩해 가져올거고 이어서 LcUserFacingExperience 로 캐스팅하고 UserFacingExperienceList 에 담아줍니다.
+
+	리스트를 다 채운 후에는 이제 그 Experience 들을 포탈로 만들어줘야합니다. 스캔하고 로딩한 후의 for each 문의 complete 화살표를 이어서 진행하면 리스팅이 다 끝난 후의 코드입니다. 
+	여기서 다시 UserFacingExperienceList 를 대상으로 foreach 를 돕니다. 
+
+	그리고 생성할 포탈 액터를 만들어줘야하는데 액터를 상속받아서 이름을 B_TeleportToUserFacingExperience 라고 짓겠습니다. 안에서 스태틱 메쉬와 캡슐 콜리전을 추가해줍니다. 
+	여기서 에셋이 필요하기 때문에 라이라 프로젝트에서 가져옵니다. B_TeleportToUserFacingExperience 를 검색해보면 블루프린트가 나오고 여기서 이중에 발판만 Lc 프로젝트에 이주해 오겠습니다. 
+
+	에셋을 이주해 온 뒤 한번 에디터를 껏다 켜야할겁니다. 
+	재부팅하고 난 뒤엔 B_TeleportToUserFacingExperience에서 추가해 뒀던 Static Mesh 를 이주해온 메쉬로 설정하고 캡슐 콜리전은 Location을 (0, 0, 100) 으로 설정하고 
+	셰이프의 높이 너비를 80씩으로 설정합니다. 
+	그리고 변수를 하나 가지고 있어야하는데 UserFacingExperience 를 가지고 있어야합니다. 포탈이 UserFacingExperience 을 가지고 있어야 이 포탈에 부딛힌 캐릭터를 해당 Experience로 보낼 수 
+	있기 때문입니다. 이때 변수 옆에 눈 모양을 띄워줘야 c++에서 public 으로 만드는것과 같이 외부에서 수정할 수 있습니다. 그리고 디테일즈에서 이 변수를 스폰시 노출하도록 설정합니다.
+
+	돌아와서 B_ExperienceList3D 에서 다시 변수를 하나 추가합니다. 포탈들을 리스트로 관리하겠습니다. 
+	B_TeleportToUserFacingExperience 를 리스트 변수로 하나 만들고 아까 foreach 를 돌면서 매 시행마다 B_TeleportToUserFacingExperience 액터를 스폰한 후 로드했던 Experience를 추가해줍니다. 
+	B_TeleportToUserFacingExperience 를 스폰할때 그 위치를 지정해줘야합니다. 적절한 로직으로 맵중앙으로 부터 UserFacingExperience 가 늘어 날때 마다 좌우로 위치하도록 만들어 Location 값을 
+	SpawnActor 에 넘겨주면 됩니다. 
+
+}

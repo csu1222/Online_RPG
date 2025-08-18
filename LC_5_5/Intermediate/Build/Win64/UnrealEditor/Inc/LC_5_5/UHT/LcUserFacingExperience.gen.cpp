@@ -48,7 +48,7 @@ struct Z_Construct_UClass_ULcUserFacingExperience_Statics
 #endif
 	};
 	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_ExperienceID_MetaData[] = {
-		{ "AllowedTypes", "HakExperienceDefinition" },
+		{ "AllowedTypes", "LcExperienceDefinition" },
 		{ "Category", "Experience" },
 #if !UE_BUILD_SHIPPING
 		{ "Comment", "/** the gameplay expierence to load */" },
@@ -116,10 +116,10 @@ ULcUserFacingExperience::~ULcUserFacingExperience() {}
 struct Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_GameModes_LcUserFacingExperience_h_Statics
 {
 	static constexpr FClassRegisterCompiledInInfo ClassInfo[] = {
-		{ Z_Construct_UClass_ULcUserFacingExperience, ULcUserFacingExperience::StaticClass, TEXT("ULcUserFacingExperience"), &Z_Registration_Info_UClass_ULcUserFacingExperience, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(ULcUserFacingExperience), 4156822550U) },
+		{ Z_Construct_UClass_ULcUserFacingExperience, ULcUserFacingExperience::StaticClass, TEXT("ULcUserFacingExperience"), &Z_Registration_Info_UClass_ULcUserFacingExperience, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(ULcUserFacingExperience), 106116682U) },
 	};
 };
-static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_GameModes_LcUserFacingExperience_h_4147731001(TEXT("/Script/LC_5_5"),
+static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_GameModes_LcUserFacingExperience_h_448947811(TEXT("/Script/LC_5_5"),
 	Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_GameModes_LcUserFacingExperience_h_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_GameModes_LcUserFacingExperience_h_Statics::ClassInfo),
 	nullptr, 0,
 	nullptr, 0);
