@@ -48,6 +48,12 @@
     <Filter Include="Source\LC_5_5\Character">
       <UniqueIdentifier>{9682EBA6-20F7-377F-B2F8-03B61E27DB38}</UniqueIdentifier>
     </Filter>
+    <ClCompile Include="..\..\Source\LC_5_5\Character\LcCharacter.cpp">
+      <Filter>Source\LC_5_5\Character</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\Character\LcCharacter.h">
+      <Filter>Source\LC_5_5\Character</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\LC_5_5\Character\LcPawnData.cpp">
       <Filter>Source\LC_5_5\Character</Filter>
     </ClCompile>
@@ -63,10 +69,22 @@
     <ClCompile Include="..\..\Source\LC_5_5\GameModes\LcExperienceDefinition.h">
       <Filter>Source\LC_5_5\GameModes</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\GameModes\LcExperienceManagerComponent.cpp">
+      <Filter>Source\LC_5_5\GameModes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\GameModes\LcExperienceManagerComponent.h">
+      <Filter>Source\LC_5_5\GameModes</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\LC_5_5\GameModes\LcGameModeBase.cpp">
       <Filter>Source\LC_5_5\GameModes</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\LC_5_5\GameModes\LcGameModeBase.h">
+      <Filter>Source\LC_5_5\GameModes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\GameModes\LcGameState.cpp">
+      <Filter>Source\LC_5_5\GameModes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\GameModes\LcGameState.h">
       <Filter>Source\LC_5_5\GameModes</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\LC_5_5\GameModes\LcUserFacingExperience.cpp">
@@ -74,6 +92,21 @@
     </ClCompile>
     <ClCompile Include="..\..\Source\LC_5_5\GameModes\LcUserFacingExperience.h">
       <Filter>Source\LC_5_5\GameModes</Filter>
+    </ClCompile>
+    <Filter Include="Source\LC_5_5\Player">
+      <UniqueIdentifier>{D9F3A3D1-B88C-3F59-9841-67E649765216}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\LC_5_5\Player\LcPlayerController.cpp">
+      <Filter>Source\LC_5_5\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\Player\LcPlayerController.h">
+      <Filter>Source\LC_5_5\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\Player\LcPlayerState.cpp">
+      <Filter>Source\LC_5_5\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\Player\LcPlayerState.h">
+      <Filter>Source\LC_5_5\Player</Filter>
     </ClCompile>
     <Filter Include="Source\LC_5_5\System">
       <UniqueIdentifier>{F0F0F1CB-253B-3870-8AC6-E7557FD84ADD}</UniqueIdentifier>

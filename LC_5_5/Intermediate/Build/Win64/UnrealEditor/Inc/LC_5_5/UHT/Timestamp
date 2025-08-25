@@ -1,5 +1,10 @@
-D:\CPP_Game\Portfolio\LC_5_5\Source\LC_5_5\GameModes\LcGameModeBase.h
-D:\CPP_Game\Portfolio\LC_5_5\Source\LC_5_5\Character\LcPawnData.h
-D:\CPP_Game\Portfolio\LC_5_5\Source\LC_5_5\GameModes\LcExperienceDefinition.h
 D:\CPP_Game\Portfolio\LC_5_5\Source\LC_5_5\GameModes\LcUserFacingExperience.h
+D:\CPP_Game\Portfolio\LC_5_5\Source\LC_5_5\GameModes\LcExperienceManagerComponent.h
+D:\CPP_Game\Portfolio\LC_5_5\Source\LC_5_5\GameModes\LcExperienceDefinition.h
+D:\CPP_Game\Portfolio\LC_5_5\Source\LC_5_5\Character\LcPawnData.h
+D:\CPP_Game\Portfolio\LC_5_5\Source\LC_5_5\Player\LcPlayerState.h
 D:\CPP_Game\Portfolio\LC_5_5\Source\LC_5_5\System\LcAssetManager.h
+D:\CPP_Game\Portfolio\LC_5_5\Source\LC_5_5\Character\LcCharacter.h
+D:\CPP_Game\Portfolio\LC_5_5\Source\LC_5_5\Player\LcPlayerController.h
+D:\CPP_Game\Portfolio\LC_5_5\Source\LC_5_5\GameModes\LcGameState.h
+D:\CPP_Game\Portfolio\LC_5_5\Source\LC_5_5\GameModes\LcGameModeBase.h

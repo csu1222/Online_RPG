@@ -13,5 +13,14 @@ UCLASS()
 class LC_5_5_API ALcGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
+public:
+	ALcGameModeBase();
 	
+	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
+
+
+	/**
+	 * member methods
+	 */
+	void HandleMatchAssignmentIfNotExpectingOne();
 };

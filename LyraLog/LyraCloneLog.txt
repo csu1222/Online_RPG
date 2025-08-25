@@ -534,5 +534,184 @@ Lyra 는 에픽게임즈에서 공식으로 배포하는 게임 프로젝트로 
 	B_TeleportToUserFacingExperience 를 리스트 변수로 하나 만들고 아까 foreach 를 돌면서 매 시행마다 B_TeleportToUserFacingExperience 액터를 스폰한 후 로드했던 Experience를 추가해줍니다. 
 	B_TeleportToUserFacingExperience 를 스폰할때 그 위치를 지정해줘야합니다. 적절한 로직으로 맵중앙으로 부터 UserFacingExperience 가 늘어 날때 마다 좌우로 위치하도록 만들어 Location 값을 
 	SpawnActor 에 넘겨주면 됩니다. 
+}
+
+# 7 Experience Load
+{
+	맵을 만들고 Experience 의 뼈대를 만들어 그 포탈을 스폰하는 것까지는 했습니다. 
+	이어서 Experience 를 로드 하는 내용을 알아 보겠습니다. 
+
+	이전에 라이라 프로젝트에서는 하나의 게임모드를 계속 사용하고 그 안에서 Experience 라는 가벼운 모드를 가지고 전환하면서 실행된다고 했는데 
+	그런데 사실은 여기에 더해 GameState, PlayerState, PlayerController, Character 이런것들 까지 만들어 놓고 시작합니다. 
+	
+	이 네가지들도 기본이 되는 개념들을 박아두고 안변하는 대신에 그 아래로 각각 필요한 부품들을 갈아 끼웁니다. 
+
+	GameState 라는것은 GameMode 와 1대1 대응이 되고 그 부품으로 ExperienceManagerComponent 를 가지고 있으면서 이 컴포넌트가 로딩을 담당하고 
+	로딩이 끝나면 응답을 해서 로딩이 끝났으니 다음 코드로 진행하라고 신호를 줍니다. 
+	Experience 의 경우 원래 C++ 에 포함된 개념이 아니다 보니 그 흐름을 제어하기가 힘든데 이 ExperienceManagerComponent 에서 직접 로딩과 그 후 진행까지 
+	맡아주는겁니다. 
+
+	PlayerState 에서는 안에 PawnData를 캐싱해둘 건데 이 안에는 당연히 있어야 할 정보들이 있습니다. 어떤 폰을 스폰할지나 인풋은 어떻게 할지 그리고 카메라 모드같은것도 가지고 있습니다. 
+	카메라 모드가 뭔가하면 보통 언리얼엔진을 배울때 플레이어 캐릭터에는 로컬 좌표로부터 일정거리를 뜻하는 스프링 암 개념이 있고 여기에 카메라를 아래로 붙여서 카메라를 달고 다녔습니다.
+	그런데 라이라에서는 스프링 암이라는 개념이 없습니다. 
+	카메라 모드가 대신하는데 지금 저격수 카메라 모드, 일반 카메라 모드, 공중 카메라 모드 등 을 사용해 카메라 형식을 바꿉니다. 
+
+	PlayerController는 아래로 CameraManager 가 있습니다. CameraManager 와 Player가 들고 있던 CameraComponent 는 연관이 있습니다. 
+	카메라 컴포넌트를 통해 화면을 보는데 렌더링은 카메라 매니저에서 렌더링을 해줍니다. 
+	왜 이렇게 되어있냐면 라이라에서 캐릭터가 모두 플레이어는 아니기 때문입니다. 라이라에서 캐릭터는 동물이나 몬스터 엔피씨 일 수도 있는데 컨트롤러는 플레이어한테만 붙을 것이기 때문입니다. 
+
+	그래서 이렇게 GameState, PlayerState, PlayerController, Character 네가지를 만들어보겠습니다. 
+
+	기본 C++ 파일들 부터 만들겠습니다. Character 는 언리얼에디터에서 C++ 파일 추가로 Character 를 상속받아 LcCharacter 정도로 만들면 됩니다 생성 경로는 Source/Lc5_5/Character로 설정합니다.
+	GameState는 GameStatebase 를 상속받고 GameMode 디렉터리로 설정합니다. PlayerController는 PlayerController 를 상속받고 Source/Lc5_5/Player 디렉토리를 만들고 거기로 생성하게 설정해줍니다.
+	PlayerState 도 역시 PlayerState를 상속받고 Player 디렉토리 아래로 생성합니다. 
+
+	다음은 LcGameModeBase 코드로 가서 생성자를 만들어 주고 생성자에서 초기화를 몇가지 해줄겁니다. 
+	
+	ALcGameModeBase::ALcGameModeBase()
+	{
+		GameStateClass = ALcGameState::StaticClass();
+		PlayerControllerClass = ALcPlayerController::StaticClass();
+		PlayerStateClass = ALcPlayerState::StaticClass();
+		DefaultPawnClass = ALcCharacter::StaticClass();
+	}
+	이전에 언리얼 에디터에서 기본 게임모드를 LcGameModeBase 로 설정을 했었는데 그 내부의 기본 GameState,PlayerController,PlayerState,DefaultPawn 들을 지금 설정한 클래스들로 기본설정이 됩니다.
+	실제로 에디터를 실행해서 프로젝트 설정->맵&모드 를 가보면 지금 설정한 클래스로 바뀌어있습니다. 라이라 프로젝트에서는 이렇게 시작을 합니다. 
+
+	그러면 이제 의문이 생기는데 Experience 로 여러 게임들을 변경하는게 라이라 프로젝트였는데 지금처럼 기본 클래스들을 고정으로 박아두고 시작하면 어떻게 Experience 에 따라 변경할지가 궁금해집니다. 
+
+	언리얼엔진이 실행되는 과정을 보면 GameInstance 가 가장 먼저 생성이 되고 World 만든 후에 Level, GameMode 순으로 생성이 됩니다. 각 모듈이 생성되는 순서 말고 호출되는 함수도 순서가 있는데 
+	InitializeActorForPlay->InitGame 이라는 함수들을 가장 먼저 호출합니다. 아직 월드에 액터들을 스폰하기도 전입니다. 이 InitGame 함수를 오버라이드로 GameMode에 받아서 몇가지 초기화를 하겠습니다. 
+
+	LcGameModeBase 클래스 안에 	
+	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
+	이런 시그니처로 멤버 함수를 만들고 안에 
+	Super::InitGame(MapName, Options, ErrorMessage);
+	이 슈퍼 함수를 호출해주면 일단 오버라이딩 준비가 되었습니다. 여기에 추가로 새 함수를 만들어 호출할건데 그 함수 이름은 
+	void HandleMatchAssignmentIfNotExpectingOne();
+	입니다. 
+	이 함수의 역할은 우리가 라이라 게임 만들면서 포탈을 타는 방식으로건 어떻게든 Experience를 선택하게 되는데 선택한 Experience 를 ExperienceManager 에서 로딩을 시작할겁니다. 
+	이때 로딩뿐만 아니라 데디케이트 서버가 맞는지, 개발자의 옵션 설정인지 등등 여러가지 요소들을 전부 검사해서 매치를 해줍니다. 그래서 함수 이름이 HandleMatchAssignmentIfNotExpectingOne
+	인겁니다. 
+	하지만 제가 만들 프로젝트에서는 그냥 ExperienceLoading 을 선택하는 용도로만 쓸거기 때문에 조금 다르지만 일단은 기존 라이라 프로젝트를 따라 만들것이기 때문에 이 이름을 사용합니다.
+
+	그러면 HandleMatchAssignmentIfNotExpectingOne 과 함께 호출할 ExperienceLoading 을 언제 진행할것인가를 생각해보면 바로 InitGame 에서 호출해줄겁니다. 
+
+	void ALcGameModeBase::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
+	{
+		Super::InitGame(MapName, Options, ErrorMessage);
+
+		// 아직 GameInstance를 통해, 초기화 작업이 진행되므로, 현 프레임에는 Lyra의 Concept인 Experience 처리를 진행할 수 없다:
+		// - 이를 처리하기 위해, 한프레임 뒤에 이벤트를 받아 처리를 이어서 진행한다
+		GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::HandleMatchAssignmentIfNotExpectingOne);
+	}
+	보면 World 를 가져오고 또 거기서 TimerManager의 SetTimerForNextTick 함수에서 HandleMatchAssignmentIfNotExpectingOne 를 호출하고 있습니다. SetTimerForNextTick 라는 함수가 무슨 함수나면
+	지금 말고 다음 프레임때에 인자로 준 함수를 실행해달라는겁니다. 
+	왜 굳이 다음 프레임에 실행하도록 했냐면 다시 언리얼엔진의 요소들이 로딩되는 순서를 봐야하는데 InitGame 이라는 함수가 엔진의 굉장히 초기에 호출된다고 했었습니다.
+	그러다 보니 첫프레임 시점의 InitGame 에서는 다른 요소들이 거의 없습니다. 그리고 우리가 하려고 했던것도 Experience 로딩인데 이건 ExperienceManager 에서 로딩한다고 했는데 당연히 
+	첫프레임 InitGame 에는 아직 객체가 생성되지 않았습니다. 그래서 SetTimerForNextTick 로 한 프레임 다음에 로딩을 해주는겁니다. 
+
+	막상 아직 ExperienceManager를 만들지 않았습니다. 그러기 위해서 엔진을 실행한 후 몇가지 설정을 해야합니다. ExperienceManager 라는 것은 GameStateComponent 가 필요합니다. 
+	이건 플러그인을 추가해야하는데 위의 옵션중에 프로젝트 세팅 밑에 플러그인을 관리하는 옵션이 있습니다.
+	여기서 Modular Gameplay 를 활성화 시킵니다. 그리고 지금은 아닌데 나중에 프로젝트에 필요한 Game Features 플러그인도 지금 활성화 시키겠습니다. 마지막으로 Gameplay Abilities 까지 
+	활성화를 해주면 되겠습니다. 
+
+	플러그인을 추가하고 또 LC_5_5.bulid.cs 파일의 코드를 수정해야 우리가 C++ 로도 관리 할 수 있습니다. 
+
+	PublicDependencyModuleNames.AddRange(new string[]  {
+		"Core",
+		"CoreUObject",
+		"Engine",
+		"InputCore",
+		// GAS
+		"GameplayTags",
+		// Game Features
+		"ModularGameplay",
+		"GameFeatures",
+	});
+	
+	이러고 나서 다시 엔진을 실행시켜봅니다. 
+
+	C++ 클래스를 추가하는데 GameStateComponent 를 상속받게끔 해주고 이름을 LcExperienceManagerComponent 라고 짓습니다. 그리고 GameModes 폴더에 생성합니다. 
+	이게 ExperienceManager 가 되는겁니다. 
+
+	GameStateComponent는 어떤 것에 부착할 수 있게 해줍니다. 코드를 상위 클래스로 따라 올라가다 보면 UActorComponent 이것도 엑터에 부착할 수 있는 컴포넌트입니다. 
+	GameState 에 추가로 붙힐 수 있는 Component 라서 GameStateComponent 입니다. 
+
+	이런 컴포넌트 개념은 언리얼보다는 유니티 엔진에서 더 많이 사용하는 개념인데 이걸 GameFeatures 모듈로 가능하도록 만든겁니다. 이 구조의 장점은 확장성이 좋고 
+	단점은 디버깅이 힘들고 파일이 많아서 가독성이 떨어진다는겁니다. 
+
+	ExperienceManagerComponent는 GameStateComponent 이기 때문에 당연히 GameState에서 들고 있을겁니다. 우리가 만든 LcGameState 에서 들고 있을겁니다. 
+	LcGameState 에서 LcExperienceManagerComponent 를 TObjectPtr 로 들고 있고 GameState 의 생성자에서 CreateDefaultSubobject 로 객체를 생성해줍니다. 
+
+	이제 GameState에 컴포넌트를 부착은 했는데 아무런 설정을 하지 않았습니다. 
+
+	LcExperienceManagerComponent 가 뭘 들고 있을지를 생각해보면 이 클래스가 할 일은 Experience를 로딩하는 클래스이다 보니 로딩할 클래스를 들고 있을겁니다. 
+	이때 Experience를 들고 있다고 해서 로딩이 완료 되었다는 뜻은 아닙니다. 이 로딩이 완료되는 시점을 알아야 해당 Experience로 전환을 하는데 완성시점을 알려주는 C++ 문법이 
+	델리게이트 입니다. 
+
+	LcExperienceManagerComponent.h 파일 위쪽에 현재 가지고 있는 Experience의 로딩 상태를 enum class 를 선언합니다. 
+	enum class ELcExperienceLoadState
+	{
+		Unloaded,
+		Loading,
+		Loaded,
+		Deactivating,
+	};
+
+	그리고 Delegate를 언리얼에서 하는방법은 
+	DECLARE_MULTICAST_DELEGATE_OneParam(FOnLcExperienceLoaded, const ULcExperienceDefinition*);
+	이 매크로로 하나의 매개변수를 가지는 멀티캐스트 델리게이트를 선언합니다. 매개변수는 아까 만들었던 LcExperienceManagerComponent 가 들고 있을 Experience 입니다. 
+	첫번째 인자로 준 FOnLcExperienceLoaded 는 이제 const ULcExperienceDefinition* 를 인자로 받는 멀티캐스트 델리게이트 클래스로 선언이 된겁니다. 
+
+	그래서 이제 총 세가지 멤버 변수를 들고 있을 겁니다. 첫째로 로딩할 현재 Experience, 두번째로 Experience 가 현재 어떤 상태인지를 나타내는 ELcExperienceLoadState,
+	세번째는 Experience 를 델리게이트할 FOnLcExperienceLoaded 입니다.
+
+	public:
+	UPROPERTY()
+	TObjectPtr<const ULcExperienceDefinition> CurrentExperience;
+
+	/** Experience의 로딩 상태를 모니터링 */
+	ELcExperienceLoadState LoadState = ELcExperienceLoadState::Unloaded;
+
+	/** Experience 로딩이 완료된 이후, Broadcasting Delegate */
+	FOnLcExperienceLoaded OnExperienceLoaded;
+
+	이제 함수를 하나 만들겁니다. 
+
+	bool IsExperienceLoaded() { return (LoadState == ELcExperienceLoadState::Loaded) && (CurrentExperience != nullptr); }
+	이 함수는 지금 Experience 가 로딩이 됐는지를 체크하는 함수인데 LoadState 가 Loaded 이고 CurrentExperience가 nullptr 이 아닌지를 체크 해주는겁니다. 
+	
+	또 한가지 함수를 더 만들건데
+	void CallOrRegister_OnExperienceLoaded(FOnLcExperienceLoaded::FDelegate&& Delegate);
+	이 함수는 델리게이트를 걸어주는 함수입니다. 
+
+	사실 델리게이트는 아까 만든 델리게이트 객체에 델리게이트를 추가해주면 로딩이 됩니다. 무슨 말이냐면 
+	OnExperienceLoaded.Add(Delegate);
+	이렇게 해주면 끝인데 굳이 하나 더 래핑해서 사용할까요
+	
+	void ULcExperienceManagerComponent::CallOrRegister_OnExperienceLoaded(FOnLcExperienceLoaded::FDelegate&& Delegate)
+	{
+		// IsExperienceLoaded() 구현
+		if (IsExperienceLoaded())
+		{
+			Delegate.Execute(CurrentExperience);
+		}
+		else
+		{
+			/**
+			* 참고로, 여러분들은 Delegate 객체를 자세히 살펴보면, 내부적으로 필요한 변수들은 메모리 할당해놓는다:
+			* TArray<int> a = {1, 2, 3, 4};
+			* delegate_type delegate = [a](){
+			*	return a.Num();
+			* }
+			* a는 delegate_type 내부에 new로 할당되어 있다. 복사 비용을 낮추기 위해 Move를 통해 하는 것을 잊지 말자!
+			*/
+			OnExperienceLoaded.Add(MoveTemp(Delegate));
+		}
+	}
+	이런 코드인데 살펴보면 일단 Experience 가 로드된 상태인지를 체크해 로드 되어있으면 바로 Delegate.Excute(CurrentExperience); 를 호출해주고 
+	만약 로드가 안되어 있다면 그러면 그때 델리게이트에 추가를 해주는겁니다. 
+	그냥 무분별적으로 델리게이트에 추가하는게 아니라 로딩 여부를 한번 체크해 걸러주는겁니다. 
 
 }

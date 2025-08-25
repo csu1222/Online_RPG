@@ -8,9 +8,19 @@ public class LC_5_5 : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" });
+		PublicDependencyModuleNames.AddRange(new string[]  {
+            "Core",
+            "CoreUObject",
+            "Engine",
+            "InputCore",
+            // GAS
+            "GameplayTags",
+            // Game Features
+            "ModularGameplay",
+            "GameFeatures",
+        });
 
-		PrivateDependencyModuleNames.AddRange(new string[] {  });
+        PrivateDependencyModuleNames.AddRange(new string[] {  });
 
         PrivateIncludePaths.AddRange(new string[]
         {

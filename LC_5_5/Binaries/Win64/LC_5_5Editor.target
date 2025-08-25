@@ -5190,6 +5190,18 @@
 			"Type": "RequiredResource"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/Editor/AssetReferenceRestrictions/Binaries/Win64/UnrealEditor-AssetReferenceRestrictions.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Editor/AssetReferenceRestrictions/Binaries/Win64/UnrealEditor-AssetReferenceRestrictions.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Editor/AssetReferenceRestrictions/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/Editor/BlueprintHeaderView/Binaries/Win64/UnrealEditor-BlueprintHeaderView.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -7226,6 +7238,26 @@
 			"Type": "RequiredResource"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/Runtime/DataRegistry/Binaries/Win64/UnrealEditor-DataRegistry.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/DataRegistry/Binaries/Win64/UnrealEditor-DataRegistry.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/DataRegistry/Binaries/Win64/UnrealEditor-DataRegistryEditor.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/DataRegistry/Binaries/Win64/UnrealEditor-DataRegistryEditor.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/DataRegistry/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/Runtime/Database/SQLiteCore/Binaries/Win64/UnrealEditor-SQLiteCore.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -7247,6 +7279,46 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Runtime/ExampleDeviceProfileSelector/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/GameFeatures/Binaries/Win64/UnrealEditor-GameFeatures.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/GameFeatures/Binaries/Win64/UnrealEditor-GameFeatures.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/GameFeatures/Binaries/Win64/UnrealEditor-GameFeaturesEditor.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/GameFeatures/Binaries/Win64/UnrealEditor-GameFeaturesEditor.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/GameFeatures/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/GameplayAbilities/Binaries/Win64/UnrealEditor-GameplayAbilities.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/GameplayAbilities/Binaries/Win64/UnrealEditor-GameplayAbilities.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/GameplayAbilities/Binaries/Win64/UnrealEditor-GameplayAbilitiesEditor.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/GameplayAbilities/Binaries/Win64/UnrealEditor-GameplayAbilitiesEditor.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/GameplayAbilities/Binaries/Win64/UnrealEditor.modules",
 			"Type": "RequiredResource"
 		},
 		{
@@ -7539,6 +7611,18 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Runtime/MobilePatchingUtils/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/ModularGameplay/Binaries/Win64/UnrealEditor-ModularGameplay.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/ModularGameplay/Binaries/Win64/UnrealEditor-ModularGameplay.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/ModularGameplay/Binaries/Win64/UnrealEditor.modules",
 			"Type": "RequiredResource"
 		},
 		{
@@ -33096,6 +33180,10 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/Editor/AssetReferenceRestrictions/AssetReferenceRestrictions.uplugin",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/Editor/BlueprintHeaderView/BlueprintHeaderView.uplugin",
 			"Type": "UFS"
 		},
@@ -33556,11 +33644,23 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/Runtime/DataRegistry/DataRegistry.uplugin",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/Runtime/Database/SQLiteCore/SQLiteCore.uplugin",
 			"Type": "UFS"
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Runtime/ExampleDeviceProfileSelector/ExampleDeviceProfileSelector.uplugin",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/GameFeatures/GameFeatures.uplugin",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/GameplayAbilities/GameplayAbilities.uplugin",
 			"Type": "UFS"
 		},
 		{
@@ -33597,6 +33697,10 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Runtime/MobilePatchingUtils/MobilePatchingUtils.uplugin",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/ModularGameplay/ModularGameplay.uplugin",
 			"Type": "UFS"
 		},
 		{
@@ -33703,6 +33807,7 @@
 		"AppleMoviePlayer",
 		"ArchVisCharacter",
 		"AssetManagerEditor",
+		"AssetReferenceRestrictions",
 		"AssetTags",
 		"AudioCapture",
 		"AudioSynesthesia",
@@ -33743,6 +33848,7 @@
 		"CryptoKeys",
 		"CurveEditorTools",
 		"CustomMeshComponent",
+		"DataRegistry",
 		"DataValidation",
 		"Dataflow",
 		"DatasmithContent",
@@ -33765,6 +33871,8 @@
 		"Fracture",
 		"FullBodyIK",
 		"GLTFExporter",
+		"GameFeatures",
+		"GameplayAbilities",
 		"GameplayCameras",
 		"GameplayTagsEditor",
 		"GeometryCache",
@@ -33807,6 +33915,7 @@
 		"MobileLauncherProfileWizard",
 		"MobilePatchingUtils",
 		"ModelingToolsEditorMode",
+		"ModularGameplay",
 		"MsQuic",
 		"N10XSourceCodeAccess",
 		"NFORDenoise",

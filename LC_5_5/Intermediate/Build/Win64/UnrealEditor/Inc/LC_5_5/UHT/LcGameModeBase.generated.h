@@ -24,8 +24,6 @@ public: \
 
 
 #define FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_GameModes_LcGameModeBase_h_15_ENHANCED_CONSTRUCTORS \
-	/** Standard constructor, called after all reflected properties have been initialized */ \
-	NO_API ALcGameModeBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()); \
 private: \
 	/** Private move- and copy-constructors, should never be used */ \
 	ALcGameModeBase(ALcGameModeBase&&); \
@@ -33,7 +31,7 @@ private: \
 public: \
 	DECLARE_VTABLE_PTR_HELPER_CTOR(NO_API, ALcGameModeBase); \
 	DEFINE_VTABLE_PTR_HELPER_CTOR_CALLER(ALcGameModeBase); \
-	DEFINE_DEFAULT_OBJECT_INITIALIZER_CONSTRUCTOR_CALL(ALcGameModeBase) \
+	DEFINE_DEFAULT_CONSTRUCTOR_CALL(ALcGameModeBase) \
 	NO_API virtual ~ALcGameModeBase();
 
 

@@ -76,7 +76,6 @@ template<> LC_5_5_API UClass* StaticClass<ALcGameModeBase>()
 {
 	return ALcGameModeBase::StaticClass();
 }
-ALcGameModeBase::ALcGameModeBase(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {}
 DEFINE_VTABLE_PTR_HELPER_CTOR(ALcGameModeBase);
 ALcGameModeBase::~ALcGameModeBase() {}
 // End Class ALcGameModeBase
