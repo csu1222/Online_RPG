@@ -9,7 +9,21 @@
             "d:\\cpp_game\\portfolio\\lc_5_5\\source\\lc_5_5\\player\\lcplayerstate.h",
             "d:\\program files\\epic games\\ue_5.5\\engine\\source\\runtime\\engine\\classes\\gameframework\\playerstate.h",
             "d:\\program files\\epic games\\ue_5.5\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\playerstate.generated.h",
-            "d:\\cpp_game\\portfolio\\lc_5_5\\intermediate\\build\\win64\\unrealeditor\\inc\\lc_5_5\\uht\\lcplayerstate.generated.h"
+            "d:\\cpp_game\\portfolio\\lc_5_5\\intermediate\\build\\win64\\unrealeditor\\inc\\lc_5_5\\uht\\lcplayerstate.generated.h",
+            "d:\\cpp_game\\portfolio\\lc_5_5\\source\\lc_5_5\\gamemodes\\lcexperiencemanagercomponent.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\plugins\\runtime\\modulargameplay\\source\\modulargameplay\\public\\components\\gamestatecomponent.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\source\\runtime\\engine\\classes\\gameframework\\gamestatebase.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\source\\runtime\\engine\\classes\\gameframework\\gamemodebase.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\source\\runtime\\engine\\classes\\engine\\serverstatreplicator.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\serverstatreplicator.generated.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\gamemodebase.generated.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\gamestatebase.generated.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\plugins\\runtime\\modulargameplay\\source\\modulargameplay\\public\\components\\gameframeworkcomponent.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\plugins\\runtime\\modulargameplay\\intermediate\\build\\win64\\unrealeditor\\inc\\modulargameplay\\uht\\gameframeworkcomponent.generated.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\plugins\\runtime\\modulargameplay\\intermediate\\build\\win64\\unrealeditor\\inc\\modulargameplay\\uht\\gamestatecomponent.generated.h",
+            "d:\\cpp_game\\portfolio\\lc_5_5\\intermediate\\build\\win64\\unrealeditor\\inc\\lc_5_5\\uht\\lcexperiencemanagercomponent.generated.h",
+            "d:\\cpp_game\\portfolio\\lc_5_5\\source\\lc_5_5\\gamemodes\\lcgamemodebase.h",
+            "d:\\cpp_game\\portfolio\\lc_5_5\\intermediate\\build\\win64\\unrealeditor\\inc\\lc_5_5\\uht\\lcgamemodebase.generated.h"
         ],
         "ImportedModules": [],
         "ImportedHeaderUnits": []

@@ -17,7 +17,7 @@ public:
 	ULcPawnData(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	/** Pawn의 Class */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hak|Pawn")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Lc|Pawn")
 	TSubclassOf<APawn> PawnClass;
 	
 };

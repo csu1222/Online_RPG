@@ -39,7 +39,7 @@ struct Z_Construct_UClass_ULcPawnData_Statics
 		{ "ObjectInitializerConstructorDeclared", "" },
 	};
 	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_PawnClass_MetaData[] = {
-		{ "Category", "Hak|Pawn" },
+		{ "Category", "Lc|Pawn" },
 #if !UE_BUILD_SHIPPING
 		{ "Comment", "/** Pawn\xec\x9d\x98 Class */" },
 #endif
@@ -102,10 +102,10 @@ ULcPawnData::~ULcPawnData() {}
 struct Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Character_LcPawnData_h_Statics
 {
 	static constexpr FClassRegisterCompiledInInfo ClassInfo[] = {
-		{ Z_Construct_UClass_ULcPawnData, ULcPawnData::StaticClass, TEXT("ULcPawnData"), &Z_Registration_Info_UClass_ULcPawnData, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(ULcPawnData), 151664297U) },
+		{ Z_Construct_UClass_ULcPawnData, ULcPawnData::StaticClass, TEXT("ULcPawnData"), &Z_Registration_Info_UClass_ULcPawnData, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(ULcPawnData), 3827361548U) },
 	};
 };
-static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Character_LcPawnData_h_1625983971(TEXT("/Script/LC_5_5"),
+static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Character_LcPawnData_h_3841044154(TEXT("/Script/LC_5_5"),
 	Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Character_LcPawnData_h_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Character_LcPawnData_h_Statics::ClassInfo),
 	nullptr, 0,
 	nullptr, 0);

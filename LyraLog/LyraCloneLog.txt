@@ -714,4 +714,147 @@ Lyra 는 에픽게임즈에서 공식으로 배포하는 게임 프로젝트로 
 	만약 로드가 안되어 있다면 그러면 그때 델리게이트에 추가를 해주는겁니다. 
 	그냥 무분별적으로 델리게이트에 추가하는게 아니라 로딩 여부를 한번 체크해 걸러주는겁니다. 
 
+	이 CallOrRegister_OnExperienceLoaded 함수 이름을 다시보면 호출하거나 예약한다. OnExperienceLoaded 를 이라는 이름입니다. 직관적입니다. 
+	어디서 이 함수를 호출해야 할까요 LcGameModeBase 로 가서 위에서 오버라이드로 만들었던 InitGame 함수 말고 InitGameState 도 만들어줄겁니다. 
+	GameState를 초기화 하는 함수이기 때문에 이 함수가 호출되는 시점은 일단 GameState 가 일단 생성된 후에 호출될겁니다. 
+	GameState가 생성 되었다는것은 GameState의 생성자에서 LcExperienceManagerComponent 를 생성했다라는겁니다. 그렇다는것은 InitGamestate 를 호출하는 시점에서는 
+	LcExperienceManagerComponent::CallOrRegister_OnExperienceLoaded 를 호출 할 수 있다는 말입니다. 
+		
+	void ALcGameModeBase::InitGameState()
+	{
+		Super::InitGameState();
+
+		// Experience 비동기 로딩을 위한 Delegate를 준비한다:
+		ULcExperienceManagerComponent* ExperienceManagerComponent = GameState->FindComponentByClass<ULcExperienceManagerComponent>();
+		check(ExperienceManagerComponent);
+
+		// OnExperienceLoaded 등록
+		ExperienceManagerComponent->CallOrRegister_OnExperienceLoaded(FOnLcExperienceLoaded::FDelegate::CreateUObject(this, &ThisClass::OnExperienceLoaded));
+	}
+	ULcExperienceManagerComponent 를 찾을때 GameState->FindComponentByClass 라는 함수로 ULcExperienceManagerComponent를 찾고 있습니다. 이 함수는 컴포넌트에 한해서 템플릿으로 준 클래스를 
+	상속하고 있는 객체를 반환합니다. 
+	그리고 혹시 모르니깐 한번 check를 해주고 이어서 CallOrRegister_OnExperienceLoaded 로 델리게이트를 걸어줍니다. 
+	델리게이트를 할때 ThisClass::OnExperienceLoaded 가 아직 안만들어져있어서 만들어주겠습니다. 
+
+	void ALcGameModeBase::OnExperienceLoaded(const ULcExperienceDefinition* CurrentExperience)
+	{
+	}
+	아직 함수의 내용은 안만들었는데 일단 이 상태에서 InitGameState에서 델리게이트를 걸때의 흐름을 다시 보면 FOnLcExperienceLoaded::FDelegate::CreateUObject(this, &ThisClass::OnExperienceLoaded)
+	이런 델리게이트를 겁니다. 이 델리게이트가 인자로 들어가고 로딩이 완료된 상태면 즉시 .Excute 를 하면서 OnExperienceLoaded 를 호출합니다. 
+
+	여기서 알 수 있는건 GameMode에서는 Experience가 로드가 된 시점을 알 수는 없고 델리게이트를 걸어두고 OnExperienceLoaded 가 호출된 시점에 로딩을 진행하는겁니다. 
+
+	다음으로 할 일은 PawnData를 채우는 건데 이때 생각해야 하는게 Pawn을 생성하고 데이터를 채우는 시점입니다. 
+	지금까지 진행한 건 언리얼엔진을 시작하고 InitGame 을 호출하는데 InitGame에서는 다음 프레임에 HandleMatchAssignmentIfNotExpectingOne 라는 함수를 호출해줄겁니다. 
+	이후 GameMode 가 생성되고 GameState 도 생성이 됩니다. GameState의 생성자에서 ExperienceManagerComponent 를 생성해 들고 있을겁니다. 다시 GameMode로 돌아와 InitGameState 를 호출합니다. 
+	여기서 CallOrRegister_OnExperienceLoaded 로 델리게이트를 걸어줍니다. 여기서 그 다음으로 SpawnPlayerActor, login, SpawnPlayerController, InitPlayerState 순으로 호출을 하고 
+	Player의 기본정보들을 초기화하는 함수들이 호출이 되는데 이때 PlayerState를 찾게되는데 초기화 함수들이 호출되는 시점에 PlayerState가 없다면 PlayerState가 생성되는 시점을 알아서 찾아서 
+	호출이 됩니다. 그리고 기본 Pawn을 설정하고 그 후 HandleStartingNewPlayer_Implementation 을 호출하면서 그 플레이어의 정보를 세팅해주게 됩니다. 
+
+	근데 이 흐름에서 CallOrRegister_OnExperienceLoaded로 델리게이트를 신청을 했는데 SpawnPlayerActor 부터 HandleStartingNewPlayer_Implementation 까지 호출하는게 한 프레임입니다. 
+	하지만 CallOrRegister_OnExperienceLoaded을 해놨던 Experience가 그 한프레임 내에 로딩이 됐을리가 없습니다. 원하는건 Experience 가 로딩이 되서 그 안에 있는 데이터로 플레이어를 
+	스폰하기를 원합니다. 
+
+	그렇게 하기 위해서 플레이어스폰 이하의 함수들을 오버라이딩으로 만들어 Experience 가 로딩될때까지 막아둘겁니다. Experience 로딩이 된 후 맨 마지막에 ReStartPlayerAtPlayerStart 라는 함수를 호출해주면서 
+	SpawnPlayerActor 시점부터 다시 시작하도록 하는게 지금 Experience 로딩 코드의 큰 흐름입니다. 
+
+	지금 해볼건 PawnData를 PlayerState에서 저장하고 있을겁니다. 
+
+	virtual void PostInitializeComponents() final;
+
+	void OnExperienceLoaded(const ULcExperienceDefinition* CurrentExperience);
+
+	UPROPERTY()
+	TObjectPtr<const ULcPawnData> PawnData;
+	
+	일단 이렇게 3가지를 추가했습니다. 그런데 여기서 한가지 의문이 들 수 있습니다. PawnData 를 PlayerState에서 또 관리를 해야하나 라는 생각이 들 수 있는데 PlayerState 전에 
+	LcExperienceDefinition 에서 이미 DefaultPawnData 라고 PawnData를 이미 들고있기 때문입니다. 
+
+	왜 PlayerState 에서 따로 PawnData를 관리하고 있냐면 나중에 여기서 GameAbilitySystemComponent 라는 것을 만들어 붙혀 줄겁니다. 이게 능력같은걸 부여할 수 있는 컴포넌트라고 할 수 있는데 
+	PlayerState 의 PawnData 를 참조해서 GameAbilitySystemComponent 가 능력을 부여 할것 입니다. 
+
+	추가한 함수들을 보면 PostInitializeComponents 에서는 초기화가 완료된 시점이고 OnExperienceLoaded 함수는 Experience 가 로딩이 완료된 후에 PawnData 를 캐싱할것이기 때문에 있습니다. 
+		
+	void ALcPlayerState::PostInitializeComponents()
+	{
+		Super::PostInitializeComponents();
+
+		const AGameStateBase* GameState = GetWorld()->GetGameState();
+		check(GameState);
+
+		ULcExperienceManagerComponent* ExperienceManagerComponent = GameState->FindComponentByClass<ULcExperienceManagerComponent>();
+		check(ExperienceManagerComponent);
+
+		ExperienceManagerComponent->CallOrRegister_OnExperienceLoaded(FOnLcExperienceLoaded::FDelegate::CreateUObject(this, &ThisClass::OnExperienceLoaded));
+	}
+	PostInitializeComponents 함수를 읽어보겠습니다. 월드로 부터 GameState를 추출해와서 GameState 라는 변수를 만들고 유효성을 체크합니다. 
+	그리고 나서는 Experience를 로딩하는 클래스인 ULcExperienceManagerComponent도 추출해와서 ExperienceManagerComponent 라는 이름의 변수로 만듭니다. 이것역시 체크를 하고 
+	ExperienceManagerComponent의 멤버 함수 CallOrRegister_OnExperienceLoaded는 델리게이트를 거는 함수였습니다. 만약 이미 로드 되어있다면 바로 처리하고 아니라면 비동기 방식으로 호출하고 있었습니다. 
+
+	다음은 PawnData 를 조금 구성해보겠습니다. 
+	UCLASS()
+	class LC_5_5_API ULcPawnData : public UPrimaryDataAsset
+	{
+		GENERATED_BODY()
+	public:
+		ULcPawnData(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+		/** Pawn의 Class */
+		UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Lc|Pawn")
+		TSubclassOf<APawn> PawnClass;
+		
+	};
+	이렇게 PawnClass 를 만든 다음 언리얼에디터를 실행해보겠습니다.
+
+	컨텐츠 드로워창에서 Characters/Heroes 위치에 LcCharacter 를 상속받은 블루프린트를 생성해줍니다. B_SimpleHeroPawn 이라고 짓고 메시에 실린더 스피어 를 추가해 대충 사람처럼 만들었습니다.
+	이 폰의 데이터는 LcExperienceDefinition를 상속받았던 B_LyraDefaultExperience 에서 데이터를 관리하다 초기화를 해줄건데 아직 안들고 있습니다. 
+	이걸 추가하기 위해 다시 Characters/Heroes/SimplePawnData 디렉토리를 하나 추가하고 여기에 데이터 에셋을 하나 만들건데 Lc Pawn Data 를 상속받아서 SimplePawnData 이름으로 만들어주었습니다. 
+	이러면 위에서 추가했던 PawnClass 를 설정할 수 있는데 이걸 B_SimpleHeroPawn 로 설정합니다. 
+
+	이 상태에서 B_LyraDefaultExperience 로 가면 Default Pawn Data 를 방금 만든 SimplePawnData 로 설정 할 수 있게 됩니다.
+
+	여기까지의 구조를 다시 보자면 DA_ExamplePlaylist 에서 MapId는 L_DefaultEditorOverview, ExperienceId는 B_LyraDefaultExperience 로 설정이 되고 
+	B_LyraDefaultExperience 에는 Default Pawn Data로 SimplePawnData가 설정이 되어있습니다. 또 따라가서 SimplePawnData 에서는 B_SimpleHeroPawn 가 PawnClass 로 설정이 되어있다는 겁니다. 
+
+	이 시점에서 게임을 실행시켜서 보면 포탈만 스폰되어있는 맵이 뜨는데 아웃라이너를 살펴보면 Lc Character가 스폰이 되어있습니다. 왜 이러냐면 
+	라이라 실행 순서를 봤을때 Experience 가 아직 로딩이 안되도 SpawnPlayerActor 가 호출되어서 인데 이 이하 부분을 Experience 가 로딩된 후 부터  호출되도록 막아주도록 하고 하겠습니다. 
+
+	LcGameModeBase로 와서 두가지 함수를 만들겁니다. 
+	
+	/* HandleStartingNewPlayer */
+	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) final;
+
+	/* SpawnDefaultPawnAtTransform */
+	virtual APawn* SpawnDefaultPawnAtTransform_Implementation(AController* NewPlayer, const FTransform& SpawnTransform) final;
+
+	HandleStartingNewPlayer_Implementation 함수는 블루프린트로도 사용가능하고 C++에서도 가능합니다. 그런데 뒤에 _Implementation 이 붙어 있으면 C++을 우선적으로 사용하고 아니라면 블루프린트로 사용합니다.
+	HandleStartingNewPlayer_Implementation 에서는 현재 Experience가 로딩이 됐는지를 체크하고 로딩이 됐을경우에 기존 Super::HandleStartingNewPlayer_Implementation을 하도록 하면됩니다. 
+	이 Experience 가 로딩이 되었는지를 체크하는건 LcExperienceManagerComponent::IsExperienceLoaded 에서 확인 할 수 있었기 때문에 LcGameModeBase 에서도 함수 하나를 만들어 줍니다. 
+		
+	bool ALcGameModeBase::IsExperienceLoaded() const
+	{
+		check(GameState);
+		ULcExperienceManagerComponent* ExperienceManagerComponent = GameState->FindComponentByClass<ULcExperienceManagerComponent>();
+		check(ExperienceManagerComponent);
+
+		return ExperienceManagerComponent->IsExperienceLoaded();
+	}
+
+	void ALcGameModeBase::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
+	{
+		if (IsExperienceLoaded())
+		{
+			Super::HandleStartingNewPlayer_Implementation(NewPlayer);
+		}
+	}
+
+	그리고 SpawnDefaultPawnAtTransform_Implementation 는 Pawn이 스폰된 후에 호출되는 함수인데 이때 로그를 하나 찍어보면 Pawn이 스폰되었는지를 확인 할 수 있어서 오버라이딩해봤습니다.
+		
+	APawn* ALcGameModeBase::SpawnDefaultPawnAtTransform_Implementation(AController* NewPlayer, const FTransform& SpawnTransform)
+	{
+		UE_LOG(LogLC, Log, TEXT("SpawnDefaultPawnAtTransform_Implementation is called!"));
+		return Super::SpawnDefaultPawnAtTransform_Implementation(NewPlayer, SpawnTransform);
+	}
+
+	SpawnDefaultPawnAtTransform_Implementation는 HandleStartingNewPlayer_Implementation를 수정하기 전후로 테스트하기 위해서 만든 오버라이딩이었습니다. 
 }

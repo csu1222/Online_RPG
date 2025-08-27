@@ -14,7 +14,7 @@ PRAGMA_DISABLE_DEPRECATION_WARNINGS
 #endif
 #define LC_5_5_LcPlayerState_generated_h
 
-#define FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Player_LcPlayerState_h_15_INCLASS_NO_PURE_DECLS \
+#define FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Player_LcPlayerState_h_18_INCLASS_NO_PURE_DECLS \
 private: \
 	static void StaticRegisterNativesALcPlayerState(); \
 	friend struct Z_Construct_UClass_ALcPlayerState_Statics; \
@@ -23,7 +23,7 @@ public: \
 	DECLARE_SERIALIZER(ALcPlayerState)
 
 
-#define FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Player_LcPlayerState_h_15_ENHANCED_CONSTRUCTORS \
+#define FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Player_LcPlayerState_h_18_ENHANCED_CONSTRUCTORS \
 	/** Standard constructor, called after all reflected properties have been initialized */ \
 	NO_API ALcPlayerState(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()); \
 private: \
@@ -37,12 +37,12 @@ public: \
 	NO_API virtual ~ALcPlayerState();
 
 
-#define FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Player_LcPlayerState_h_12_PROLOG
-#define FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Player_LcPlayerState_h_15_GENERATED_BODY \
+#define FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Player_LcPlayerState_h_15_PROLOG
+#define FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Player_LcPlayerState_h_18_GENERATED_BODY \
 PRAGMA_DISABLE_DEPRECATION_WARNINGS \
 public: \
-	FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Player_LcPlayerState_h_15_INCLASS_NO_PURE_DECLS \
-	FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Player_LcPlayerState_h_15_ENHANCED_CONSTRUCTORS \
+	FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Player_LcPlayerState_h_18_INCLASS_NO_PURE_DECLS \
+	FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Player_LcPlayerState_h_18_ENHANCED_CONSTRUCTORS \
 private: \
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
