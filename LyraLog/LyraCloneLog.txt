@@ -857,4 +857,268 @@ Lyra 는 에픽게임즈에서 공식으로 배포하는 게임 프로젝트로 
 	}
 
 	SpawnDefaultPawnAtTransform_Implementation는 HandleStartingNewPlayer_Implementation를 수정하기 전후로 테스트하기 위해서 만든 오버라이딩이었습니다. 
+
+
+	HandleStartingNewPlayer_Implementation 에서 Experience가 로딩될때까지 Pawn을 스폰하지 않도록 막아 뒀는데 지금 상태의 코드로는 계속 막혀 있을것이기 때문에 
+	Experience 로딩 코드를 만들어야 합니다. 
+
+	HandleStartingNewPlayer_Implementation 을 호출한 다음은 프레임이 하나 넘어갔습니다. 그 후 순서는 HandleMatchAssignmentIfNotExpectingOne -> OneMatchAssignmentGiven -> 
+	ExperienceManagerComponent->ServerSetCurrentExperience -> StartExperienceLoad -> FStreamableDelegate::CreateUObject(this, &ThisClass::OnExperienceLoadComplete)
+	순으로 코드가 진행될것입니다.
+
+	지금까지 Experience 가 로딩되면 호출하도록 델리게이트를 걸어놨는데 정작 로딩은 어디서 하는지를 안만들어 놨습니다. 
+	어디서 로딩을 시작할거냐면 지금 라이라 프로젝트를 만들면서 초반에 만들었던 오버라이드 함수 HandleMatchAssignmentIfNotExpectingOne 에서 할겁니다. 
+
+	void ALcGameModeBase::HandleMatchAssignmentIfNotExpectingOne()
+	{
+		// 해당 함수에서는 우리가 로딩할 Experience에 대해 PrimaryAssetId를 생성하여, OnMatchAssignmentGiven으로 넘겨준다
+
+		FPrimaryAssetId ExperienceId;
+
+		// precedence order (highest wins)
+		// - matchmaking assignment (if present)
+		// - default experience
+
+		UWorld* World = GetWorld();
+
+		// fall back to the default experience
+		// 일단 기본 옵션으로 default하게 B_HakDefaultExperience로 설정놓자
+		if (!ExperienceId.IsValid())
+		{
+			ExperienceId = FPrimaryAssetId(FPrimaryAssetType("LcExperienceDefinition"), FName("B_LcDefaultExperience"));
+		}
+
+		// 필자가 이해한 HandleMatchAssignmentIfNotExpectingOne과 OnMatchAssignmentGiven()은 아직 직관적으로 이름이 와닫지 않는다고 생각한다
+		// - 후일, 어느정도 Lyra가 구현되면, 해당 함수의 명을 더 이해할 수 있을 것으로 예상한다
+		OnMatchAssignmentGiven(ExperienceId);
+	}
+	코드를 보면 FPrimaryAssetId 객체 ExperienceId 를 만들고 IsValid() 가 아니라면 FPrimaryAssetId 값을 넣어줄겁니다. 이때 IsVaild 체크는 무조건 통과합니다. 왜냐면 
+	객체를 만들자 마자 아무것도 안넣어 준 상태로 조건문을 걸기 때문입니다. 
+	ExperienceId 에 FPrimaryAssetId를 넣을때 타입을 LcExperienceDefinition으로 넣고 이름을 B_LcDefaultExperience 로 넣었습니다. 
+	B_LcDefaultExperience 는 이전에 LcExperienceDefinition 을 상속받은 블루프린트를 만들었었습니다. 
+	
+	ExperienceId 에 기본타입의 LcExperienceDefinition 을 넣어주고 있는겁니다. 
+	그런데 이 ExperienceId = FPrimaryAssetId(FPrimaryAssetType("LcExperienceDefinition"), FName("B_LcDefaultExperience"));
+	코드가 Experience 를 로딩하고 있는것은 아닙니다. 
+
+	블루프린트 B_ExperienceList3D 에서 포탈을만들때 먼저 LcUserFacingExperience 타입의 PrimaryAssetId 들을 가져와 비동기로딩을 해서 UserFacingExperienceList 라는 리스트에 추가를 했었습니다.
+	그 후에 적절한 위치에 로딩해 리스트에 담아놓은 LcUserFacingExperience 들을 포탈의 형태로 스폰했었습니다. 
+
+	이렇듯이 위에 ExperienceId 를 FPrimaryAssetId 로 Id를 가져오는것은 스캔되어있는 Experience 들을 설정하기 위해 Id를 가져오는겁니다. 
+	지금 보는 함수이름이 HandleMatchAssignmentIfNotExpectingOne 인 이유는 과제를 골라주는데 적어도 하나는 골라주도록 핸들링하는것입니다.
+	본래 라이라 프로젝트에서는 이 함수에서 여러 조건에 따라 그에 맞는 ExperienceId 를 가져왔는데 지금은 그냥 가장 기본 ExperienceId를 가져오는겁니다. 
+	
+	그리고 이렇게 구한 ExperienceId 를 가지고 OnMatchAssignmentGiven 라는 함수를 호출합니다. 이 함수를 구현해보겠습니다.
+
+	void ALcGameModeBase::OnMatchAssignmentGiven(FPrimaryAssetId ExperienceId)
+	{
+		// 해당 함수는 ExperienceManagerComponent을 활용하여 Experience을 로딩하기 위해, ExperienceManagerComponent의 ServerSetCurrentExperience를 호출한다
+
+		check(ExperienceId.IsValid());
+
+		ULcExperienceManagerComponent* ExperienceManagerComponent = GameState->FindComponentByClass<ULcExperienceManagerComponent>();
+		check(ExperienceManagerComponent);
+		ExperienceManagerComponent->ServerSetCurrentExperience(ExperienceId);
+	}
+	코드를 읽어보면 일단 인자로 받은 ExperienceId 가 유효한지 체크 후 LcExperienceManagerComponent 를 가져오고 체크. 그리고 가져온 ExperienceManagerComponent의 멤버 함수 
+	ServerSetCurrentExperience(ExperienceId) 를 호출합니다. 
+	
+	이 ServerSetCurrentExperience 를 보겠습니다. 라이라 프로젝트는 원래 데디케이트 서버기반으로 동작합니다. 서버 클라이언트간 통신에서는 서로 패킷을 만들어 주고 받으면서 네트워킹을 하는데 
+	원래 GameMode 라는것은 클라이언트가 아니라 서버쪽에 위치합니다. 그리고 이 GameMode 에서 지금 이 ExperienceLoad 를 진행하고 있었습니다. 그래서 함수이름에 Server 가 들어가는겁니다. 
+
+	그리고 직접적인 Experience 로딩을 GameMode 에서 직접 하는게 아니라 ExperienceManagerComponent 로 넘겨주고 있습니다. 
+
+	void ULcExperienceManagerComponent::ServerSetCurrentExperience(FPrimaryAssetId ExperienceId)
+	{
+		ULcAssetManager& AssetManager = ULcAssetManager::Get();
+
+		TSubclassOf<ULcExperienceDefinition> AssetClass;
+		{
+			FSoftObjectPath AssetPath = AssetManager.GetPrimaryAssetPath(ExperienceId);
+			AssetClass = Cast<UClass>(AssetPath.TryLoad());
+		}
+
+		// 왜 CDO를 가져오는 걸까?
+		const ULcExperienceDefinition* Experience = GetDefault<ULcExperienceDefinition>(AssetClass);
+		check(Experience != nullptr);
+		check(CurrentExperience == nullptr);
+		{
+			// 그리고 CDO로 CurrentExperience를 설정한다!
+			// 어떤 의도로 이렇게 코드를 작성한지는 코드를 쭉 읽어보고(StartExperienceLoad까지 읽어보자) 다시 생각해보자:
+			CurrentExperience = Experience;
+		}
+
+		StartExperienceLoad();
+	}
+	이 함수에서는 먼저 오버라이딩으로 만든 LcAssetManager 를 가져옵니다.
+	AssetClass 를 만들었는데 TSubclassOf 란 템플릿으로 넘겨준 타입의 클래스를 상속받은 하위 클래스만 담을 수 있는 객체였습니다. 
+	그래서 그 아래 대괄호에서 ExperienceId 의 경로를 가져오고 그 경로를 TryLoad() 함수로 동기화 식으로 로딩을 하고 있습니다. 
+	
+	결론적으로는 ExperienceId 라고 하는 이 FPrimaryAssetId 는 LcGameModeBase::InitGame 에서 다음 프레임에 실행되도록 호출했던 
+	LcGameModeBase::HandleMatchAssignmentIfNotExpectingOne 함수로부터 LcExperienceDefinition 타입의 B_LcDefaultExperience 라는 이름의 기본 LcExperienceDefinition 의 아이디를 
+	ExperienceId 라는 변수로 받아서 LcGameModeBase::OnMatchAssignmentGiven 을 통해 호출된 LcExperienceManagerComponent::ServerSetCurrentExperience 까지 넘어온 아이디를 
+	TryLoad 로 비동기 로딩을 실행한것입니다. 
+	로딩이 끝난후에 AssetClass 변수에 저장을 합니다. 
+
+	다음 코드에서 AssetClass 를 GetDefault 함수에 인자로 넣고 호출합니다. 이 GetDefault 함수는 CDO(Class Default Object)형식으로 가져오는함수입니다. 
+	가져온 CDO 를 const ULcExperienceDefinition* Experience 라는 변수에 저장을 하고 체크를 한번하고 CurrentExperience 에 저장합니다. 
+
+	이러면 B_LcDefaultExperience 가 로딩이 됐고 LcExperienceManagerComponent 의 CurrentExperience 에 저장도 되었는데 마지막 줄에 이어서 
+	StartExperienceLoad(); 함수가 호출됩니다. 
+
+	로딩을 진행했는데 왜 또 로딩을 할까요?
+
+	일단 구현을 해보겠습니다. 
+	이번에 추가할 함수의 시그니처만 먼저 보면 
+	void StartExperienceLoad();
+	void OnExperienceLoadComplete();
+	void OnExperienceFullLoadCompleted();
+	이렇게 3가지 함수를 추가할겁니다. 
+	이 시점에 LcExperienceManagerComponent.cpp 상단에 헤더하나를 추가해줘야합니다. 
+
+	#include "GameFeaturesSubsystemSettings.h"
+
+	먼저 StartExperienceLoad 입니다. 
+	void ULcExperienceManagerComponent::StartExperienceLoad()
+	{
+		check(CurrentExperience);
+		check(LoadState == ELcExperienceLoadState::Unloaded);
+
+		LoadState = ELcExperienceLoadState::Loading;
+
+		ULcAssetManager& AssetManager = ULcAssetManager::Get();
+
+		// 이미 앞서, ServerSetCurrentExperience에서 우리는 ExperienceId를 넘겨주었는데, 여기서 CDO를 활용하여, GetPrimaryAssetId를 로딩할 대상으로 넣는다!
+		// - 왜 이렇게 하는걸까?
+		// - GetPrimaryAssetId를 좀 더 자세히보자:
+		// - GetPrimaryAssetId를 살펴봄으로써, 아래의 두가지를 알 수 있다:
+		//   1. 우리는 B_LcDefaultExperience를 BP로 만든 이유
+		//   2. CDO를 가져와서, GetPrimaryAssetId를 호출한 이유
+
+		// 우리는 앞서 이미 CDO로 로딩하여, CDO를 사용하지 않고 CDO를 사용하여 로딩할 에셋을 지정하여, BundleAssetList에 추가해준다!
+
+		TSet<FPrimaryAssetId> BundleAssetList;
+		BundleAssetList.Add(CurrentExperience->GetPrimaryAssetId());
+
+		// load assets associated with the experience
+		// 아래는 우리가 후일 GameFeature를 사용하여, Experience에 바인딩된 GameFeature Plugin을 로딩할 Bundle 이름을 추가한다:
+		// - Bundle이라는게 후일 우리가 로딩할 에셋의 카테고리 이름이라고 생각하면 된다 (일단 지금은 넘어가자 후일, 또 다룰 것이다!)
+		TArray<FName> BundlesToLoad;
+		{
+			// 여기서 주목해야 할 부분은 OwnerNetMode가 NM_Standalone이면? Client/Server 둘다 로딩에 추가된다!
+			const ENetMode OwnerNetMode = GetOwner()->GetNetMode();
+			bool bLoadClient = GIsEditor || (OwnerNetMode != NM_DedicatedServer);
+			bool bLoadServer = GIsEditor || (OwnerNetMode != NM_Client);
+			if (bLoadClient)
+			{
+				BundlesToLoad.Add(UGameFeaturesSubsystemSettings::LoadStateClient);
+			}
+			if (bLoadServer)
+			{
+				BundlesToLoad.Add(UGameFeaturesSubsystemSettings::LoadStateServer);
+			}
+		}
+
+		FStreamableDelegate OnAssetsLoadedDelegate = FStreamableDelegate::CreateUObject(this, &ThisClass::OnExperienceLoadComplete);
+
+		// 아래도, 후일 Bundle을 우리가 GameFeature에 연동하면서 더 깊게 알아보기로 하고, 지금은 앞서 B_LcDefaultExperience를 로딩해주는 함수로 생각하자
+		TSharedPtr<FStreamableHandle> Handle = AssetManager.ChangeBundleStateForPrimaryAssets(
+			BundleAssetList.Array(),
+			BundlesToLoad,
+			{}, false, FStreamableDelegate(), FStreamableManager::AsyncLoadHighPriority);
+
+		if (!Handle.IsValid() || Handle->HasLoadCompleted())
+		{
+			// 로딩이 완료되었으면, ExecuteDelegate를 통해 OnAssetsLoadedDelegate를 호출하자:
+			// - 아래의 함수를 확인해보자:
+			FStreamableHandle::ExecuteDelegate(OnAssetsLoadedDelegate);
+		}
+		else
+		{
+			Handle->BindCompleteDelegate(OnAssetsLoadedDelegate);
+			Handle->BindCancelDelegate(FStreamableDelegate::CreateLambda([OnAssetsLoadedDelegate]()
+				{
+					OnAssetsLoadedDelegate.ExecuteIfBound();
+				}));
+		}
+
+		// FrameNumber를 주목해서 보자
+		static int32 StartExperienceLoad_FrameNumber = GFrameNumber;
+	}
+	코드 위에서부터 읽어보자면 일단 CurrentExperience가 유효한지, 지금 ELcExperienceLoadState가 Unloaded 인지를 체크합니다. 
+	이 체크를 통과했다면 먼저 LoadState를 Loading 으로 변경합니다. 
+
+	다음으로 BundleAssetList 라는 TSet에 CurrentExperience->GetPrimaryAssetId 를 넣어주고 있습니다. 
+	BundleAssetList 가 TSet<FPrimaryAssetId> 타입의 컨테이너였는데 이 FPrimaryAssetId는 위에서 LcGameModeBase::HandleMatchAssignmentIfNotExpectingOne 에서 
+	직접 하드코딩으로 B_LcDefaultExperience 의 아이디를 가져왔었습니다. 
+	이것을 하드코딩이 아니라 GetPrimaryAssetId() 함수로 가져올 수 있습니다. 
+
+	이후로 다시 TArray<FName> BundleToLoad 라는 배열이 있고
+
+	const ENetMode OwnerNetMode = GetOwner()->GetNetMode();
+	bool bLoadClient = GIsEditor || (OwnerNetMode != NM_DedicatedServer);
+	bool bLoadServer = GIsEditor || (OwnerNetMode != NM_Client);
+
+	OwnerNetMode를 통해 bLoadClient, bLoadServer 라는 불리언 값 두개를 가져옵니다. 각각 GIsEditor 부분은 에디터 모드에서 실행중인지의 불리언값인데 무시하고 진행해도 됩니다.
+	OwnerNetMode 가 NM_DedicatedServer 가 아니면 클라이언트인것이고 맞다면 서버인것이라는 겁니다. 
+	이 두 불리언 값으로 조건문을 걸어서 BundleToLoad 에 값을 채웁니다. OwnerNetMode 가 클라이언트라면 UGameFeaturesSubsystemSettings::LoadStateClient, 서버라면 
+	UGameFeaturesSubsystemSettings::LoadStateServer 라고 Add 를 하고 있습니다. 
+	이게 무슨 값이냐면 사실 
+	LoadStateClient 는 TEXT("Client");
+	LoadStateServer 는 TEXT("Server");
+	입니다. 
+	즉, BundleToLoad 에 Client, Server 라는 FName 이 들어간겁니다. 
+
+	다음은 델리게이트를 걸어줍니다. 
+
+	FStreamableDelegate OnAssetsLoadedDelegate = FStreamableDelegate::CreateUObject(this, &ThisClass::OnExperienceLoadComplete);
+	OnExperienceLoadComplete 라는 함수를 델리게이트로 거는데 명칭을보면 Experience가 로드가 완료된 후 발생되는 함수같습니다. 
+
+	왜 이 함수를 델리게이트 걸어야하는지는 이 밑 코드 부터 보고 오겠습니다.
+	밑의 코드는 AssetManager::ChangeBundleStateForPrimaryAssets 라는 함수를 호출하고 있습니다. 이 함수가 하는일은 주어진 Asset 목록에 대해 번들 상태를 변경하고, 필요에 따라 
+	Asset을 비동기적으로 로딩하고, 로드가 완료되면 인자로 준 델리게이트 함수를 호출합니다. 
+	이때 첫번째 인자로 TArray<FPrimaryAssetId> 를 받고 있어서 위의 BundleAssetList를 만들고 BundleAssetList.Array() 로 변환해 인자로 넣어주고 있습니다. 
+
+	분명 ServerSetCurrentExperience 에서 B_LcDefaultExperience의 경로로 TryLoad를 했는데 여기서 왜 다시 로드하냐면 
+	라이라는 많은 에셋을 관리할 수 있는 시스템입니다. 
+	이때 BundleToLoad 가 뭔지 이해를 해야하는데 지금 코드에서는 그냥 Client, Server 라는 문자열만 가지고 있을 수 있는데 
+	만약 어떤 LcExperienceDefinition 이 가지고 있는 데이터가 많다고 해보겠습니다. 직업 데이터들을 가지고 있어서 전사,법사,궁수 등등의 데이터를 가지고 있는데 
+	이중에 전사 라는 카테고리의 데이터만 로딩하고 싶은겁니다. 전사 관련 데이터만 필요한데 모든 직업의 데이터를 다 로딩하는건 비효율적이기 때문인데 
+	이럴때 사용하는게 ChangeBundleStateForPrimaryAssets 함수입니다. 
+
+	ChangeBundleStateForPrimaryAssets 으로 전사와 관련된 데이터를 로딩하고 싶다면 BundleAssetList 에 직업에 대한 LcExperienceDefinition 의 PrimaryAssetId 를 넣고 
+	BundleToLoad 에는 "전사" 라는 FName을 넣는겁니다. 그리고 ChangeBundleStateForPrimaryAssets 의 두번째 인자로 넣습니다. 
+	그러면 ChangeBundleStateForPrimaryAssets 함수 내부에서 BundleToLoad 로 넘겨준 번들네임과 같은 것을 찾아 ExistingHandle.Add 로 무언가 진행합니다. 
+
+	즉, BundleAssetList 이라는 LcExperienceDefinition에서 BundleToLoad 와 관련된 데이터만 로딩하는게 ChangeBundleStateForPrimaryAssets 라는겁니다. 
+	그런데 이전에 LcExperienceDefinition 에서 들고 있는 데이터인 DefaultPawnData, GameFeaturesToEnable 은 번들을 지정하지 않았었습니다. 나중에 이 번들을 지정해줄건데 
+	만약 전사라는 번들을 로드하고 싶다고 인자를 넣으면 현재 B_LcDefaultExperience 에서는 그에 해당하는 데이터가 없는겁니다. 
+
+	지금 우리코드로는 이제 Server 혹은 Client 라는 번들을 가진 데이터를 모두 로드하게될겁니다.
+	라이라 프로젝트의 경우 데디케이트 서버 방식으로 되어있기때문에 클라이언트에서만 로드 필요한게 있을수 있고 서버쪽 에서만 필요한게 나눠져 있을건데 그걸 대비한 코드가 지금 코드입니다. 
+	
+	그런데 ChangeBundleStateForPrimaryAssets 는 이 로딩이 비동기 로딩이라고 했는데 그래서 이어서 핸들을 가지고 조건문을 걸어 
+	지금 로드가 완료되었는지를 체크하고 있습니다. 로드가 바로 완료되었다면 OnExperienceLoadComplete 를 델리게이트로 만들어 놨던걸 ExecuteDelegate를 호출하고 
+	만약 비동기로딩이 아직 완료 되어 있지 않다면 BindCompleteDelegate 를 걸고 만약에 ChangeBundleStateForPrimaryAssets 의 비동기 호출이 실패했더라도 델리게이트를 걸어줍니다. 
+
+	여기서 델리게이트를거는 OnExperienceLoadComplete 는 하는일이 굳이 OnExperienceFullLoadCompleted를 다시 호출해주고 있습니다. 
+	왜이러냐면 지금 만드는 프로젝트가 라이라의 아주 초창기 버전이기 때문에 로딩할게 많이 없는데 원본같은경우는 여기서 많은 것들을 로드하고 FullLoad 로 넘겨줍니다. 
+
+	OnExperienceFullLoadCompleted 에서 하는 일은 LoadState를 Loaded로 설정하고 OnExperienceLoaded.Broadcast를 해줍니다. 
+	OnExperienceLoaded 가 뭐였냐면 LcExperienceDefinition 를 델리게이트로 만든것이었습니다. 이 델리게이트가 걸린게 어디였냐면 
+	LcGameModeBase::InitGameState 에서 GameState 가 로드되면 CallOrRegister_OnExperienceLoaded 로 OnExperienceLoaded를 호출하도록 걸었고 
+	또 LcPlayerState::PostInitializeComponents 에서 PlayerState가 로딩된 후 CallOrRegister_OnExperienceLoaded 로 OnExperienceLoaded를 호출하도록 했었습니다.  
+
+	
+	마지막으로 지금까지 했던 Experience Load 진행을 한번 쭉 따라가면서 복기 해보겠습니다. 
+	처음 시작점은 LcGameModeBase::InitGame 입니다. 여기서 다음프레임에 HandleMatchAssignmentIfNotExpectingOne 를 실행하도록 요청을 합니다. 
+	다음프레임에 실행된 HandleMatchAssignmentIfNotExpectingOne 에서는 LcExperienceDefinition 타입의 B_LcDefaultExperience 의 PrimaryAssetId를 가져옵니다.
+	이걸 OnMatchAssignmentGiven으로 인자로 주고 여기서 LcExperienceManagerComponent::ServerSetCurrentExperience 쪽으로 넘겨줍니다. 
+	ServerSetCurrentExperience 에서는 AssetManager를 가져와 ExperienceId 가 스캔된다면 그 경로를 가져와 TryLoad로 동기화 로딩을 합니다. 
+	B_LcDefaultExperience 블루프린트가 로딩이 되는건데 로딩후 GetDefault 함수를 통해 CDO를 가져와 이 상태에서 CurrentExperience 로 들고 있게 됩니다.
+	이어서 StartExperienceLoad를 진행합니다. 여기서는 BundleAssetList 와 BundleToLoad 를 통해 원하는 특정 번들을 로드하도록 요청을 합니다. 
+	이로딩이 전부 완료되었으면 OnExperienceLoadComplete 를 호출후 이어서 OnExperienceFullLoadCompleted 를 호출 여기서 OnExperienceLoaded의 Broadcast를 해주게 됩니다. 
+
+	여기서 아직 해결되지 않은 부분이 있는데 왜 ExperienceId를 가져올때 블루프린트인 B_LcDefaultExperience 를 만들어 사용했는지와 CurrentExperience 를 로드된 Experience의 CDO를
+	가져왔는지 입니다. 
 }

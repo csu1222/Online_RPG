@@ -70,15 +70,26 @@ void ALcGameModeBase::HandleMatchAssignmentIfNotExpectingOne()
 	UWorld* World = GetWorld();
 
 	// fall back to the default experience
-	// 일단 기본 옵션으로 default하게 B_HakDefaultExperience로 설정놓자
+	// 일단 기본 옵션으로 default하게 B_LcDefaultExperience로 설정놓자
 	if (!ExperienceId.IsValid())
 	{
-		ExperienceId = FPrimaryAssetId(FPrimaryAssetType("HakExperienceDefinition"), FName("B_HakDefaultExperience"));
+		ExperienceId = FPrimaryAssetId(FPrimaryAssetType("LcExperienceDefinition"), FName("B_LcDefaultExperience"));
 	}
 
 	// 필자가 이해한 HandleMatchAssignmentIfNotExpectingOne과 OnMatchAssignmentGiven()은 아직 직관적으로 이름이 와닫지 않는다고 생각한다
 	// - 후일, 어느정도 Lyra가 구현되면, 해당 함수의 명을 더 이해할 수 있을 것으로 예상한다
-	//OnMatchAssignmentGiven(ExperienceId);
+	OnMatchAssignmentGiven(ExperienceId);
+}
+
+void ALcGameModeBase::OnMatchAssignmentGiven(FPrimaryAssetId ExperienceId)
+{
+	// 해당 함수는 ExperienceManagerComponent을 활용하여 Experience을 로딩하기 위해, ExperienceManagerComponent의 ServerSetCurrentExperience를 호출한다
+
+	check(ExperienceId.IsValid());
+
+	ULcExperienceManagerComponent* ExperienceManagerComponent = GameState->FindComponentByClass<ULcExperienceManagerComponent>();
+	check(ExperienceManagerComponent);
+	ExperienceManagerComponent->ServerSetCurrentExperience(ExperienceId);
 }
 
 bool ALcGameModeBase::IsExperienceLoaded() const

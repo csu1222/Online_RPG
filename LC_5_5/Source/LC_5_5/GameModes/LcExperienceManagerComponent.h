@@ -19,7 +19,7 @@ enum class ELcExperienceLoadState
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnLcExperienceLoaded, const ULcExperienceDefinition*);
 
 /**
- * HakExperienceManagerComponent
+ * LcExperienceManagerComponent
  * - 말 그대로, 해당 component는 game state를 owner로 가지면서, experience의 상태 정보를 가지고 있는 component이다
  * - 뿐만 아니라, manager라는 단어가 포함되어 있듯이, experience 로딩 상태 업데이트 및 이벤트를 관리한다
  */
@@ -39,6 +39,11 @@ public:
 	 */
 	void CallOrRegister_OnExperienceLoaded(FOnLcExperienceLoaded::FDelegate&& Delegate);
 
+	void ServerSetCurrentExperience(FPrimaryAssetId ExperienceId);
+	void StartExperienceLoad();
+	void OnExperienceLoadComplete();
+	void OnExperienceFullLoadCompleted();
+	const ULcExperienceDefinition* GetCurrentExperienceChecked() const;
 public:
 	UPROPERTY()
 	TObjectPtr<const ULcExperienceDefinition> CurrentExperience;
