@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GameModes/LcGameModeBase.h"
-#include "GameModes/LcExperienceDefinition.h"
-#include "GameModes/LcExperienceManagerComponent.h"
+#include "LcGameModeBase.h"
+#include "LcExperienceDefinition.h"
+#include "LcExperienceManagerComponent.h"
 #include "LcGameState.h"
 #include "LcLogChannels.h"
 #include "Player/LcPlayerController.h"
@@ -39,6 +39,20 @@ void ALcGameModeBase::InitGameState()
 
 	// OnExperienceLoaded 등록
 	ExperienceManagerComponent->CallOrRegister_OnExperienceLoaded(FOnLcExperienceLoaded::FDelegate::CreateUObject(this, &ThisClass::OnExperienceLoaded));
+}
+
+UClass* ALcGameModeBase::GetDefaultPawnClassForController_Implementation(AController* InController)
+{
+	// GetPawnDataForController를 활용하여, PawnData로부터 PawnClass를 유도하자
+	if (const ULcPawnData* PawnData = GetPawnDataForController(InController))
+	{
+		if (PawnData->PawnClass)
+		{
+			return PawnData->PawnClass;
+		}
+	}
+
+	return Super::GetDefaultPawnClassForController_Implementation(InController);
 }
 
 PRAGMA_DISABLE_OPTIMIZATION
@@ -118,4 +132,39 @@ void ALcGameModeBase::OnExperienceLoaded(const ULcExperienceDefinition* CurrentE
 			}
 		}
 	}
+}
+
+const ULcPawnData* ALcGameModeBase::GetPawnDataForController(const AController* InController) const
+{
+	// 게임 도중에 PawnData가 오버라이드 되었을 경우, PawnData는 PlayerState에서 가져오게 됨
+	if (InController)
+	{
+		if (const ALcPlayerState* LcPS = InController->GetPlayerState<ALcPlayerState>())
+		{
+			// GetPawnData 구현
+			if (const ULcPawnData* PawnData = LcPS->GetPawnData<ULcPawnData>())
+			{
+				return PawnData;
+			}
+		}
+	}
+
+	// fall back to the default for the current experience
+	// 아직 PlayerState에 PawnData가 설정되어 있지 않은 경우, ExperienceManagerComponent의 CurrentExperience로부터 가져와서 설정
+	check(GameState);
+	ULcExperienceManagerComponent* ExperienceManagerComponent = GameState->FindComponentByClass<ULcExperienceManagerComponent>();
+	check(ExperienceManagerComponent);
+
+	if (ExperienceManagerComponent->IsExperienceLoaded())
+	{
+		// GetExperienceChecked 구현
+		const ULcExperienceDefinition* Experience = ExperienceManagerComponent->GetCurrentExperienceChecked();
+		if (Experience->DefaultPawnData)
+		{
+			return Experience->DefaultPawnData;
+		}
+	}
+
+	// 어떠한 케이스에도 핸들링 안되었으면 nullptr
+	return nullptr;
 }

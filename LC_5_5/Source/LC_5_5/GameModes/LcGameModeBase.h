@@ -22,6 +22,9 @@ public:
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	virtual void InitGameState() final;
 
+	/** GetDefaultPawnClassForController */
+	virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) final;
+
 	/* HandleStartingNewPlayer */
 	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) final;
 
@@ -35,4 +38,5 @@ public:
 	void OnMatchAssignmentGiven(FPrimaryAssetId ExperienceId);
 	bool IsExperienceLoaded() const;
 	void OnExperienceLoaded(const ULcExperienceDefinition* CurrentExperience);
+	const ULcPawnData* GetPawnDataForController(const AController* InController) const;
 };
