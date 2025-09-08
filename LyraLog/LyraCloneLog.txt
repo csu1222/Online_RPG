@@ -1341,3 +1341,70 @@ Lyra 는 에픽게임즈에서 공식으로 배포하는 게임 프로젝트로 
 
 	마지막으로 PlayerStart 를 배치해놓으면 그 위치에서 DefaultPlayer가 스폰되는데 그것만 배치하겠습니다. 
 }
+
+# 8 PrimaryAssetData [심화 강의]
+{
+	언리얼 에디터에서 만든 파일들을 보면 LcUserFacingExperience 을 상속받은 파일은 DataAsset 타입이고 LcExperienceDefinition 을 상속받은 파일은 블루프린트입니다. 
+	PawnData 는 DataAsset 입니다. 
+
+	왜 LcExperienceDefinition 만 블루프린트로 만들었을까요 
+	ULcExperienceManagerComponent::ServerSetCurrentExperience 에서 FPrimaryAssetId 의 CDO를 가져와 CurrentExperience로 저장했습니다. 
+
+	이때 사용한 CDO 가 무엇인지를 알아야 할 필요가 있습니다. 
+	CDO를 가져오는 방법은 GetDefault<클래스>(로드한 FPrimaryAssetId) 이 방법으로 가져올 수 있습니다. 
+	
+	CDO의 약자는 Class Default Object 입니다. 
+	언리얼프로젝트에서 StaticClass가 UClass인데 이 UClass를 리플렉스라는 기능을 이용해 메타데이터를 만든다고 했습니다.
+	여기서 CDO는 UClass의 기본값을 가진 것입니다. 
+
+	무슨말이냐면 만약 ALcCharacter에서 캐릭터의 기본 HP가 10 이라고 설정하고 멤버 변수로 들고 있게 설계를 했다면 이 값을 기본값으로 저장해서 UObject 방식으로 만든게 
+	CDO라고 보면 됩니다. 간단하게 생각해서 CDO는 UClass의 초기화 값으로 이루어진 UObject. 즉, 객체화된 오브젝트 라고 하겠습니다.
+
+	이 CDO는 없을 수 없습니다. UObject 를 상속받았다면 무조건 하나는 있을수 밖에 없다고 합니다.
+
+	그러면 CDO라는것은 왜 있는건가 싶은데 
+	가장 큰 이유는 서버와 통신패킷을 만들때 데이터를 직렬화(Serialization)를 하는데 Delta Serialization 할때 이 CDO가 쓰입니다.
+	패킷을 직렬화 할때 어떤 데이터에 변화가 있을 수 있을겁니다. 여러 데이터를 직렬화하는데 그중 기본값과 차이가 나는 데이터만 패킷으로 만들어 보내는게 훨씬 
+	효율적입니다. 이것이 Delta Serialization 입니다.
+
+	여기서 CDO와 StaticClass 가 비슷해보일 수 있지만 차이가 있는게 
+	StaticClass 는 UClass의 메타데이터의 집합인거고 CDO는 클래스의 기본값을 저장한 Instance 화 된 UObject 입니다. 
+
+	CDO가 뭔지는 알았는데 우리 코드에서 왜 사용했는지 생각해보겠습니다.
+	ServerSetCurrentExperience 함수에서 CDO 값을 const 이긴하지만 포인터로 가져왔습니다. 그 이야기는 const만 떼어내면 
+	그 기본값을 마음대로 수정 할 수도 있는 위험한 짓이라는 겁니다. 
+
+	왜 CDO를 사용했는지 알기 위해서는 ULcPawnData 가 상속받은 UPrimaryDataAsset 에 들어가 봐야합니다. 
+
+	PrimaryAssetData는 UDataAsset을 상속받았습니다. 
+	DataAsset 에서 이전 ChangeBundleStateForPrimaryAssets 에서 사용했던 AssetBundle 시스템과 GetPrimaryAssetId() 에 대한 코드가 추가적으로 구현되어있는 클래스입니다. 
+	AssetManager를 통해 Load, UnLoad 가 편리하도록 만들었습니다. 
+	
+	그래서 라이라 프로젝트에서 왜 PrimaryAssetData 를 사용하냐면 프로젝트 내에서 CurrentExperience->GetPrimaryAssetId() 하는 부분이 있습니다. 
+	이부분이 중요한데 GetPrimaryAssetId() 함수는 호출한 자신이 Native(C++) 클래스로 정의되어있다면 그 클래스를 PrimaryAssetType으로써 반환이 됩니다.
+	여기서 Native(C++) 라는것은 .cpp, .h 와 같은 확장자의 파일에 작성된 C++ 언어로 만들어진 클래스라는것입니다. 블루프린트 같은것이 아닌 
+	그런데 만약 블루프린트의 경우 두가지 방식에 따라 PrimaryAssetType으로 사용될 수 있는데 
+	하나는 부모클래스를 거슬러 올라가다가 그 중 가장 처음 만난 Native C++ 클래스로 사용하던지 
+	아니면 두번째로 가장 부모클래스까지 올라간 블루프린트 클래스로 사용해야 합니다. (아마 이 가장부모인 블루프린트 클래스는 UPrimaryDataAsset을 상속 받았을 겁니다.)
+
+	위의 규칙을 따르면 언리얼 에디터에서 만들었던 B_LcDefaultExperience 는 바로 윗 부모 클래스가 LcExperienceDefinition 이기 때문에 이 타입을 반환합니다. 
+	그러면 B_LcDefaultExperience 의 PrimaryAssetType 이 LcExperienceDefinition 인것입니다. 
+
+	GetPrimaryAssetId 가 그럼 왜 사용되는지를 알아보자면 이 함수의 구현부를 따라 들어가봤습니다. 
+	어떤 조건문에 의해 로직이 동작하는데 만약 이 조건문 없이 마지막 리턴만 보면 
+	return FPrimaryAssetId(GetClass()->GetFName(), GetFName());
+	이런 코드입니다. 이러면 이 GetPrimaryAssetId 를 호출한 객체의 타입과 이름이 똑같아 집니다. 
+
+	이게 무슨 문제인가 싶은데 언리얼 에디터를 실행해 예시를 들어보면 지금까지 LcExperienceDefinition 을 상속받은 B_LcDefaultExperience 를 GetPrimaryAssetId 을 했는데 
+	만약 타입과 이름 모두 같은 B_LcDefaultExperience 라고 하겠습니다. 
+	이러면 이 블루프린트를 스캔하는 부분에서 문제가 생깁니다. 
+	프로젝트 세팅의 에셋매니저 옵션을 보면 지금까지 스캔을 하도록 해놓은게 Map, PrimaryAssetLabel, LcExperienceDefinition, LcUserFacingExperience, GameFeatureData 입니다. 
+	이중에는 B_LcDefaultExperience 가 없습니다. 그렇다고 이 B_LcDefaultExperience 를 스캔할 타입으로 등록하게되면 앞으로 모든 블루프린트마다 등록할 수도 없으니 
+	공통된 클래스 타입으로 사용해야 스캔에 용이합니다.
+
+	GetPrimaryAssetId 는 알겠는데 그래서 왜 CDO를 사용해야 했냐면 사실은 CDO를 사용하는게 GetPrimaryAssetId 를 사용하는 조건입니다. 
+	왜냐면 GetPrimaryAssetId 의 구현부의 첫 조건문의 조건이 CDO일것입니다. 
+
+	그리고 SimplePawnData, DA_ExamplePlaylist 는 DataAsset 으로 만들었고 B_LcDefaultExperience 는 블루프린트로 만들었던 이유가 스캔해서 로딩할때 사용할 ExperienceDefinition은 
+	블루프린트로 만들어야 GetPrimaryAssetId 를 할때 PrimaryAssetType을 찾을 수 있을것이기 때문입니다. 
+}
