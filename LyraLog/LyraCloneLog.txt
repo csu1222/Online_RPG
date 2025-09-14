@@ -1408,3 +1408,182 @@ Lyra 는 에픽게임즈에서 공식으로 배포하는 게임 프로젝트로 
 	그리고 SimplePawnData, DA_ExamplePlaylist 는 DataAsset 으로 만들었고 B_LcDefaultExperience 는 블루프린트로 만들었던 이유가 스캔해서 로딩할때 사용할 ExperienceDefinition은 
 	블루프린트로 만들어야 GetPrimaryAssetId 를 할때 PrimaryAssetType을 찾을 수 있을것이기 때문입니다. 
 }
+
+# 9 InitState
+{
+	새로운 C++ 클래스를 추가해주겠습니다. 언리얼 에디터에서 C++ 클래스 추가를 하는데 GameInstance 를 상속받아서 LC_5_5/System 디렉토리 아래에 LcGameInstance 라고 만들겠습니다. 
+	하나 더 추가할겁니다. 
+	None 타입을 상속받은 LcGameplayTags 라는 이름으로 LC_5_5 디렉토리 위치에 만들어주겠습니다. 
+
+	GameplayTags 가 뭔지 부터 알아보겠습니다.
+	일단 기본으로 작성되어 있던 LcGameplayTags 헤더파일이랑 cpp 파일의 내용을 지워주고 시작하겠습니다.
+
+	게임플레이 태그가 뭔가하면 언리얼에디터를 실행해서 프로젝트 세팅에 가보면 GameplayTags 옵션이 있습니다. 
+	가보면 Gameplay Tag list 라는게 있습니다. 여러 태그가 있는데 상단 플러스 버튼을 누르면 이름, 코멘트, 소스를 작성할 수 있습니다.
+	그런데 추가할때 이름을 A.B.C 라고 입력하면 A 태그밑에 B태그 또 그 밑으로 C 태그가 있게 되는 식입니다. 
+
+	그래서 이 게임플레이 태그가 뭐냐면 쉽게말해서 Enum 이라고 할 수 있는데 체계화된 Enum입니다. 
+	Enum인데 위에서 A,B,C 가 계층화가 되듯이 계층화가 되는 Enum인것입니다. 위에서 한것처럼 언리얼에디터에서 수정할 수도 있는데 
+	단점은 에디터에서 게임플레이태그를 만들면 C++ 코드에서 태그를 사용하는게 굉장히 복잡해집니다. 불가능한것은 아닌데 매우 복잡해진다고 하고 
+	그런데 C++ 과 에디터 둘 모두에서 사용하는방법이 있는데 이 방법을 LcGameplayTags 로 만들어보겠습니다. 
+
+	LcGameplayTags 에서는 클래스가 아니라 구조체로 사용할겁니다. 
+	
+	#include "Containers/UnrealString.h"
+	#include "Containers/Map.h"
+	#include "GameplayTagContainer.h"
+	세가지 헤더를 추가해주고 
+	
+	class UGameplayTagsManager;
+	전반선언이 하나 있습니다. 
+
+	struct FLcGameplayTags
+	{
+		/**
+		* static methods
+		*/
+		static const FLcGameplayTags& Get() { return GameplayTags; }
+		static void InitializeNativeTags();
+
+		/**
+		* member methods
+		*/
+		void AddTag(FGameplayTag& OutTag, const ANSICHAR* TagName, const ANSICHAR* TagComment);
+		void AddAllTags(UGameplayTagsManager& Manager);
+
+		/**
+		* 아래의 GameplayTag는 초기화 과정 단계를 의미한다:
+		* - GameInstance의 초기화 과정에 UGameFrameworkComponentManager의 RegisterInitState로 등록되어 선형적으로(linear)하게 업데이트 된다
+		* - 이 초기화 GameplayTag는 게임의 Actor 사이에 공유되며, GameFrameworkInitStateInterface 상속받은 클래스는 초기화 상태(Init State)를 상태머신(State Machine)과 같이 관리 가능한 인터페이스를 제공한다
+		*/
+		FGameplayTag InitState_Spawned;
+		FGameplayTag InitState_DataAvailable;
+		FGameplayTag InitState_DataInitialized;
+		FGameplayTag InitState_GameplayReady;
+
+	private:
+		// static 변수 초기화는 .cpp에 해주는 것을 잊지 말기!
+		static FLcGameplayTags GameplayTags;
+	};
+
+	스태틱 함수로 Get 과 InitializeNativeTags 가 있습니다.
+	일반 퍼블릭 변수로는 네가지 FGameplayTag 가 있습니다. 
+	그리고 멤버 함수로는 AddTag, AddAllTags 가 있습니다. 
+	프라이빗 변수로 static FLcGameplayTags 타입으로 들고 있는건 싱글톤형식으로 만들었다는겁니다. 
+
+	먼저 스태틱 함수 InitializeNativeTags 를 보겠습니다. 
+
+	void FLcGameplayTags::InitializeNativeTags()
+	{
+		UGameplayTagsManager& Manager = UGameplayTagsManager::Get();
+		GameplayTags.AddAllTags(Manager);
+	}
+	UGameplayTagsManager 를 가져와서 AddAllTags 를 해주고 있습니다. 
+	
+	그럼 AddAllTags 는 뭐냐하면 
+
+	void FLcGameplayTags::AddAllTags(UGameplayTagsManager& Manager)
+	{
+		/**
+		* GameFrameworkComponentManager init state tags
+		*/
+		AddTag(InitState_Spawned, "InitState.Spawned", "1: Actor/Component has initially spawned and can be extended");
+		AddTag(InitState_DataAvailable, "InitState.DataAvailable", "2: All required data has been loaded/replicated and is ready for initialization");
+		AddTag(InitState_DataInitialized, "InitState.DataInitialized", "3: The available data has been initialized for this actor/component, but it is not ready for full gameplay");
+		AddTag(InitState_GameplayReady, "InitState.GameplayReady", "4: The actor/component is fully ready for active gameplay");
+	}
+	여기서는 또 네가지 FGameplayTag 를 AddTag 하고 있습니다. 이어서 AddTag 까지 보겠습니다. 
+
+	void FLcGameplayTags::AddTag(FGameplayTag& OutTag, const ANSICHAR* TagName, const ANSICHAR* TagComment)
+	{
+		OutTag = UGameplayTagsManager::Get().AddNativeGameplayTag(FName(TagName), FString(TEXT("(Native) ")) + FString(TagComment));
+	}
+	UGameplayTagsManager를 가져오고 각종 인자를 넣어줘서 AddNativeGameplayTag 를 하고 있습니다. 
+
+	설명을 해보자면 먼저 AddAllTags 에서 멤버변수였던 태그들을 AddTag 하고 있는데 태그들을 변수로 들고 있다고 해서 사용할 수는 없습니다.
+	에디터에 등록을 하고자 하면 AddTag 에서 하듯이 UGameplayTagsManager의 AddNativeGameplayTag 를 해줘야합니다. 
+	이때 AddNativeGameplayTag 에 넣는 인자들이 중요합니다. 
+
+	OutTag = UGameplayTagsManager::Get().AddNativeGameplayTag(FName(TagName), FString(TEXT("(Native) ")) + FString(TagComment));
+
+	OutTag는 멤버 변수로 들고 있는 태그들의 이름인 InitState_Spawned 같은것들입니다. 그리고 두번째 인자인 TagName 은 예시로 InitState.Spawned 라고 되어있는데 
+	이것이 언리얼 에디터에서 태그 추가할때 사용했던 네임입니다. 온점으로 구분되면 InitState 아래로 Spawned 가 계층화로 이어졌었는데 똑같이 동작합니다. 
+	세번째 인자인 TagComment 는 말그대로 이 태그에 대한 코멘트 입니다. 설명을 해주는 부분입니다 필수는 아닙니다.
+
+	다시 정리해보겠습니다. 
+	AddNativeGameplayTag 라는 함수를 통해 InitState.Spawned 라는 이름의 태그를 만든겁니다. 이로인해 언리얼에디터에 등록이 되는데 
+	C++코드로도 이 태그를 관리하고 싶었는데 그걸 OutTag 라는 변수로 관리할 수 있도록 넣어주는겁니다. 이 OutTag가 LcGameplayTags 의 멤버변수 태그들로 
+	들고 있을겁니다. 
+	FLcGameplayTags::InitializeNativeTags 를 호출하면 InitState_Spawned, InitState_DataAvailable, InitState_DataInitialized, InitState_GameplayReady 네가지 태그가 
+	에디터와 C++ 둘 모두에서 사용할 수 있도록 준비가 되는겁니다. 
+	어디서 이걸 호출해줄거냐면 AssetManager 에서 호출해줄겁니다. ULcAssetManager::StartInitialLoading 지금까지는 그냥 오버라이딩함수는 만들었지만 따로 뭘 추가하진 않았습니다. 
+		
+	PRAGMA_DISABLE_OPTIMIZATION
+	void ULcAssetManager::StartInitialLoading()
+	{
+		Super::StartInitialLoading();
+
+		FLcGameplayTags::InitializeNativeTags();
+	}
+	PRAGMA_ENABLE_OPTIMIZATION
+
+	이렇게 추가를 합니다. 그런데 FLcGameplayTags 객체를 만들지 않아도 사용가능한 이유가 싱글톤패턴으로 이미 자신을 static 으로 선언도 했고 InitializeNativeTags 도 
+	static 함수이기 때문에 호출이 됩니다. 
+
+	AssetManager 에서 호출된다는것은 에디터가 실행되기도 전 시점이라는걸 다시 떠올려야합니다. 
+
+	다시 에디터에서 확인해보면 태그들이 다 만들어져 있는걸 확인 할 수 있습니다. 
+
+
+	그러면 이 FLcGameplayTags 는 어디서 사용되냐면 이번에 같이 만들었던 LcGameInstance 로 가보겠습니다. 
+	두가지 멤버 함수를 만들겁니다. Init과 Shutdown 두가지 virtual 함수를 재정의 할건데 
+		
+	void ULcGameInstance::Init()
+	{
+		Super::Init();
+
+		// 앞서 정의한 InitState의 GameplayTags 등록:
+		UGameFrameworkComponentManager* ComponentManager = GetSubsystem<UGameFrameworkComponentManager>(this);
+		if (ensure(ComponentManager))
+		{
+			const FLcGameplayTags& GameplayTags = FLcGameplayTags::Get();
+
+			ComponentManager->RegisterInitState(GameplayTags.InitState_Spawned, false, FGameplayTag());
+			ComponentManager->RegisterInitState(GameplayTags.InitState_DataAvailable, false, GameplayTags.InitState_Spawned);
+			ComponentManager->RegisterInitState(GameplayTags.InitState_DataInitialized, false, GameplayTags.InitState_DataAvailable);
+			ComponentManager->RegisterInitState(GameplayTags.InitState_GameplayReady, false, GameplayTags.InitState_DataInitialized);
+		}
+	}
+	이 함수 시작하면서 만든 객체인 UGameFrameworkComponentManager 가 무슨 클래스냐면 컴포넌트를 관리해주는 클래스입니다. 
+	전에 ULcExperienceManagerComponent 가 상속받은게 UGameStateComponent 였고 또 여기서는 UGameFrameworkComponentManager를 상속받고 있습니다. 
+	여기서 컴포넌트란 부품을 이야기 하는거고 컴포넌트들은 어떤 객체 아레에 부착이 될 수 있습니다.
+	컴포넌트의 장점으로 GameFeature 시스템과 결합 되었을때 A라는 클래스와 1,2,3 이라는 컴포넌트 클래스들이 있다고 쳤을때 
+	GameFeature 가 자동으로 A 객체에 1,2,3 컴포넌트를 부착시킬수 있습니다. 
+	거기에 더해서 A에 파생된 클래스가 있다고 했을때 여기에도 알아서 컴포넌트를 부착시킬수 있습니다. 
+
+	이런 컴포넌트 시스템을 관리하는게 위의 UGameFrameworkComponentManager 에서 하는 일입니다. 
+
+	다음코드를 보면 FLcGameplayTags 에서 Get 한 후 RegisterInitState 라는 함수를 호출하고 있습니다. 
+	이 함수를 호출하는게 현재 GameplayTag 들을 C++에서 사용할 수 있도록 만든 이유입니다. 
+
+	RegisterInitState 가 무슨 역할을 하길래 이러냐면 
+	컴포넌트들은 그냥 무작위로 객체에 붙일수도 있지만 붙히는 순서가 중요할 수도 있습니다. 예를 들어 전사 객체에 컴포넌트가 붙을때 무기, 스킬, 버프 순으로 붙어야 한다고 하겠습니다.
+	무기가 먼저 붙어야 무기에 달린 스킬을 사용할 수 있고 또 이 스킬들 중에 자기 버프도 할 수 있다던가 하는 식이라고 했을때 무작위 순서로 컴포넌트들이 붙는다면 바로 크래시가 날것입니다. 
+
+	ComponentManager->RegisterInitState 의 인자들을 보면 패턴이 있습니다. 처음에는 비어있는 FGameplayTag() 와 InitState_Spawned 가 인자로 들어가 있고 
+	다음에는 InitState_Spawned 와 InitState_DataAvailable 가 들어있고 이렇게 꼬리를 물고 이어지는 패턴입니다. 
+	이렇게 순서를 지정해주는것입니다.
+
+	컴포넌트의 순서를 지금 GameplayTag를 이용해 지정해주고 있는겁니다. 
+
+	이 로직은 언리얼엔진 공식문서에서 InitState는 GameInstance 초기화 단계에서 하라고 작성이 되어있기 때문에 지금 구조도 그렇게 한것입니다. 
+
+	void ULcGameInstance::Shutdown()
+	{
+		Super::Shutdown();
+	}
+	이 함수는 아직 그냥 래핑만해두고 추가하지 않았습니다.
+
+	테스트를 해보려면 먼저 프로젝트 세팅에서 사용할 GameInstance를 지금 새로 만든 LcGameInstance 로 설정해주어야합니다. 
+
+}

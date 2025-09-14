@@ -1,0 +1,23 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "d:\\cpp_game\\portfolio\\lc_5_5\\source\\lc_5_5\\system\\lcgameinstance.cpp",
+        "ProvidedModule": "",
+        "PCH": "d:\\cpp_game\\portfolio\\lc_5_5\\intermediate\\build\\win64\\x64\\lc_5_5editor\\development\\unrealed\\sharedpch.unrealed.project.valapi.cpp20.h.pch",
+        "Includes": [
+            "d:\\cpp_game\\portfolio\\lc_5_5\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\lc_5_5\\definitions.lc_5_5.h",
+            "d:\\cpp_game\\portfolio\\lc_5_5\\source\\lc_5_5\\system\\lcgameinstance.h",
+            "d:\\cpp_game\\portfolio\\lc_5_5\\intermediate\\build\\win64\\unrealeditor\\inc\\lc_5_5\\uht\\lcgameinstance.generated.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\plugins\\runtime\\modulargameplay\\source\\modulargameplay\\public\\components\\gameframeworkcomponentmanager.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\plugins\\runtime\\modulargameplay\\source\\modulargameplay\\public\\components\\gameframeworkcomponentdelegates.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\source\\runtime\\gameplaytags\\classes\\gameplaytagcontainer.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\source\\runtime\\core\\public\\misc\\comparisonutility.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\gameplaytags\\uht\\gameplaytagcontainer.generated.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\plugins\\runtime\\modulargameplay\\intermediate\\build\\win64\\unrealeditor\\inc\\modulargameplay\\uht\\gameframeworkcomponentdelegates.generated.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\plugins\\runtime\\modulargameplay\\intermediate\\build\\win64\\unrealeditor\\inc\\modulargameplay\\uht\\gameframeworkcomponentmanager.generated.h",
+            "d:\\cpp_game\\portfolio\\lc_5_5\\source\\lc_5_5\\lcgameplaytags.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

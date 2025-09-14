@@ -30,6 +30,12 @@
     <Filter Include="Source\LC_5_5">
       <UniqueIdentifier>{C45F524B-32ED-3276-B7DF-476E9B8138CA}</UniqueIdentifier>
     </Filter>
+    <ClCompile Include="..\..\Source\LC_5_5\LcGameplayTags.cpp">
+      <Filter>Source\LC_5_5</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\LcGameplayTags.h">
+      <Filter>Source\LC_5_5</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\LC_5_5\LcLogChannels.cpp">
       <Filter>Source\LC_5_5</Filter>
     </ClCompile>
@@ -115,6 +121,12 @@
       <Filter>Source\LC_5_5\System</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\LC_5_5\System\LcAssetManager.h">
+      <Filter>Source\LC_5_5\System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\System\LcGameInstance.cpp">
+      <Filter>Source\LC_5_5\System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\System\LcGameInstance.h">
       <Filter>Source\LC_5_5\System</Filter>
     </ClCompile>
   </ItemGroup>

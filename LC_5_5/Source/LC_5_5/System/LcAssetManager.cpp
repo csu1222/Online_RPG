@@ -2,6 +2,7 @@
 
 #include "System/LcAssetManager.h"
 #include "LcLogChannels.h"
+#include "LcGameplayTags.h"
 
 ULcAssetManager::ULcAssetManager()
 {
@@ -23,10 +24,12 @@ ULcAssetManager& ULcAssetManager::Get()
 	return *NewObject<ULcAssetManager>();
 }
 
-PRAGMA_DISABLE_OPTIMIZATION
+PRAGMA_DISABLE_OPTIMIZATION 
 void ULcAssetManager::StartInitialLoading()
 {
 	Super::StartInitialLoading();
+
+	FLcGameplayTags::InitializeNativeTags();
 }
 PRAGMA_ENABLE_OPTIMIZATION
 
