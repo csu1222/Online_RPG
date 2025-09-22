@@ -1585,5 +1585,473 @@ Lyra 는 에픽게임즈에서 공식으로 배포하는 게임 프로젝트로 
 	이 함수는 아직 그냥 래핑만해두고 추가하지 않았습니다.
 
 	테스트를 해보려면 먼저 프로젝트 세팅에서 사용할 GameInstance를 지금 새로 만든 LcGameInstance 로 설정해주어야합니다. 
+}
+
+# 10 PawnExtension
+{
+	이번에는 InitState 태그들을 이용해 어떻게 컴포넌트를 부착하고 관리할지에 대한 내용입니다. 
+	InitStateChange, ExtensionComponent 시스템을 알아볼건데 이 부분이 추상화 레벨이 높고 언리얼에 없던 내용이기 때문에 
+	어려울 수 있는 파트입니다. 
+
+	시작하면서 클래스를 몇개 추가하겠습니다. 
+	에디터를 실행하고 PawnComponent를 상속받은 LcHeroComponent를 Character 디렉터리에 생성,
+	다시 PawnComponent를 상속받아 LcPawnExtensionComponent 라는 이름으로 역시 Character 디렉터리에 생성해 
+	일단 두개의 클래스를 생성해주겠습니다.
+
+	이번에도 나온용어 Component는 부품이라고 했습니다. 프로젝트에서 사용됐던 컴포넌트는 
+	LcExperienceManagerComponent 가 상속받았던 UGameStateComponent 가 있었습니다. 
+	이런 컴포넌트들은 더 상위에 공통적으로 UGameFrameworkComponent 를 상속 받고 있습니다. 
+
+	먼저 LcHeroComponent에 대한 주석을 보겠습니다.
+	/**
+	* component that sets up input and camera handling for player controlled pawns (or bots that simulate players)
+	* - this depends on a PawnExtensionComponent to coordinate initialization
+	*
+	* 카메라, 입력 등 플레이어가 제어하는 시스템의 초기화를 처리하는 컴포넌트
+	*/
+	카메라, 입력 같은것들을 초기화 해주는게 LcHeroComponent 라고 합니다. 
+	지금까지 언리얼에서 플레이어를 만들때 공용 플레이어와 유저가 직접 조작하는 플레이어가 있고 조작하는 플레이어가 InputComponent를 
+	들고 있으면서 입력도 받고 스프링 암이나 카메라도 조작 플레이어가 들고 있었습니다. 
+	이러면 플레이어에게 인풋, 카메라에 대한 종속성이 생기는데 이렇게 하지 않고 
+	LcHeroComponent 를 사용한다면 혹시나 캐릭터가 갑자기 입력의 방식을 바꾸고 싶다면 캐릭터에 부착되어있던 LcHeroComponent 를 
+	없애버리면 기존 입력방식을 버릴 수 있게 됩니다. 
+
+	그러면 LcPawnExtensionComponent 는 어떤 역할을 할지 알아보겠습니다. 역시 주석을 보겠습니다. 
+	/**
+	* 초기화 전반을 조정하는 컴포넌트
+	*/
+	초기화 전반을 조정한다는게 무슨 말이냐면 InitStateChange 시스템을 사용하는 이유를 알아볼때 
+	원래 컴포넌트들이 부착될때 그 순서를 보장할 수 없는 이유가 각 컴포넌트가 부착 준비가 되는 시점이 각각 달라서 
+	부착 순서가 보장이 안되는 것이었는데 
+	이것과 관계된 클래스가 이 LcPawnExtensionComponent 입니다. 
+
+	어떤 방식이냐면 LcPawnExtensionComponent 가 매니저의 역할로 있고 이 아래로 LcHeroComponent 가 부착되는겁니다. 
+	지금이야 LcHeroComponent 하나밖에 없어서 따로 부착 순서를 신경쓰지 않아도 되지만 라이라 프로젝트에서는 예시를 들어주고 있는겁니다. 
+	이후로 LcItemComponent, LcEffectComponent 같은 컴포넌트들을 더 부착할때 각 컴포넌트의 준비 시점들을 관리 할 수 있는겁니다. 
+
+	거기에 더해 LcPawnExtensionComponent 는 캐릭터에 종속적이지가 않다는 점이 장점입니다. 
+	만약 다른 방식으로 컴포넌트들을 관리하고 싶다면 LcPawnExtensionComponent를 떼어내고 다른 컴포넌트를 부착하면 되는것입니다. 
+	이건 컴포넌트 방식의 이점입니다. 
+
+	혹시 LcPawnExtensionComponent 와 LcHeroComponent 같은 컴포넌트끼리 종속성이 생기는것이 아닌가 생각이 들 수도 있는데 
+	라이라 프로젝트가 이것을 해결한 방법을 또 알아볼것입니다. 
+
+	코드를 보겠습니다. 
+	생성자 코드입니다.
+		
+	ULcHeroComponent::ULcHeroComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+	{
+		PrimaryComponentTick.bStartWithTickEnabled = false;
+		PrimaryComponentTick.bCanEverTick = false;
+	}
+	
+	그리고 LcPawnExtensionComponent 의 생성자도 같이 보면 
+
+	ULcPawnExtensionComponent::ULcPawnExtensionComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+	{
+		PrimaryComponentTick.bStartWithTickEnabled = false;
+		PrimaryComponentTick.bCanEverTick = false;
+	}
+	
+	이런식으로 두 생성자에서 틱을 모두 끄고 있습니다. 그런데 여기서 한군데 더 틱을 끄는 곳이 있는데 
+	바로 LcCharacter 입니다. 
+
+	// Sets default values
+	ALcCharacter::ALcCharacter()
+	{
+		// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+		PrimaryActorTick.bCanEverTick = false;
+		PrimaryActorTick.bStartWithTickEnabled = false;
+	}
+
+	Tick 을 끈다라는 것은 이 클래스들은 주기적으로 무언가 검사하거나 업데이트하는 로직이 없다라는것입니다. 
+	업데이트 방식이 아닌 델리게이트 같은 이벤트 방식을 이용해 초기화를 진행할것입니다. 
+	매 프레임마다 체크하는게 아닌 이벤트 형식이기 때문에 굉장히 효율적으로 동작하게 됩니다. 
+
+	이 시점에 한가지 생각해볼 문제가 있습니다.
+	LcPawnExtensionComponent 가 하는일이 LcHeroComponent 같은 컴포넌트들을 관리한다고 했습니다. 
+	관리란 그 관리 받는 것들을 다 지켜보고 있어야 관리가 가능할겁니다. 
+	지켜보기 위해서는 자신이 가장 먼저 생성이 되어 있어야 그 이후 부품들을 지켜볼 수 있습니다. 
+	만약 부품이 하나 먼저 생성이 되고 관리자가 그 이후 생성이 된다면 먼저 생성된 부품은 매니저의 관리를 벗어나 
+	마음대로 로직을 진행 시키게 될겁니다. 
+	현재 이 컴포넌트 시스템에서는 관리자와 피관리자 간의 종속성이 없는데 생성 순서를 보장받아야 합니다. 
+	쉬운 방법으로는 BeginPlay 나 Tick 에서 객체 생성을 호출하는건데 
+	라이라 프로젝트에서는 이벤트 방식으로 처리하기 위해 틱들을 다 막아 놨습니다. 그래서 틱 방식은 아니겠다 라는걸 알 수 있습니다. 
+
+	어떤 식으로 LcPawnExtensionComponent 과 LcHeroComponent 의 생성 순서를 보장하냐면 
+	
+	일단 LcCharacter 에 새 멤버 변수로 LcPawnExtensionComponent 을 하나 만들어 줍니다. 
+	헤더에는 
+
+	public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "LC|Chacter")
+	TObjectPtr<ULcPawnExtensionComponent> PawnExtComponent;
+	
+	이렇게 추가하고 헤더 파일 상단에 전방선언도 해줘야하겠습니다.
+	그리고 cpp 파일에는 LcCharacter 생성자에 이 멤버변수를 생성해줘야할겁니다. 
+	// Sets default values
+	ALcCharacter::ALcCharacter()
+	{
+		// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+		PrimaryActorTick.bCanEverTick = false;
+		PrimaryActorTick.bStartWithTickEnabled = false;
+
+		// LcPawnExtensionComponent 변수를 생성
+		PawnExtComponent = CreateDefaultSubobject<ULcPawnExtensionComponent>(TEXT("PawnExtensionComponent"));
+	}
+
+	이러면 LcCharacter 가 생성될때 LcPawnExtensionComponent 가 가장 먼저 생성되도록 보장이 된걸까요?
+	이 LcCharacter 생성자 시점에는 아직 LcHeroComponent 를 만들지 않았습니다. 
+	
+	언리얼 에디터를 실행해서 현재 맵의 플레이어로 만들었던 B_SimpleHeroPawn 의 이벤트 그래프에 LcHeroComponent 를 만들어 줄겁니다.
+	그런데 블루플린트에서 LcHeroComponent 가 검색이 안되는데 이것은 LcHeroComponent 의 선언부를 보겠습니다. 
+	
+	UCLASS(Blueprintable, Meta = (BlueprintSpawnableComponent))
+	class LC_5_5_API ULcHeroComponent : public UPawnComponent
+	{
+		GENERATED_BODY()
+	public:
+		ULcHeroComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+		
+	};
+	이렇게 상단 UCLASS 인자로 Blueprintable, Meta = (BlueprintSpawnableComponent) 를 줘야 블루프린트로 사용가능하고 컴포넌트로 사용이
+	가능합니다. 
+	지금까지 다른 클래스에서 문제가 되지않았던것은 부모클래스로 올라가보면 미리 다 설정이 되어있었기 때문입니다. 
+
+	이제 에디터를 실행해보면 B_SimpleHeroPawn 의 컴포넌트 추가메뉴에서 Lc Hero 라는 컴포넌트가 검색이 가능합니다. 추가해주고 
+	이름을 HeroComponent 라고 짓겠습니다. 
+
+	여기까지해서 지금 수정한게 LcCharacter C++ 코드에서 멤버 변수로 추가한 LcPawnExtensionComponent 와 언리얼 에디터에서 
+	LcCharacter 를 상속받아 만든 블루프린트 B_SimpleHeroPawn 의 컴포넌트로 LcHeroComponent 를 추가했습니다.
+
+	이번 주제에서 중요한 컨샙입니다. 
+	지금까지 수정으로 이루려는 목표는 컴포넌트들을 관리할 LcPawnExtensionComponent 가 먼저 생성이 되고 그 이후로 
+	캐릭터의 입력, 카메라등을 초기화 하는 컴포넌트 LcHeroComponent 가 생성되는 순서를 보장하고 싶었습니다. 
+
+	C++ 코드에 작성한 Native C++ 코드에서 선언한것이 엔진의 블루프린트에 작성한 코드(SCS Simple Construction Script)보다 먼저 
+	실행이 됩니다. 
+	이런 언리얼 엔진의 특성을 이용해 클래스 생성 순서의 보장을 받을 수 있게 되는겁니다. 
+
+	이제 앞으로 컴포넌트를 다룰 방식이 보입니다. 
+	매니징을 하는 LcPawnExtensionComponent는 Native C++ 로 만들고 이후 실제 기능을 하는 컴포넌트들은 
+	언리얼 에디터의 블루프린트에서 생성해 주게 될겁니다. 
+
+	지금까지 컴포넌트간의 생성순서를 맞춰주었고 
+	LcPawnExtensionComponent 의 코드를 마저 만들겠습니다. 
+
+	세가지 멤버 함수를 추가할겁니다.
+	
+	/**
+	* UPawnComponent interfaces
+	 */
+	virtual void OnRegister() final;
+	virtual void BeginPlay() final;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) final;
+
+	OnRegister는 컴포넌트나 액터가 생성되는 아주 초반에 호출이 됩니다. 
+	void ULcPawnExtensionComponent::OnRegister()
+	{
+		Super::OnRegister();
+
+		// 올바른 Actor에 등록되었는지 확인:
+		{
+			if (!GetPawn<APawn>())
+			{
+				UE_LOG(LogLC, Error, TEXT("this component has been added to a BP whose base class is not a Pawn!"));
+				return;
+			}
+		}
+			
+		// GameFrameworkComponentManager에 InitState 사용을 위해 등록 진행:
+		// - 등록은 상속받았던 IGameFrameworkInitStateInterface 메서드 RegisterInitStateFeature()를 활용
+		// - 해당 함수를 간단히 보기
+		RegisterInitStateFeature();
+
+		// 디버깅을 위한 함수
+		UGameFrameworkComponentManager* Manager = UGameFrameworkComponentManager::GetForActor(GetOwningActor());
+	}
+	LcPawnExtensionComponent 에서 GetPawn을 한다는것은 UPawnComponent 자체적으로 있는 기능인데 Owner 를 Pawn으로 캐스팅해 가져오는것입니다. 
+	가져온 Pawn 이 false 인지를 조건문으로 보는것은 이 LcPawnExtensionComponent 가 정상적으로 LcCharacter에 등록이 되어있는지를 확인하는 
+	조건문입니다. 만약 제대로 등록이 안되어 있다면 에러 로그를 출력하면서 리턴이 되어버립니다. 
+
+	OnRegister 라는 함수는 무언가 일감을 등록할때 호출될 함수인데 왜 여기서 Owner가 잘 등록되어 있는지 체크하냐면 
+	엔진의 작동순서가 연관이 있는데 OnRegister 단계에서 컴포넌트를 부착하게 됩니다. 
+	즉 이 OnRegister의 Supter:OnRegister() 를 호출한 다음에 온 이 조건문은 여기에 해당할 경우 
+	LcPawnExtensionComponent 가 LcCharacter에 부착이 실패했다라는 것입니다. 
+
+	여기서 LcPawnExtensionComponent 가 클래스 하나 더 상속받아야 합니다. 
+	
+	#include "Components/GameFrameworkInitStateInterface"
+
+	class LC_5_5_API ULcPawnExtensionComponent : public UPawnComponent, public IGameFrameworkInitStateInterface
+	{
+		// ...
+	}
+	새로 상속받은 이 IGameFrameworkInitStateInterface 가 어떤 역할을 하냐면 
+	InitStateChange 에서 LcGameplayTags 를 에디터에 등록했던 RegisterInitState 에 대한 초기화를 편리하게 관리하기 위한 인터페이스입니다. 
+
+	그리고 LcHeroComponent 도 마찬가지로 똑같이 상속 시켜줘야합니다. 
+
+	GameFrameworkInitStateInterface 를 상속받으면 OnRegister 에서 사용된 RegisterInitStateFeature() 와 GetOwningActor() 가 사용가능해집니다. 
+
+	RegisterInitStateFeature() 가 뭐냐면 Super::OnRegister() 는 컴포넌트가 생성되는 극초반에 일어나고 부착까지 일어난다고 했었는데 
+	이런 상황에서 RegisterInitStateFeature() 함수는 이름대로 InitState를 등록하는 함수입니다. 
+	InitState라는 시스템을 사용하기 위해서는 등록을 해야합니다. 그게 이 함수가 하는일인데 
+	이 함수는 따로 인자를 받고 있지 않습니다. 내부적으로 어떻게 동작하고 있냐면
+
+	void IGameFrameworkInitStateInterface::RegisterInitStateFeature()
+	{
+		UObject* ThisObject = Cast<UObject>(this);
+		AActor* MyActor = GetOwningActor();
+		UGameFrameworkComponentManager* Manager = UGameFrameworkComponentManager::GetForActor(MyActor);
+		const FName MyFeatureName = GetFeatureName();
+
+		if (MyActor && Manager)
+		{
+			// Manager will be null if this isn't in a game world
+			Manager->RegisterFeatureImplementer(MyActor, MyFeatureName, ThisObject);
+		}
+	}
+	먼저 this를 UObject로 캐스팅해서 가져옵니다. 여기서 this는 RegisterInitStateFeature 를 호출했던 ULcPawnExtensionComponent 입니다. 
+	그리고 GetOwningActor()로 나를 소유하고 있는 액터를 가져오는데 만약 자신이 액터면 바로 반환을 합니다. 
+	Manager 는 MyActor에 대한 GameFrameworkComponentManager 를 가져와 저장한 변수고
+	MyFeatureName 도 가져온 후 Manager->RegisterFeatureImplementer 를 호출하고 있습니다. 
+	인자는 순서대로 MyActor, MyFeatureName, ThisObject 를 받고 있습니다. 
+	여기서 MyActor 는 OwningActor 인겁니다. ULcPawnExtensionComponent 가 부착되어 있는 액터인거고 
+	ThisObject는 ULcPawnExtensionComponent 입니다. 
+
+	이 인자들을 가지고 호출하는 RegisterFeatureImplementer 함수의 내용중에 
+	
+	FActorFeatureData& ActorStruct = FindOrAddActorData(Actor);
+
+	이런 FindOrAddActorData 라는 함수로 액터를 FActorFeatureData 로 만드는 부분이 있습니다. 다시 이 함수를 타고 들어가겠습니다. 
+	그러면 또 
+	
+	FActorFeatureData& ActorStruct = ActorFeatureMap.FindOrAdd(FObjectKey(Actor));
+
+	이런 코드가 있습니다. 액터를 FObjectKey로 만들고 ActorFeatureMap 라는 맵에 추가를 하고 있습니다. 
+	이 맵은 
+	
+	TMap<FObjectKey, FActorFeatureData> ActorFeatureMap;
+
+	이런 형식의 맵입니다. 
+	여기서 액터를 FObjectKey 라는 구조체로 만들고 있는데 이 구조체의 역할을 설명하자면 
+	A라는 CDO 가 있다고 하겠습니다. 이 CDO에 따라 생성되는 객체 A1, A2 가 있다면 이 두 객체의 메타데이터 혹은 StaticClass는 동일할테지만 
+	인스턴스적 관점에서는 다른 객체들일겁니다. 
+	여기서 인스턴스적 관점이란 각 객체들의 메모리 주소 혹은 상태나 데이터등을 말합니다. 
+
+	이런 인스턴스적 관점에서 두 객체가 다름을 구별할수 있게 해주는게 FObjectKey 입니다. 이 FObjectKey는 각 객체의 메모리와 고유 ID값을 조합해 
+	만들기 때문에 같은 클래스에서 나왔지만 다른 인스턴스임을 구별할 수 있게 해줍니다.
+
+	그럼 여기서 FObjectKey 로 만들어지고 있는게 결국 ULcPawnExtensionComponent 가 부착되어있는 캐릭터인것이고 이 캐릭터의 메모리와 고유 ID가 조합되어 
+	FObjectKey가 되는것입니다. 
+
+	그 다음으로 FObjectKey를 FindOrAdd 하고 있는 FActorFeatureData 가 가지고 있는 데이터를 보면
+	이 구조체가 들고 있는게 ActorClass, RegisteredStates, RegisteredDelegate 등이 있습니다.
+
+	FindOrAddActorData 는 FObjectKey 로 Actor를 캐스팅해 FindOrAdd 를 한 반환값인 ActorStruct 의 ActorClass가 유효한지 체크하는데 
+	만약 유효하지 않다면 Actor의 클래스를 자신의 ActorClass로 삼고 반환합니다. 
+
+	반환되면 이제 UGameFrameworkComponentManager::RegisterFeatureImplementer 의 코드입니다. 
+	이 함수에 사용된 매개변수들이 IGameFrameworkInitStateInterface::RegisterInitStateFeature() 에서는 각각 
+	Character, GetFeatureName, ULcPawnExtensionComponent 입니다. 
+
+	Actor는 ULcPawnExtensionComponent 가 부착된 OwningActor 인 Character 입니다. 이 Actor를 FindOrAddActorData를 호출한 
+	반환값 FActorFeatureData 를 받아옵니다. 이것을 ActorStruct 라는 변수에 받아주고 
+	비어있는 FActorFeatureState* FoundState 를 만들고 
+	ActorStruct의 RegisteredStates 를 순회 돌면서 각 RegisteredStates.FeatureName과 인자로 받은 FeatureName이 일치하는지를 체크하는데
+	일치하는게 있다면 해당 RegisteredStates를 FoundState 에 담아주고 
+	일치하는게 없다면 인자 FeatureName을 가지고 RegisteredStates에 하나 추가하고 그걸 다시 FoundState에 저장합니다. 
+	그 후 FoundState->Implement 로 인자 Implement를 등록합니다. 
+	세번째 매개변수가 ULcPawnExtensionComponent 즉, 이 RegisterInitStateFeature 를 호출한 나 입니다.
+
+	좀 더 쉽게 설명해보자면 
+	대표 클래스 A 가 있다고 하겠습니다. 프로젝트에서는 이 A가 Character 인겁니다. 
+	A 클래스로부터 A1, A2 라는 두개의 클래스가 나왔다고 하겠습니다. 
+	이 A1, A2 에는 각각 컴포넌트들이 붙을겁니다. 지금 프로젝트에서는 LcPawnExtensionComponent 와 LcHeroComponent 입니다. 
+	그런데 지금까지 알아보던 함수들을 가지고 있던 클래스 UGameFrameworkComponentManager 는 단 하나 밖에 없습니다. 
+	UGameFrameworkComponentManager 가 내부적으로 액터들을 Map으로 관리하는데 액터들을 인스턴스 단위로 구별해 관리를 합니다. 
+	또 인스턴스별로 관리하는 각 클래스들을 FObjectKey로 만들어 Map의 키로 사용합니다. 
+	액터를 UGameFrameworkComponentManager 가 들고 있는 ActorFeatureMap 에 FindOrAdd 라는 함수로 등록을 하는데 FObjectKey로 만들어진
+	Actor가 키가 됩니다. 
+	그리고 키로 사용된 Actor의 FActorFeatureData 로 저장이 됩니다. 
+	이 FActorFeatureData 코드를 열어보면 
+	struct FActorFeatureData
+	{
+		/** Actor class for cross referencing with the class callbacks */
+		TWeakObjectPtr<UClass> ActorClass;
+
+		/** All active features */
+		TArray<FActorFeatureState> RegisteredStates;
+
+		/** All delegates bound to this actor */
+		FActorFeatureDelegateList RegisteredDelegates;
+
+		/** Properly clear delegate list */
+		~FActorFeatureData();
+	};
+	이렇게 되어있습니다. 이중에 컴포넌트들을 들고 있는건 RegisteredStates 입니다. 
+	RegisteredStates가 FAcotrFeatureState의 Array 이니깐 FAcotrFeatureState를 다시 열어보면 
+	struct FActorFeatureState
+	{
+		FActorFeatureState(FName InFeatureName) : FeatureName(InFeatureName) {}
+
+		/** The feature this is tracking */
+		FName FeatureName;
+
+		/** The state when it was last registered */
+		FGameplayTag CurrentState;
+
+		/** The object implementing this feature, this can be null */
+		TWeakObjectPtr<UObject> Implementer;
+	};
+	FeatureName 이라는 FName을 통해 이 기능의 이름을 붙여주고 FGameplayTag는 이전에 FLcGameplayTags를 에디터와 C++ 양쪽에서
+	관리할 수 있도록 하면서 살펴봤었습니다. 이 태그를 통해 마지막으로 예약된 상태를 저장하고 있습니다. 
+	마지막으로 Implement 는 사실상의 컴포넌트 자체입니다. 
+
+	지금 살펴보고 있는 로직이 컴포넌트들의 초기화를 관리하는 과정이었습니다. 
+	그래서 내부적으로 컴포넌트 객체도 저장하고 현재 어디까지 업데이트되었는지 상태를 확인해야하는겁니다. 
+	그리고 FeatureName이 필요한 이유가 RegisteredStates 가 Array<FActorFeatureState> 였습니다. 
+	한 액터에 부착될 컴포넌트들이 다수가 될 겁니다. 이 여러 컴포넌트들을 FeatureName 을 정의해 검색하기 쉽게 하는겁니다. 
+
+	다시 정리하겠습니다. 
+	ULcPawnExtensionComponent 에서 호출한 IGameFrameworkInitStateInterface::RegisterInitStateFeature 는 
+	UGameFrameworkComponentManager 안에 ULcPawnExtensionComponent 이 부착된 캐릭터와 이 캐릭터에 부착된 컴포넌트들을 등록해주는 것입니다.
+
+	이 등록을 해야 LcGameInstance 에서 정의한 RegisterInitState 사용할 수 있다
+
+	UGameFrameworkComponentManager 에서 들고 있는 액터들의 컴포넌트를 FeatureName 으로 구분한다고 했는데 
+	이 FeatureName 을 GetFeatureName 을 통해 가지고 오는데 이걸 컴포넌트들에 만들어 줘야합니다. 
+
+	ULcPawnExtensionComponent 에 스태틱 멤버 변수를 하나 만들어 줍니다. 
+
+	/** FeatureName 정의 */
+	static const FName NAME_ActorFeatureName;
+
+	/**
+	 * IGameFrameworkInitStateInterface
+	 */
+	virtual FName GetFeatureName() const final { return NAME_ActorFeatureName; }
+
+	그리고 나서 GetFeatureName 함수를 오버라이딩으로 받아 반환해주도록 합니다. 
+
+	NAME_ActorFeatureName 는 ULcPawnExtensionComponent 의 cpp 파일에서 구현해줘야합니다.
+		
+	/** feature name을 component 단위니깐 component를 빼고 pawn extension만 넣은 것을 확인할 수 있다 */
+	const FName ULcPawnExtensionComponent::NAME_ActorFeatureName("PawnExtension");
+
+	이렇게 해서 ULcPawnExtensionComponent::OnRegister() 함수를 통해 컴포넌트와 오너액터를 등록해봤습니다. 
+
+	다음으로 BeginPlay 함수를 알아보겠습니다. 
+	
+	void ULcPawnExtensionComponent::BeginPlay()
+	{
+		Super::BeginPlay();
+
+		// FeatureName에 NAME_None을 넣으면, Actor에 등록된 Feature Component의 InitState 상태를 관찰하겠다는 의미:
+		BindOnActorInitStateChanged(NAME_None, FGameplayTag(), false);
+
+		// InitState_Spawned로 상태 변환:
+		// - TryToChangeInitState는 아래와 같이 진행된다:
+		//   1. CanChangeInitState로 상태 변환 가능성 유무 판단
+		//   2. HandleChangeInitState로 내부 상태 변경 (Feature Component)
+		//   3. BindOnActorInitStateChanged로 Bind된 Delegate를 조건에 맞게 호출해 줌
+		//      - HakPawnExtensionComponent의 경우, 모든 Actor의 Feature 상태 변화에 대해 OnActorInitStateChanged()가 호출됨
+		ensure(TryToChangeInitState(FLcGameplayTags::Get().InitState_Spawned));
+
+		// 해당 함수는 우리가 오버라이딩 한다:
+		// - 이 함수를 ForceUpdateInitState와 같은 느낌으로 이해해주면 된다 
+		// - 현재 강제 업데이트 진행 (물론 CanChangeInitState와 HandleChangleInitState를 진행해준다)
+		CheckDefaultInitialization();
+	}
+	이 함수는 호출한 함수는 3개인데 주석이 많습니다. 
+	위부터 살펴보면 인자를 3개를 넣습니다. 각 매개변수의 타입을 시그니처로 살펴보겠습니다. 
+	void IGameFrameworkInitStateInterface::BindOnActorInitStateChanged(FName FeatureName, FGameplayTag RequiredState, bool bCallIfReached)
+	FeatureName, Tag, bCallIfReached 라는 불리언입니다. 이 중에 중요한건 앞의 두개입니다. 
+	함수의 이름으로 역할을 유추해보자면 액터의 InitState가 변경이 되면 그걸 받겠다라는 뜻입니다. 
+	예를 들어서 LcHeroComponent 가 원래 초기화 순서가 InitState_Spawned 단계였는데 InitState_DataAvailable 에서 초기화 하도록 업데이트했다고 하겠습니다.
+	그럼 이 초기화 시점을 업데이트된 내용으로 받아준다는겁니다. 
+	그런데 인자로 넘겨준게 NAME_None, 과 비어있는 FGameplayTag() 입니다. 
+	이게 무슨뜻이냐면 먼저 NAME_None 을 넣으면 액터의 모든 컴포넌트들에 대해서 받겠다라는겁니다. 액터가 가진 모든 컴포넌트의 초기화될 상태가 바뀌어도 받는다는겁니다. 
+	두번째 인자인 FGameplayTag() 는 시그니처에서 보면 RequiredState 라고 합니다. 이 요청한 상태로 넘어가는 애들만 관찰하겠다라는건데 
+	비어있는 FGameplayTag() 를 넣었다는것은 모든 변화를 관찰하겠다라는겁니다. 
+	그러니깐 첫번째 인자 NAME_None은 모든 컴포넌트에 대해서 받아주겠다, 두번째 인자 FGameplayTag() 는 모든 변화에 대해 받아주겠다입니다. 
+	왜 모든 컴포넌트의 변화를 받아주냐면 ULcPawnExtensionComponent 자체가 모든 컴포넌트의 초기화를 관리해줄거라고 했었기 때문입니다. 
+
+	두번째 함수 TryToChangeInitState 는 인자로 InitState_Spawned 태그를 받고 있습니다. 
+	함수이름으로 역할을 유추해보면 현재 나의 상태를 변경 시도한다고 볼 수 있습니다. 
+	즉 여기서는 나 ULcPawnExtensionComponent 는 초기화될 상태를 InitState_Spawned 시점으로 변경 시도를 하는겁니다. 
+	이 TryToChangeInitState 내부에서 CanChangeInitState, HandleChangeInitState, ChangeFeatureInitState 라는 세가지 함수로 주요 로직을 실행하는데
+	CanChangeInitState 로 초기화상태를 변경할수 있는지 조건을 우리가 설정하는거고, HandleChangeInitState 에서 초기화 상태를 변경하는 로직도 우리가 설정하는겁니다. 
+	ChangeFeatureInitState 에서는 변경이 완료가 되고 변경되었다라는 이벤트를 델리게이트를 통해 BindOnActorInitStateChanged 에게 알려줍니다. 
+
+	세번째 함수인 CheckDefaultInitialization 는 강제로 업데이트 해주는 함수입니다. 
+	오버라이딩해서 사용할겁니다. 오버라이딩 함수가 세가지 있는데 지금 한번에 추가하겠습니다. 
+
+	virtual void OnActorInitStateChanged(const FActorInitStateChangedParams& Params) final;
+	virtual bool CanChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState, FGameplayTag DesiredState) const final;
+	virtual void CheckDefaultInitialization() final;
+
+	CheckDefaultInitialization 는 강제 업데이트를 하는 함수입니다. 
+	void ULcPawnExtensionComponent::CheckDefaultInitialization()
+	{
+		// PawnExtensionComponent는 Feature Component들의 초기화를 관장하는 Component이다:
+		// - 따라서, Actor에 바인딩된 Feature Component들에 대해 CheckDefaultInitialization을 호출해주도록 한다 (ForceUpdate 느낌?)
+		// - 이 메서드를 IGameFrameworkInitStateInterface가 제공하는데, CheckDefaultInitializationForImplementers이다:
+		// - 간단히 CheckDefaultInitializationForImplementers 보자:
+		CheckDefaultInitializationForImplementers();
+
+		const FLcGameplayTags& InitTags = FLcGameplayTags::Get();
+
+		// 사용자 정의 InitState를 직접 넘겨줘야 한다... (사실 이건 좀 알아서 할 수 있을거 같은데 굳이...)
+		static const TArray<FGameplayTag> StateChain = { InitTags.InitState_Spawned, InitTags.InitState_DataAvailable, InitTags.InitState_DataInitialized, InitTags.InitState_GameplayReady };
+
+		// CanChangeInitState()와 HandleChangeInitState() 그리고 ChangeFeatureInitState 호출을 통한 OnActorInitStateChanged Delegate 호출까지 진행해준다:
+		// 아래의 코드를 간단히 보자:
+		// - 해당 코드까지 보면, 우리는 간단히 짐작할 수 있다:
+		//   - 계속 상태를 가능할때까지 한번 업데이트 한다
+		//   - InitState에 대한 변화는 Linear(선형적)임을!... -> 나중에 Diagram으로 정리하면서 보자
+		//     - 업데이트가 멈추면 누군가 시작해줘야 함을 의미! (chaining)
+		ContinueInitStateChain(StateChain);
+	}
+	왜 강제 업데이트 라는 말이 붙었냐면 내부에서 CheckDefaultInitializationForImplementers() 를 호출하고 있는데 
+	이함수의 내용을 간단히 설명하자면 내부에서 Implementer 를 다루고 있는데 이 Implementer는 위의 
+	IGameFrameworkInitStateInterface::RegisterInitStateFeature() 에서 다루는 이 함수를 호출한 본인(여기서는 ULcPawnExtensionComponent)
+	를 뜻했습니다. 즉 컴포넌트를 말하는것입니다. 
+	이런 Implementer 를 TArray 로 다루면서 Implementers 라는 명칭으로 순회를 돌면서 각 
+	Implementer 를 CheckDefaultInitialization() 을 호출하고 있습니다. 
+	이 함수는 방금 추가한 오버라이딩 함수와 같은 이름입니다. 
+	그런데 Implementers 를 만들때 나 자신을 제외하고 가져옵니다. 그래서 재귀호출을 방지했습니다. 
+	캐릭터에 부착되어있는 컴포넌트들이 자신을 제외한 컴포넌트들에 대해 CheckDefaultInitialization() 을 돌리고 있는것입니다. 
+	
+	CheckDefaultInitialization() 을 호출한 다음 코드를 보면 StateChain 이라는것을 만들고 있습니다. 
+	InitState를 설정했던 그 순서대로 넣고 있습니다. 
+
+	그리고 다음으로 ContinueInitStateChain(StateChain); 을 호출하고 있습니다. 
+	내부동작을 살펴보면 인자로 넘겨받은 StateChain 의 0번 인덱스부터 하나씩 while 순회를 하면서 현재 GameplayTag 로 사용하는 
+	State가 뭔지를 비교하고 있습니다. 그런데 만약 일치하더라도 다음 인덱스로 넘어가 다시 순회를 합니다. 하지만 StateChain의 인덱스를 넘어가는
+	순회를 하면 while문을 빠져나갑니다. 
+	현재 스테이트와 일치한다면 CanChangeInitState() 를 확인하면서 계속 순회를 하게 됩니다. 
+
+	이러면 이 ContinueInitStateChain 함수는 어떤 의미가 있냐면 이 함수를 호출한 자신을 제외한 컴포넌트들에게 
+	CanChangeInitState() 가 되는 스테이트 까지 다른 컴포넌트들을 업데이트 시키는것입니다. 
+
+	ULcPawnExtensionComponent::BeginPlay 에서는 
+	OnRegister 에서 등록된 모든 컴포넌트 들에 대해 모든 변경사항을 관찰하면서 현재 InitState를 InitState_Spawned 로 변경합니다. 
+	그 후 CheckDefaultInitialization을 호출했습니다. 
+	그런데 이 CheckDefaultInitialization 에서는 자신과 자신을 제외한 모든 컴포넌트들이 자신이 업데이트 할수 있는 초기화 상태까지 현재 상태를 진행시킵니다.
+
+	마지막으로 EndPlay 함수입니다. 
+		
+	void ULcPawnExtensionComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+	{
+		// 앞서, OnRegister의 RegisterInitStateFeature()의 쌍을 맞추어주자
+		UnregisterInitStateFeature();
+
+		Super::EndPlay(EndPlayReason);
+	}
+
+	이 함수는 그냥 함수하나만 더 추가한 버전입니다. OnRegister 에서 컴포넌트와 액터를 등록했는데 
+	EndPlay는 이 액터가 소멸되는 시점이니깐 등록했던 액터를 제거해줘야합니다. 하지않으면 메모리 누수가 일어날 수 있습니다.
 
 }

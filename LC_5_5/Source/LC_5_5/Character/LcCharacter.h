@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "LcCharacter.generated.h"
 
+class ULcPawnExtensionComponent;
+
 UCLASS()
 class LC_5_5_API ALcCharacter : public ACharacter
 {
@@ -26,4 +28,7 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "LC|Chacter")
+	TObjectPtr<ULcPawnExtensionComponent> PawnExtComponent;
 };

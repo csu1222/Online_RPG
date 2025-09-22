@@ -14,7 +14,7 @@ PRAGMA_DISABLE_DEPRECATION_WARNINGS
 #endif
 #define LC_5_5_LcCharacter_generated_h
 
-#define FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Character_LcCharacter_h_12_INCLASS_NO_PURE_DECLS \
+#define FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Character_LcCharacter_h_14_INCLASS_NO_PURE_DECLS \
 private: \
 	static void StaticRegisterNativesALcCharacter(); \
 	friend struct Z_Construct_UClass_ALcCharacter_Statics; \
@@ -23,7 +23,7 @@ public: \
 	DECLARE_SERIALIZER(ALcCharacter)
 
 
-#define FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Character_LcCharacter_h_12_ENHANCED_CONSTRUCTORS \
+#define FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Character_LcCharacter_h_14_ENHANCED_CONSTRUCTORS \
 private: \
 	/** Private move- and copy-constructors, should never be used */ \
 	ALcCharacter(ALcCharacter&&); \
@@ -35,12 +35,12 @@ public: \
 	NO_API virtual ~ALcCharacter();
 
 
-#define FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Character_LcCharacter_h_9_PROLOG
-#define FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Character_LcCharacter_h_12_GENERATED_BODY \
+#define FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Character_LcCharacter_h_11_PROLOG
+#define FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Character_LcCharacter_h_14_GENERATED_BODY \
 PRAGMA_DISABLE_DEPRECATION_WARNINGS \
 public: \
-	FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Character_LcCharacter_h_12_INCLASS_NO_PURE_DECLS \
-	FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Character_LcCharacter_h_12_ENHANCED_CONSTRUCTORS \
+	FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Character_LcCharacter_h_14_INCLASS_NO_PURE_DECLS \
+	FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Character_LcCharacter_h_14_ENHANCED_CONSTRUCTORS \
 private: \
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
