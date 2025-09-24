@@ -22,6 +22,14 @@ public:
 	static const FName NAME_ActorFeatureName;
 
 	/**
+	* member methods
+	*/
+	static ULcPawnExtensionComponent* FindPawnExtensionComponent(const AActor* Actor) { return (Actor ? Actor->FindComponentByClass<ULcPawnExtensionComponent>() : nullptr); }
+	template <class T>
+	const T* GetPawnData() const { return Cast<T>(PawnData); }
+	void SetPawnData(const ULcPawnData* InPawnData);
+
+	/**
 	* UPawnComponent interfaces
 	 */
 	virtual void OnRegister() final;

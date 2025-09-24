@@ -7,6 +7,7 @@
 #include "Components/PawnComponent.h"
 #include "LcHeroComponent.generated.h"
 
+class ULcCameraMode;
 /**
  * 
  */
@@ -16,5 +17,28 @@ class LC_5_5_API ULcHeroComponent : public UPawnComponent, public IGameFramework
 	GENERATED_BODY()
 public:
 	ULcHeroComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
-	
+
+	/** FeatureName Á¤ÀÇ */
+	static const FName NAME_ActorFeatureName;
+
+	/**
+	 * UPawnComponent interface
+	 */
+	virtual void OnRegister() final;
+	virtual void BeginPlay() final;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) final;
+
+	/**
+	* IGameFrameworkInitStateInterface
+	*/
+	virtual FName GetFeatureName() const final { return NAME_ActorFeatureName; }
+	virtual void OnActorInitStateChanged(const FActorInitStateChangedParams& Params) final;
+	virtual bool CanChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState, FGameplayTag DesiredState) const final;
+	virtual void HandleChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState, FGameplayTag DesiredState) final;
+	virtual void CheckDefaultInitialization() final;
+
+	/**
+	 * member methods
+	 */
+	TSubclassOf<ULcCameraMode> DetermineCameraMode() const;
 };

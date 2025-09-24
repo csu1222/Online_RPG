@@ -10,6 +10,7 @@
 #include "Player/LcPlayerState.h"
 #include "Character/LcCharacter.h"
 #include "Character/LcPawnData.h"
+#include "Character/LcPawnExtensionComponent.h"
 
 ALcGameModeBase::ALcGameModeBase()
 {
@@ -67,8 +68,30 @@ PRAGMA_ENABLE_OPTIMIZATION
 
 APawn* ALcGameModeBase::SpawnDefaultPawnAtTransform_Implementation(AController* NewPlayer, const FTransform& SpawnTransform)
 {
-	UE_LOG(LogLC, Log, TEXT("SpawnDefaultPawnAtTransform_Implementation is called!"));
-	return Super::SpawnDefaultPawnAtTransform_Implementation(NewPlayer, SpawnTransform);
+	FActorSpawnParameters SpawnInfo;
+	SpawnInfo.Instigator = GetInstigator();
+	SpawnInfo.ObjectFlags |= RF_Transient;
+	SpawnInfo.bDeferConstruction = true;
+
+	if (UClass* PawnClass = GetDefaultPawnClassForController(NewPlayer))
+	{
+		if (APawn* SpawnedPawn = GetWorld()->SpawnActor<APawn>(PawnClass, SpawnTransform, SpawnInfo))
+		{
+			// FindPawnExtensionComponent ±¸Çö
+			if (ULcPawnExtensionComponent* PawnExtComp = ULcPawnExtensionComponent::FindPawnExtensionComponent(SpawnedPawn))
+			{
+				if (const ULcPawnData* PawnData = GetPawnDataForController(NewPlayer))
+				{
+					PawnExtComp->SetPawnData(PawnData);
+				}
+			}
+
+			SpawnedPawn->FinishSpawning(SpawnTransform);
+			return SpawnedPawn;
+		}
+	}
+
+	return nullptr;
 }
 
 void ALcGameModeBase::HandleMatchAssignmentIfNotExpectingOne()
