@@ -43,7 +43,16 @@
             "d:\\program files\\epic games\\ue_5.5\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\character.generated.h",
             "d:\\cpp_game\\portfolio\\lc_5_5\\intermediate\\build\\win64\\unrealeditor\\inc\\lc_5_5\\uht\\lccharacter.generated.h",
             "d:\\cpp_game\\portfolio\\lc_5_5\\source\\lc_5_5\\character\\lcpawndata.h",
-            "d:\\cpp_game\\portfolio\\lc_5_5\\intermediate\\build\\win64\\unrealeditor\\inc\\lc_5_5\\uht\\lcpawndata.generated.h"
+            "d:\\cpp_game\\portfolio\\lc_5_5\\intermediate\\build\\win64\\unrealeditor\\inc\\lc_5_5\\uht\\lcpawndata.generated.h",
+            "d:\\cpp_game\\portfolio\\lc_5_5\\source\\lc_5_5\\character\\lcpawnextensioncomponent.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\plugins\\runtime\\modulargameplay\\source\\modulargameplay\\public\\components\\pawncomponent.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\plugins\\runtime\\modulargameplay\\intermediate\\build\\win64\\unrealeditor\\inc\\modulargameplay\\uht\\pawncomponent.generated.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\plugins\\runtime\\modulargameplay\\source\\modulargameplay\\public\\components\\gameframeworkinitstateinterface.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\source\\runtime\\gameplaytags\\classes\\gameplaytagcontainer.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\source\\runtime\\core\\public\\misc\\comparisonutility.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\gameplaytags\\uht\\gameplaytagcontainer.generated.h",
+            "d:\\program files\\epic games\\ue_5.5\\engine\\plugins\\runtime\\modulargameplay\\intermediate\\build\\win64\\unrealeditor\\inc\\modulargameplay\\uht\\gameframeworkinitstateinterface.generated.h",
+            "d:\\cpp_game\\portfolio\\lc_5_5\\intermediate\\build\\win64\\unrealeditor\\inc\\lc_5_5\\uht\\lcpawnextensioncomponent.generated.h"
         ],
         "ImportedModules": [],
         "ImportedHeaderUnits": []

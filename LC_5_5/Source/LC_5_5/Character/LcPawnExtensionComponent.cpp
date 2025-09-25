@@ -35,6 +35,12 @@ void ULcPawnExtensionComponent::SetPawnData(const ULcPawnData* InPawnData)
 	PawnData = InPawnData;
 }
 
+void ULcPawnExtensionComponent::SetupPlayerInputComponent()
+{
+	// ForceUpdate로 다시 InitState 상태 변환 시작 (연결 고리)
+	CheckDefaultInitialization();
+}
+
 void ULcPawnExtensionComponent::OnRegister()
 {
 	Super::OnRegister();

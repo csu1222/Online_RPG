@@ -137,14 +137,14 @@ void ULcHeroComponent::HandleChangeInitState(UGameFrameworkComponentManager* Man
 			PawnData = PawnExtComp->GetPawnData<ULcPawnData>();
 		}
 
-		if (bIsLocallyControlled && PawnData)
-		{
-			// 현재 HakCharacter에 Attach된 CameraComponent를 찾음
-			if (ULcCameraComponent* CameraComponent = ULcCameraComponent::FindCameraComponent(Pawn))
-			{
-				CameraComponent->DetermineCameraModeDelegate.BindUObject(this, &ThisClass::DetermineCameraMode);
-			}
-		}
+		//if (bIsLocallyControlled && PawnData)
+		//{
+		//	// 현재 HakCharacter에 Attach된 CameraComponent를 찾음
+		//	if (ULcCameraComponent* CameraComponent = ULcCameraComponent::FindCameraComponent(Pawn))
+		//	{
+		//		CameraComponent->DetermineCameraModeDelegate.BindUObject(this, &ThisClass::DetermineCameraMode);
+		//	}
+		//}
 	}
 }
 
@@ -159,22 +159,22 @@ void ULcHeroComponent::CheckDefaultInitialization()
 }
 
 PRAGMA_DISABLE_OPTIMIZATION
-TSubclassOf<ULcCameraMode> ULcHeroComponent::DetermineCameraMode() const
-{
-	const APawn* Pawn = GetPawn<APawn>();
-	if (!Pawn)
-	{
-		return nullptr;
-	}
-
-	if (ULcPawnExtensionComponent* PawnExtComp = ULcPawnExtensionComponent::FindPawnExtensionComponent(Pawn))
-	{
-		if (const ULcPawnData* PawnData = PawnExtComp->GetPawnData<ULcPawnData>())
-		{
-			return PawnData->DefaultCameraMode;
-		}
-	}
-
-	return nullptr;
-}
+//TSubclassOf<ULcCameraMode> ULcHeroComponent::DetermineCameraMode() const
+//{
+//	const APawn* Pawn = GetPawn<APawn>();
+//	if (!Pawn)
+//	{
+//		return nullptr;
+//	}
+//
+//	if (ULcPawnExtensionComponent* PawnExtComp = ULcPawnExtensionComponent::FindPawnExtensionComponent(Pawn))
+//	{
+//		if (const ULcPawnData* PawnData = PawnExtComp->GetPawnData<ULcPawnData>())
+//		{
+//			return PawnData->DefaultCameraMode;
+//		}
+//	}
+//
+//	return nullptr;
+//}
 PRAGMA_ENABLE_OPTIMIZATION
