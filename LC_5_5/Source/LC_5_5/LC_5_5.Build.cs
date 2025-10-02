@@ -29,6 +29,7 @@ public class LC_5_5 : ModuleRules
             "LC_5_5/Character",
             "LC_5_5/Player",
             "LC_5_5/GameModes",
+            "LC_5_5/Camera",
         });
         // Uncomment if you are using Slate UI
         // PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });

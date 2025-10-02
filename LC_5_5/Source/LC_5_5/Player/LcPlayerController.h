@@ -13,5 +13,7 @@ UCLASS()
 class LC_5_5_API ALcPlayerController : public APlayerController
 {
 	GENERATED_BODY()
+public:
+	ALcPlayerController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	
 };

@@ -6,6 +6,8 @@
 #include "Engine/DataAsset.h"
 #include "LcPawnData.generated.h"
 
+ class ULcCameraMode;
+
 /**
  * 
  */
@@ -19,5 +21,8 @@ public:
 	/** Pawn의 Class */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Lc|Pawn")
 	TSubclassOf<APawn> PawnClass;
-	
+
+	///* Camera Mode */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Lc|Camera")
+	TSubclassOf<ULcCameraMode> DefaultCameraMode;
 };

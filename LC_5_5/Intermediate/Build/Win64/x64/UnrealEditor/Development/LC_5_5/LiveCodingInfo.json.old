@@ -1,0 +1,44 @@
+{
+	"RemapUnityFiles": 
+	{
+		"Module.LC_5_5.cpp.obj": [
+			"LcAssetManager.gen.cpp.obj",
+			"LcCameraComponent.gen.cpp.obj",
+			"LcCameraMode.gen.cpp.obj",
+			"LcCharacter.gen.cpp.obj",
+			"LcExperienceDefinition.gen.cpp.obj",
+			"LcExperienceManagerComponent.gen.cpp.obj",
+			"LcGameInstance.gen.cpp.obj",
+			"LcGameModeBase.gen.cpp.obj",
+			"LcGameState.gen.cpp.obj",
+			"LcHeroComponent.gen.cpp.obj",
+			"LcPawnData.gen.cpp.obj",
+			"LcPawnExtensionComponent.gen.cpp.obj",
+			"LcPlayerCameraManager.gen.cpp.obj",
+			"LcPlayerController.gen.cpp.obj",
+			"LcPlayerState.gen.cpp.obj",
+			"LcUserFacingExperience.gen.cpp.obj",
+			"LC_5_5.init.gen.cpp.obj",
+			"PerModuleInline.gen.cpp.obj",
+			"LcCameraComponent.cpp.obj",
+			"LcCameraMode.cpp.obj",
+			"LcPlayerCameraManager.cpp.obj",
+			"LcCharacter.cpp.obj",
+			"LcHeroComponent.cpp.obj",
+			"LcPawnData.cpp.obj",
+			"LcPawnExtensionComponent.cpp.obj",
+			"LcExperienceDefinition.cpp.obj",
+			"LcExperienceManagerComponent.cpp.obj",
+			"LcGameModeBase.cpp.obj",
+			"LcGameState.cpp.obj",
+			"LcUserFacingExperience.cpp.obj",
+			"LcGameplayTags.cpp.obj",
+			"LcLogChannels.cpp.obj",
+			"LC_5_5.cpp.obj",
+			"LcPlayerController.cpp.obj",
+			"LcPlayerState.cpp.obj",
+			"LcAssetManager.cpp.obj",
+			"LcGameInstance.cpp.obj"
+		]
+	}
+}

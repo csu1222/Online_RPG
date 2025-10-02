@@ -51,6 +51,33 @@
     <ClCompile Include="..\..\Source\LC_5_5\LC_5_5.h">
       <Filter>Source\LC_5_5</Filter>
     </ClCompile>
+    <Filter Include="Source\LC_5_5\Camera">
+      <UniqueIdentifier>{8DA30B28-D064-3D79-BF07-572FED156CAC}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\LC_5_5\Camera\LcCameraComponent.cpp">
+      <Filter>Source\LC_5_5\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\Camera\LcCameraComponent.h">
+      <Filter>Source\LC_5_5\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\Camera\LcCameraMode.cpp">
+      <Filter>Source\LC_5_5\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\Camera\LcCameraMode.h">
+      <Filter>Source\LC_5_5\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\Camera\LcCameraMode_ThirdPerson.cpp">
+      <Filter>Source\LC_5_5\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\Camera\LcCameraMode_ThirdPerson.h">
+      <Filter>Source\LC_5_5\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\Camera\LcPlayerCameraManager.cpp">
+      <Filter>Source\LC_5_5\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\Camera\LcPlayerCameraManager.h">
+      <Filter>Source\LC_5_5\Camera</Filter>
+    </ClCompile>
     <Filter Include="Source\LC_5_5\Character">
       <UniqueIdentifier>{9682EBA6-20F7-377F-B2F8-03B61E27DB38}</UniqueIdentifier>
     </Filter>

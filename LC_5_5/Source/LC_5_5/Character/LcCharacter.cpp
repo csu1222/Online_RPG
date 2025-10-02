@@ -3,6 +3,7 @@
 
 #include "LcCharacter.h"
 #include "LcPawnExtensionComponent.h"
+#include "LcCameraComponent.h"
 
 // Sets default values
 ALcCharacter::ALcCharacter()
@@ -11,7 +12,14 @@ ALcCharacter::ALcCharacter()
 	PrimaryActorTick.bCanEverTick = false;
 	PrimaryActorTick.bStartWithTickEnabled = false;
 
+	// PawnExtensionComponent 持失
 	PawnExtComponent = CreateDefaultSubobject<ULcPawnExtensionComponent>(TEXT("PawnExtensionComponent"));
+
+	// CameraComponent 持失
+	{
+		CameraComponent = CreateDefaultSubobject<ULcCameraComponent>(TEXT("CameraComponent"));
+		CameraComponent->SetRelativeLocation(FVector(-300.0f, 0.0f, 75.0f));
+	}
 }
 
 // Called when the game starts or when spawned

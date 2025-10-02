@@ -7,6 +7,7 @@
 #include "LcCharacter.generated.h"
 
 class ULcPawnExtensionComponent;
+class ULcCameraComponent;
 
 UCLASS()
 class LC_5_5_API ALcCharacter : public ACharacter
@@ -31,4 +32,7 @@ public:
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "LC|Chacter")
 	TObjectPtr<ULcPawnExtensionComponent> PawnExtComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "LC|Chacter")
+	TObjectPtr<ULcCameraComponent> CameraComponent;
 };

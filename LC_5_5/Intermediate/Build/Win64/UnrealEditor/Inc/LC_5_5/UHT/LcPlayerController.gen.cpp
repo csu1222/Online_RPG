@@ -35,6 +35,7 @@ struct Z_Construct_UClass_ALcPlayerController_Statics
 		{ "HideCategories", "Collision Rendering Transformation" },
 		{ "IncludePath", "Player/LcPlayerController.h" },
 		{ "ModuleRelativePath", "Player/LcPlayerController.h" },
+		{ "ObjectInitializerConstructorDeclared", "" },
 	};
 #endif // WITH_METADATA
 	static UObject* (*const DependentSingletons[])();
@@ -75,7 +76,6 @@ template<> LC_5_5_API UClass* StaticClass<ALcPlayerController>()
 {
 	return ALcPlayerController::StaticClass();
 }
-ALcPlayerController::ALcPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {}
 DEFINE_VTABLE_PTR_HELPER_CTOR(ALcPlayerController);
 ALcPlayerController::~ALcPlayerController() {}
 // End Class ALcPlayerController
@@ -84,10 +84,10 @@ ALcPlayerController::~ALcPlayerController() {}
 struct Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Player_LcPlayerController_h_Statics
 {
 	static constexpr FClassRegisterCompiledInInfo ClassInfo[] = {
-		{ Z_Construct_UClass_ALcPlayerController, ALcPlayerController::StaticClass, TEXT("ALcPlayerController"), &Z_Registration_Info_UClass_ALcPlayerController, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(ALcPlayerController), 2337088485U) },
+		{ Z_Construct_UClass_ALcPlayerController, ALcPlayerController::StaticClass, TEXT("ALcPlayerController"), &Z_Registration_Info_UClass_ALcPlayerController, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(ALcPlayerController), 858039383U) },
 	};
 };
-static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Player_LcPlayerController_h_1421506208(TEXT("/Script/LC_5_5"),
+static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Player_LcPlayerController_h_1176297713(TEXT("/Script/LC_5_5"),
 	Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Player_LcPlayerController_h_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Player_LcPlayerController_h_Statics::ClassInfo),
 	nullptr, 0,
 	nullptr, 0);

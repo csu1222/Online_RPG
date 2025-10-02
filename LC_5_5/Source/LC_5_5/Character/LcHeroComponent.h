@@ -40,5 +40,5 @@ public:
 	/**
 	 * member methods
 	 */
-	//TSubclassOf<ULcCameraMode> DetermineCameraMode() const;
+	TSubclassOf<ULcCameraMode> DetermineCameraMode() const;
 };
