@@ -41,13 +41,75 @@ struct Z_Construct_UClass_ULcCameraMode_Statics
 		{ "ToolTip", "Camera Blending \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd" },
 #endif
 	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_FieldOfView_MetaData[] = {
+		{ "Category", "View" },
+		{ "Clampmax", "170.0" },
+		{ "ClampMin", "5.0" },
+#if !UE_BUILD_SHIPPING
+		{ "Comment", "/** Camera Mode\xef\xbf\xbd\xef\xbf\xbd FOV */" },
+#endif
+		{ "ModuleRelativePath", "Camera/LcCameraMode.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "Camera Mode\xef\xbf\xbd\xef\xbf\xbd FOV" },
+#endif
+		{ "UIMax", "170" },
+		{ "UIMin", "5.0" },
+	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_ViewPitchMin_MetaData[] = {
+		{ "Category", "View" },
+		{ "Clampmax", "89.9" },
+		{ "ClampMin", "-89.9" },
+#if !UE_BUILD_SHIPPING
+		{ "Comment", "/** View\xef\xbf\xbd\xef\xbf\xbd \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd Pitch [Min, Max] */" },
+#endif
+		{ "ModuleRelativePath", "Camera/LcCameraMode.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "View\xef\xbf\xbd\xef\xbf\xbd \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd Pitch [Min, Max]" },
+#endif
+		{ "UIMax", "89.9" },
+		{ "UIMin", "-89.9" },
+	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_ViewPitchMax_MetaData[] = {
+		{ "Category", "View" },
+		{ "Clampmax", "89.9" },
+		{ "ClampMin", "-89.9" },
+		{ "ModuleRelativePath", "Camera/LcCameraMode.h" },
+		{ "UIMax", "89.9" },
+		{ "UIMin", "-89.9" },
+	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_BlendTime_MetaData[] = {
+		{ "Category", "Blending" },
+#if !UE_BUILD_SHIPPING
+		{ "Comment", "/** \xef\xbf\xbd\xf3\xb8\xb6\xb5\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd Blend\xef\xbf\xbd\xef\xbf\xbd \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd \xef\xbf\xbd\xc3\xb0\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd \xef\xbf\xbd\xc7\xb9\xef\xbf\xbd */" },
+#endif
+		{ "ModuleRelativePath", "Camera/LcCameraMode.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "\xef\xbf\xbd\xf3\xb8\xb6\xb5\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd Blend\xef\xbf\xbd\xef\xbf\xbd \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd \xef\xbf\xbd\xc3\xb0\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd \xef\xbf\xbd\xc7\xb9\xef\xbf\xbd" },
+#endif
+	};
 #endif // WITH_METADATA
+	static const UECodeGen_Private::FFloatPropertyParams NewProp_FieldOfView;
+	static const UECodeGen_Private::FFloatPropertyParams NewProp_ViewPitchMin;
+	static const UECodeGen_Private::FFloatPropertyParams NewProp_ViewPitchMax;
+	static const UECodeGen_Private::FFloatPropertyParams NewProp_BlendTime;
+	static const UECodeGen_Private::FPropertyParamsBase* const PropPointers[];
 	static UObject* (*const DependentSingletons[])();
 	static constexpr FCppClassTypeInfoStatic StaticCppClassTypeInfo = {
 		TCppClassTypeTraits<ULcCameraMode>::IsAbstract,
 	};
 	static const UECodeGen_Private::FClassParams ClassParams;
 };
+const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_ULcCameraMode_Statics::NewProp_FieldOfView = { "FieldOfView", nullptr, (EPropertyFlags)0x0010000000010001, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(ULcCameraMode, FieldOfView), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_FieldOfView_MetaData), NewProp_FieldOfView_MetaData) };
+const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_ULcCameraMode_Statics::NewProp_ViewPitchMin = { "ViewPitchMin", nullptr, (EPropertyFlags)0x0010000000010001, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(ULcCameraMode, ViewPitchMin), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ViewPitchMin_MetaData), NewProp_ViewPitchMin_MetaData) };
+const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_ULcCameraMode_Statics::NewProp_ViewPitchMax = { "ViewPitchMax", nullptr, (EPropertyFlags)0x0010000000010001, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(ULcCameraMode, ViewPitchMax), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ViewPitchMax_MetaData), NewProp_ViewPitchMax_MetaData) };
+const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_ULcCameraMode_Statics::NewProp_BlendTime = { "BlendTime", nullptr, (EPropertyFlags)0x0010000000010001, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(ULcCameraMode, BlendTime), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_BlendTime_MetaData), NewProp_BlendTime_MetaData) };
+const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UClass_ULcCameraMode_Statics::PropPointers[] = {
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_ULcCameraMode_Statics::NewProp_FieldOfView,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_ULcCameraMode_Statics::NewProp_ViewPitchMin,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_ULcCameraMode_Statics::NewProp_ViewPitchMax,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_ULcCameraMode_Statics::NewProp_BlendTime,
+};
+static_assert(UE_ARRAY_COUNT(Z_Construct_UClass_ULcCameraMode_Statics::PropPointers) < 2048);
 UObject* (*const Z_Construct_UClass_ULcCameraMode_Statics::DependentSingletons[])() = {
 	(UObject* (*)())Z_Construct_UClass_UObject,
 	(UObject* (*)())Z_Construct_UPackage__Script_LC_5_5,
@@ -59,11 +121,11 @@ const UECodeGen_Private::FClassParams Z_Construct_UClass_ULcCameraMode_Statics::
 	&StaticCppClassTypeInfo,
 	DependentSingletons,
 	nullptr,
-	nullptr,
+	Z_Construct_UClass_ULcCameraMode_Statics::PropPointers,
 	nullptr,
 	UE_ARRAY_COUNT(DependentSingletons),
 	0,
-	0,
+	UE_ARRAY_COUNT(Z_Construct_UClass_ULcCameraMode_Statics::PropPointers),
 	0,
 	0x001000A0u,
 	METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_ULcCameraMode_Statics::Class_MetaDataParams), Z_Construct_UClass_ULcCameraMode_Statics::Class_MetaDataParams)
@@ -188,11 +250,11 @@ ULcCameraModeStack::~ULcCameraModeStack() {}
 struct Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Camera_LcCameraMode_h_Statics
 {
 	static constexpr FClassRegisterCompiledInInfo ClassInfo[] = {
-		{ Z_Construct_UClass_ULcCameraMode, ULcCameraMode::StaticClass, TEXT("ULcCameraMode"), &Z_Registration_Info_UClass_ULcCameraMode, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(ULcCameraMode), 2145154044U) },
+		{ Z_Construct_UClass_ULcCameraMode, ULcCameraMode::StaticClass, TEXT("ULcCameraMode"), &Z_Registration_Info_UClass_ULcCameraMode, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(ULcCameraMode), 116353564U) },
 		{ Z_Construct_UClass_ULcCameraModeStack, ULcCameraModeStack::StaticClass, TEXT("ULcCameraModeStack"), &Z_Registration_Info_UClass_ULcCameraModeStack, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(ULcCameraModeStack), 3471300103U) },
 	};
 };
-static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Camera_LcCameraMode_h_3444809266(TEXT("/Script/LC_5_5"),
+static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Camera_LcCameraMode_h_368954494(TEXT("/Script/LC_5_5"),
 	Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Camera_LcCameraMode_h_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Camera_LcCameraMode_h_Statics::ClassInfo),
 	nullptr, 0,
 	nullptr, 0);

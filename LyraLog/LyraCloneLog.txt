@@ -3002,4 +3002,524 @@ Lyra 는 에픽게임즈에서 공식으로 배포하는 게임 프로젝트로 
 	
 	어디서 바인딩을 하냐면 HeroComponent 에서 합니다. HandleChangeInitState 함수에서 바인딩을 해주는데 
 	바인딩 해주는 함수도 같이 들고 있어서 폰데이터에서 디폴트 카메라 모드를 반환하는 함수입니다. 
+
+
+	# 2 
+
+	카메라 컴포넌트에서 카메라 모드 스택에 카메라 모드를 푸시 하는 함수를 아직 안만들어 놨습니다. 
+	이런 카메라에 대한 기능들을 만들어 보겠습니다. 
+
+	LcCameraModeStack 클래스에 멤버 함수를 추가합니다. 
+	
+	/**
+	 * member variables
+	 */
+	ULcCameraMode* GetCameraModeInstance(TSubclassOf<ULcCameraMode>& CameraModeClass);
+	void PushCameraMode(TSubclassOf<ULcCameraMode>& CameraModeClass);
+
+	void ULcCameraModeStack::PushCameraMode(TSubclassOf<ULcCameraMode>& CameraModeClass)
+	{
+		if (!CameraModeClass)
+		{
+			return;
+		}
+
+		ULcCameraMode* CameraMode = GetCameraModeInstance(CameraModeClass);
+		check(CameraMode);
+	}
+	PushCameraMode 함수부터 보면 인자로 카메라 모드의 TSubclassOf 를 받고 있습니다. 인자로 받은 객체의 메타데이터를 
+	가져오는겁니다. 그 카메라 모드의 메타데이터를 GetCameraModeInstance 함수에 넘겨줘서 가져오고 있습니다. 
+
+	받은 카메라모드를 곧바로 스택에 저장하면 될거 같은데 굳이 GetCameraModeInstance 함수에 넘겨줘서 처리하는 방식을 사용할까요 
+		
+	ULcCameraMode* ULcCameraModeStack::GetCameraModeInstance(TSubclassOf<ULcCameraMode>& CameraModeClass)
+	{
+		check(CameraModeClass);
+
+		// CameraModeInstances에서 먼저 생성되어있는지 확인 후, 반환한다:
+		for (ULcCameraMode* CameraMode : CameraModeInstances)
+		{
+			// CameraMode는 UClass를 비교한다:
+			// - 즉, CameraMode는 클래스 타입에 하나만 생기게된다
+			if ((CameraMode != nullptr) && (CameraMode->GetClass() == CameraModeClass))
+			{
+				return CameraMode;
+			}
+		}
+
+		// CameraModeClass에 알맞는 CameraMode의 인스턴스가 없다면 생성한다:
+		ULcCameraMode* NewCameraMode = NewObject<ULcCameraMode>(GetOuter(), CameraModeClass, NAME_None, RF_NoFlags);
+		check(NewCameraMode);
+
+		// 여기서 우리는 CameraModeInstances는 CameraModeClass에 맞는 인스턴스를 가지고(관리하는) 컨테이너이라는 것을 알 수 있다
+		CameraModeInstances.Add(NewCameraMode);
+
+		return NewCameraMode;
+	}
+	인자로 받은 CameraModeClass 를 체크한 다음 CameraModeInstances 를 순회 하고 있습니다. 
+	이 CameraModeInstances 는 CameraModeStack 클래스에 만들어둔 멤버 변수로 TArray<TObject<ULcCameraMode>> 타입의 배열입니다. 
+	이 배열을 순회하면서 순회하는 원소가 nullptr 이 아니고 인자로 받은 CameraModeClass 와 같다면 원소를 받환합니다. 
+	만약 CameraModeClass 와 같은 원소가 CameraModeInstances 안에 없다면 NewObject 로 새로 만들어 CameraModeInstances 에 추가하고있습니다. 
+
+	이것은 PushCameraMode 를 하는 모든 카메라 모드들을 CameraModeInstances 에 다 담아 두는것입니다. 
+
+	즉 PushCameraMode 에서 GetCameraModeInstance 를 하는 이유는 인자로 받은 카메라 모드를 CameraModeInstances 에 캐싱하는 
+	과정을 추가하는것입니다. 
+
+	캐싱이라는것은 메모리를 사용해서 데이터를 로딩하는 시간을 줄이기 위해 사용합니다. 
+	카메라 모드가 달라 질때 마다 새로 NewObject로 만들어 사용하는것보다 캐싱을해두고 꺼내 사용하는게 성능상 이득입니다. 
+
+	다음은 이제 카메라 모드를 제대로 구현하는것입니다. 
+	카메라 모드를 사용하기 위한 변수값들을 정의 하겠습니다. 
+	
+	// CameraMode 클래스에 멤버 변수 추가
+	/** 얼마동안 Blend를 진행할지 시간을 의미 */
+	UPROPERTY(EditDefaultsOnly, Category = "Blending")
+	float BlendTime;
+
+	/** 선형적인 Blend 값 [0, 1] */
+	float BlendAlpha;
+
+	/**
+	 * 해당 CameraMode의 최종 Blend 값
+	 * 앞서 BlendAlpha의 선형 값을 매핑하여 최종 BlendWeight를 계산 (코드를 보며, 이해해보자)
+	 */
+	float BlendWeight;
+
+	세가지 float 변수를 추가합니다. 블랜드라는 단어를 앞에 달고 있는 변수들입니다. 
+	블렌드라는것은 두가지 대상을 섞는것을 말하는데 
+	여기서는 두가지나 그 이상의 카메라 모드를 섞는걸 말하는것입니다. 
+
+	이 세가지 블렌드 값을 가지고 어떻게 연산하는지 PushCameraMode 의 나머지 코드를 보겠습니다. 
+	
+	int32 StackSize = CameraModeStack.Num();
+	if ((StackSize > 0) && (CameraModeStack[0] == CameraMode))
+	{
+		// CameraModeStack[0] 가장 최근에 이미 CameraMode가 Stacking되었으므로 그냥 리턴!
+		return;
+	}
+
+	이 코드는 CameraModeStack 의 상단 데이터와 지금 Push 하려는 카메라 모드가 같다면 바로 리턴하는 코드입니다. 
+	한가지 특이한점은 기본적인 스택의 경우 최신 데이터의 인덱스가 큰숫자로 가는 반면 CameraModeStack은 반대로 
+	낮은 숫자가 최신 데이터입니다.
+	업데이트 하려는 카메라 모드가 가장 최신의 카메라 모드와 같다면 업데이트 할 필요가 없으니 리턴하는것입니다. 
+
+	// ExistingStackIndex는 CameraModeStack에서 CameraMode에 맞는 Index를 찾음
+	// ExistingStackContribution은 위에서 아래로 최종 BlendWeight 값을 찾기 위해 초기값으로 1.0으로 설정
+	int32 ExistingStackIndex = INDEX_NONE;
+	float ExistingStackContribution = 1.0f;
+
+	/**
+	 * BlendWeight    |    ExistingStackCOntribution    |    ExistingStackCOntribution (accumulated)
+	 * 0.1f           |    (1.0f) * 0.1f = 0.1f         |    (1.0f - 0.1f) = 0.9f
+	 * 0.3f           |    (0.9f) * 0.3f = 0.27f        |    (1.0f - 0.3f) * 0.9f = 0.63f
+	 * 0.6f           |    (0.63f) * 0.6f = 0.378f      |    (1.0f - 0.6f) * 0.63f = 0.252f
+	 * 1.0f           |    (0.252f) * 1.0f = 0.252f     |
+	 *                |    0.1f + 0.27f + 0.378f + 0.252f = 1.0f!
+	 */
+	다음은 두가지 변수가 있는데 이것들을 알아보기 전 BlendWeight 에 대해 대략적으로라도 알아야합니다.
+	BlendWeight 는 0.f 부터 1.f 까지 값이 있는데 0에 가까울수록 최신 카메라 모드인것이고 1에 가까워지면 
+	오래된 카메라 모드인겁니다. 
+
+	위의 주석을 예시로 보면 ExistingStackContribution 이라는 값이 1.0f 부터 시작하는데 이값이 BlendWeight 의 비율로 
+	나뉘는 것입니다. 
+	순서대로 1.0f 라는 값에서 첫번째 BlendWeight 로 곱하면 0.1f 이고 1.0f 라는 총량에 0.1f 값을 빼고 남는 용량이 0.9f 입니다. 
+	이 다음 blendWeight 는 0.9f 와 곱해지고 그 곱한값을 또 총용량에 -를 해줍니다. 이렇게 해서 네가지 blendWeight를 다 계산하고 총량을 다 
+	더해보면 1.0f 가 나옵니다. 
+
+	이런 보간 계산을 해주는 것이 아래 코드입니다. 
+
+	for (int32 StackIndex = 0; StackIndex < StackSize; ++StackIndex)
+	{
+		if (CameraModeStack[StackIndex] == CameraMode)
+		{
+			ExistingStackIndex = StackIndex;
+			// BlendWeight를 CameraMode에 추가해주자:
+			// - 여기서 ExistingStackContribution 우리가 찾는 CameraMode를 찾았으니깐, 누적된 BlendWeight와 함께 BlendWeight을 곱하여, 루프를 빠져나온다
+			ExistingStackContribution *= CameraMode->BlendWeight;
+			break;
+		}
+		else
+		{
+			// 당연히 우리가 원하는 CamearMode가 아니니깐, InvBlendWeight = (1.0 - BlendWeight)를 곱해줘야, 값이 누적되겠징?
+			ExistingStackContribution *= (1.0f - CameraModeStack[StackIndex]->BlendWeight);
+		}
+	}
+	// 해당 루프의 동작 원리는 앞서 적어놓은 표를 확인해보며 이해해보자.
+
+	스택 인덱스를 0부터 스택 사이즈크기까지 증가하면서 순환하는 for문입니다. 
+	조건문으로 스택인덱스를 카메라 모드 스택의 인덱스로 쓰면서 해당 인덱스의 원소가 CameraMode 인지를 체크하고 있습니다. 
+	여기서 CameraMode 는 PushCameraMode 에 들어온 카메라 모드입니다. 즉, 지금 CameraModeStack 의 몇번째 인덱스에 현재 PushCameraMode 의 인자인
+	카메라 모드가 있는지를 찾고 있습니다.
+	조건문이 참이라면 ExistingStackIndex 에 인덱스 값을 저장하고 ExistingStackContribution 에 카메라모드가 들고 있을 BlendWeight를 곱하여 저장합니다.
+	조건문이 거짓일때는 ExistingStackContribution 에 CameraModeStack 에서 현재 인덱스에 해당하는 카메라모드의 BlendWeight 를 곱하여 1.0f 에서 빼준후 
+	곱합니다.
+	이 수식은 푸시된 카메라 모드가 첫번째로 들어왔다면 0.1f 가 출력될것이지만 두번째 세번째로 들어온다면 앞의 인덱스에서 사용한 만큼의 값을 누적으로 
+	빼줘야하는 조건을 수식으로 표현한것입니다. 
+
+	// 우리는 CameraMode를 Top으로 반영하기 위해, 당연히 중간에 있었다면, 제거하여 다시 Push 해줘야 한다
+	if (ExistingStackIndex != INDEX_NONE)
+	{
+		CameraModeStack.RemoveAt(ExistingStackIndex);
+		StackSize--;
+	}
+	else
+	{
+		// 없었으니깐 당연히 Contribution은 0으로 세팅해줘야겠징?
+		ExistingStackContribution = 0.0f;
+	}
+	이 조건문에서 ExistingStackIndex 가 None 이 아니라는것은 위의 코드에서 CameraModeStack 에 지금 푸시할 카메라모드가 있다는것입니다. 
+	그리고 CameraModeStack 에서 해당 인덱스로 Remove 를 합니다. 
+
+	왜 이런 로직이 있냐면 카메라 모드 스택안에 카메라 모드들이 딱 하나씩 들어있어야 하고 새로 들어온 카메라 모드는 가장 앞으로 가져올겁니다. 
+	그래서 지금 이 조건문에서 하는것은 지금 들어온 카메라 모드를 최상단으로 올리기 위해 일단 기존 스택에서 없애는것입니다. 
+	하지만 이 조건문에 부합하지 않는다라는것 ExsitingStackIndex 가 INDEX_NONE 이라는것은 현재 CameraModeStack 안에 
+	지금들어온 카메라 모드를 못찾았다는것입니다. 새로 카메라 모드 스택에 신규 카메라 모드가 들어오며서 ExistingStackCOntribution 을 0.0f 로 밀어줍니다. 
+	새로운 카메라 모드라는것은 가장 최신의 위치에 있는 카메라 모드라는것으로 0.0f 값을 주게 됩니다. 
+
+	// BlendTime이 0보다 크다는 것은 Blend을 얼마 시간동안 진행함을 의미 따라서, ExistingStackContribution을 적용
+	// - 따라서 Blend하지 않는다면, BlendWeight를 1.0을 넣어 새로 넣는 CameraMode만 적용할 것이다
+	const bool bShouldBlend = ((CameraMode->BlendTime > 0.f) && (StackSize > 0));
+	const float BlendWeight = (bShouldBlend ? ExistingStackContribution : 1.0f);
+	CameraMode->BlendWeight = BlendWeight;
+	
+	변수 bShouldBlend는 이름대로 Blend를 할것인지를 불리언으로 표현한것인데 블랜드 타임이 0이라는것은 블렌드를 하지 않겠다라는것이고 
+	스택사이즈가 0일때도 카메라 모드가 단 하나이기 때문에 블랜드를 할 수 없는상태입니다. 
+	float BlendWeight 는 bShouldBlend 값에 따라 참이라면 ExistingStackContribution 값을 반환하거나 거짓이라면 1.0f 값을 그냥 넣습니다. 
+	이렇게 구한 BlendWeight를 푸시하려는 카메라 모드의 BlendWeight에 저장합니다.  
+
+	// 흠.. Array를 Stack처럼 사용하는것은 알지만, Index 0에 넣는건 비효율적인데..
+	// - Push, Pop 메서드와 같이그냥 last에 넣는게... 어떨까 싶음
+	CameraModeStack.Insert(CameraMode, 0);
+
+	// 앞서 설명했듯이 마지막은 항상 1.0이 되어야 함!
+	CameraModeStack.Last()->BlendWeight = 1.0f;
+
+	여기까지 PushCameraMode 의 코드였습니다. 
+	이 함수가 하는일을 간단하게 말하자면 카메라 모드들을 카메라 모드 스택에 푸시를 할건데 각 BlendWeight를 
+	비율에 따라 1.0f 부터 0.0f 까지 계산을 해주는것입니다. 
+	특이한점은 스택이지만 뒷 인덱스에 최신 데이터를 넣는게 아니라 0번 인덱스가 최신데이터가 되도록 저장한다는것입니다. 
+
+
+	다음으로 할일은 카메라 컴포넌트의 GetCameraView 입니다. 
+	GetCameraView 는 매 프레임 호출된다는 특징을 이용해 여기서 UpdateCameraModes 함수를 여기서 호출해줬었습니다. 
+	UpdateCameraModes 에서는 호출될때 마다 델리게이트를 받아서 PawnData가 가지고 있는 DefaultCameraMode 를 
+	PushCameraMode 해줍니다. 
+
+	이 외에 코드 두줄을 GetCameraView 에서 호출해줄겁니다. 
+
+	// EvaluateStack은 CameraModeStack에 있는 CameraMode를 업데이트(+블랜딩)하고 CameraModeStack을 Bottom-Top까지 업데이트된 CameraMode들을 Lerp를 진행해준다.
+	// - 이에 대한 결과는 CameraModeView에 캐싱된다
+	FLcCameraModeView CameraModeView;
+	
+	CameraModeStack->EvaluateStack(DeltaTime, CameraModeView);
+
+	FLcCameraModeView 와 카메라 모드 스택의 EvaluateStack 함수는 아직 구현이 안된 코드입니다. 
+	먼저 CameraModeView 를 구현해보겠습니다. 
+
+	LcCameraMode.h 에 새로 구조체를 선언할건데 이게 CameraModeView 입니다. 
+	/**
+	* FLcCameraModeView
+	*/
+	struct FLcCameraModeView
+	{
+		FLcCameraModeView();
+
+		FVector Location;
+		FRotator Rotation;
+		FRotator ControlRotation;
+		float FieldOfView;
+	};
+
+	카메라 모드 뷰 라는것은 현재 카메라가 바라보는 시야입니다. 렌더링을 해야할 그 영역입니다. 
+	네가지 변수가 있는데 Location, Rotation, ControlRotation, FieldOfView 입니다. 
+	렌더링 해야하는 그 영역을 이 구조체에 담아 넘겨줄겁니다. 
+
+	FLcCameraModeView 의 생성자에서는 변수들을 초기화 해줄겁니다. 
+		
+	FLcCameraModeView::FLcCameraModeView()
+		: Location(ForceInit)
+		, Rotation(ForceInit)
+		, ControlRotation(ForceInit)
+		, FieldOfView(LC_CAMERA_DEFAULT_FOV)
+	{
+	}
+	ForceInit 은 사실 0 값을 가집니다. 즉 Location, Rotation, ControlRotation 은 0으로 초기화를 한것이고 
+	LC_CAMERA_DEFAULT_FOV 는 LcPlayerCameraManager 에서 선언해놨던 값으로 80.0f 값입니다. 
+
+	이제 LcCameraComponent::GetCameraView 에 새로 추가한 코드중 FLcCameraModeView 는 해결했습니다. 
+
+	다음으로 CameraModeStack->EvaluateStack 을 구현해보겠습니다. 
+		
+	void ULcCameraModeStack::EvaluateStack(float DeltaTime, FLcCameraModeView& OutCameraModeView)
+	{
+		// Top -> Bottom [0 -> Num]까지 순차적으로 Stack에 있는 CameraMode 업데이트
+		UpdateStack(DeltaTime);
+
+		// Bottom -> Top까지 CameraModeStack에 대해 Blending 진행
+		BlendStack(OutCameraModeView);
+	}
+
+	EvaluateStack 안에서 또 두가지 함수를 호출하고 있습니다. 
+	GetCameraView 에서 호출되면서 먼저 UpdateCameraModes 를 통해 현재 사용하고 있는 카메라 모드를 스택에 저장한 후에 
+	EvaluateStack 에서 카메라 모드들에 대해 업데이트를 진행하고 Blend 도 진행해줄겁니다. 
+
+	그런데 여기서 눈여겨봐야할것은 주석의 내용입니다. 
+	UpdateStack 에서는 Top 에서 Bottom 순으로 업데이트한다고 합니다. 즉 최신 카메라 모드에서 가장 오래된 카메라 모드순으로 
+	업데이트를 진행하고 
+	BlendStack 은 Top 에서 Bottom 순으로 Blend 가 진행됩니다. 
+
+	UpdateStack 코드 부터 보겠습니다. 
+	void ULcCameraModeStack::UpdateStack(float DeltaTime)
+	{
+		const int32 StackSize = CameraModeStack.Num();
+		if (StackSize <= 0)
+		{
+			return;
+		}
+
+		// CameraModeStack을 순회하며, CameraMode를 업데이트한다
+		int32 RemoveCount = 0;
+		int32 RemoveIndex = INDEX_NONE;
+		for (int32 StackIndex = 0; StackIndex < StackSize; ++StackIndex)
+		{
+			ULcCameraMode* CameraMode = CameraModeStack[StackIndex];
+			check(CameraMode);
+
+			// UpdateCameraMode를 확인해보자:
+			CameraMode->UpdateCameraMode(DeltaTime);
+
+			// 만약 하나라도 CameraMode가 BlendWeight가 1.0에 도달했다면, 그 이후 CameraMode를 제거한다
+			if (CameraMode->BlendWeight >= 1.0f)
+			{
+				RemoveIndex = (StackIndex + 1);
+				RemoveCount = (StackSize - RemoveIndex);
+				break;
+			}
+		}
+
+		if (RemoveCount > 0)
+		{
+			// 생각해보면 이거 때문에 Pop하고 Push를 안한거일지도?
+			CameraModeStack.RemoveAt(RemoveIndex, RemoveCount);
+		}
+	}
+	이 함수는 카메라 모드 스택을 순회 하면서 각 카메라 모드의 BlendWeight 를 확인해 1.0f 에 도달한 카메라 모드를 
+	카메라 모드 스택에서 없애고 있습니다. 
+
+	좀 더 자세히 보자면 이 과정중에 순회를 할때 카메라 모드 스택의 0번 인덱스부터 순회를 시작하는데 
+	0번인덱스가 가장 최신 카메라 모드라고 했었습니다. 또 중간에 CameraMode->UpdataCameraMode 를 진행합니다. 
+	그리고 카메라 모드의 BlendWeight 가 1.0f 일때 RemoveIndex 값을 정하는데 자신이 아니라 자신 다음번 인덱스를 정합니다. 
+	또 RemoveCount는 StackSize - RemoveIndex 라고 합니다. 
+	이 값을 사용해서 카메라 모드 스택에서 원소들을 지워주고 있습니다. 
+
+	무슨 말인지 예시를 들자면 배틀필드 같은 게임에서 1인칭 시점과 스나이퍼 스코프, 탱크를 탑승한 시점 이렇게 세가지 카메라 모드가 있다고 했을때 
+	1인칭 시점의 BlendWeight 가 0.6f 로 0번인덱스, 스타이퍼 스코프 시점의 BlendWeight 가 1.1f 로 1번인덱스, 탱크 시점이 1.4f 로 2번인덱스에 
+	있다고 해보겠습니다. 
+
+	이런 카메라 모드 스택에서 UpdateStack 함수를 호출하면 1번 인덱스때에 조건문에 걸릴겁니다. 
+	그러면 RemoveIndex는 2, RemoveCount는 1 이 됩니다. 
+	이 상태로 아래 코드까지 들어가면 RemoveCount 가 1로 0보다 크기때문에 통과가 되고 RemoveAt 을 RemoveIndex 인 2번 부터 RemoveCount 인 1개 
+	삭제해줍니다. 그러면 스나이퍼 스코프 다음에 위치한 카메라 모드들은 다 삭제가 됩니다. 
+
+	그런데 RemoveAt 의 기준이 1.0f 이상으로 잡은건데 이게 무슨 의미냐면 
+	프로젝트에서 가장 최신의 카메라 모드를 0.0f 로 두고 가장 오래된 카메라 모드를 1.0f 로 둔다고 했었는데 
+	카메라 모드 스택에 언제까지 카메라 모드 스택들을 담아둘건지 기준을 1.0f 로 둔겁니다. 
+
+	이 로직에서 카메라 모드 스택이 최신 원소를 0번 인덱스에 두고 가장 오래된 원소를 가장뒷 인덱스에 두는 이유를 알 수 있습니다. 
+	순회를 0번 인덱스부터 하기때문에 가장 최신 카메라 모드부터 BlendWeight를 체크할 수 있습니다. 그리고 1.0f 를 넘는 카메라 모드를 확인한 순간 
+	그 뒷쪽 원소들은 확인할 필요가 없습니다. 
+	반대로 0번 인덱스를 오래된 카메라 모드 부터 넣는다면 첫번째 부터 BlendWeight 가 1.0f 가 넘어가도 다음 인덱스를 확인해봐야 합니다. 
+	언제부터 1.0f 이하로 내려오는지를 알 수 없기 때문입니다. 
+	하지만 새로 카메라 모드를 등록할때는 똑같이 O(N) 이기는 합니다. 하지만 새로운 카메라를 등록하는것보다 오래 등록된 카메라 모드를 
+	쳐내는게 더 빈번하기 때문에 라이라는 이렇게 만든것 같습니다. 
+
+	그리고 코드에서 1.0f 부터 딱 자른다면 예시의 스나이퍼 스코프 카메라 모드도 지우는 것들에 포함이 되어야합니다. 
+	하지만 그 다음 인덱스부터 삭제하도록 하고 있는데 
+	왜그렇냐면 카메라 모드들의 BlendWeight 는 시간경과에 따른 값이라고 했는데 그러면 아무런 변화가 없어도 카메라 모드들의 BlendWeight 값이 
+	계속 커질것이고 모든 카메라 모드들이 1.0f 값을 넘게 될건데 
+	어찌 됐건 카메라 모드 하나만은 남아있어야 화면을 렌더링할 수 있을것입니다. 이게 위의 코드의 이유입니다. 
+	1.0f 보다 큰 카메라 모드 다음것부터 지우는 코드로 최소한 하나의 카메라모드를 가지고 있을 수 있습니다. 
+
+	UpdateStack 함수에서 아직 구현하지 않은 부분이 CameraMode->UpdateCameraMode 입니다. 
+	여기서 DeltaTime을 인자로 받고있는데 이 델타 타임을 통해 카메라 모드의 BlendWeight 같은것들을 업데이트 할것입니다. 
+
+	CameraMode::UpdateCameraMode 를 구현해보겠습니다. 
+		
+	void ULcCameraMode::UpdateCameraMode(float DeltaTime)
+	{
+		// Actor를 활용하여, Pivot[Location|Rotation]을 계산하여, View를 업데이트
+		UpdateView(DeltaTime);
+
+		// BlendWeight를 DeltaTime을 활용하여, BlendAlpha 계산 후, BlendFunction에 맞게 재-매핑하여 최종 계산
+		UpdateBlending(DeltaTime);
+	}
+
+	UpdateCameraMode 에서 또 두가지 함수를 호출하고 있습니다. 
+	함수 두개도 추가할것이지만 또 그에 따라 필요한 몇가지가 더있습니다. 
+
+	// CameraMode 클래스 추가 코드 
+	virtual void UpdateView(float DeltaTime);
+	void UpdateBlending(float DeltaTime);
+
+	// CameraMode 클래스에 추가될 멤버 함수들 
+	/**
+	 * member variables
+	 */
+
+	 /** CameraMode에 의해 생성된 CameraModeView */
+	FLcCameraModeView View;
+
+	/** Camera Mode의 FOV */
+	UPROPERTY(EditDefaultsOnly, Category = "View", Meta = (UIMin = "5.0", UIMax = "170", ClampMin = "5.0", Clampmax = "170.0"))
+	float FieldOfView;
+
+	/** View에 대한 Pitch [Min, Max] */
+	UPROPERTY(EditDefaultsOnly, Category = "View", Meta = (UIMin = "-89.9", UIMax = "89.9", ClampMin = "-89.9", Clampmax = "89.9"))
+	float ViewPitchMin;
+
+	UPROPERTY(EditDefaultsOnly, Category = "View", Meta = (UIMin = "-89.9", UIMax = "89.9", ClampMin = "-89.9", Clampmax = "89.9"))
+	float ViewPitchMax;
+
+	먼저 만들었었던 LcCameraModeView 를 카메라 모드 단위에서 들고 있을것이고 
+	다른 멤버 변수 FieldOfView, ViewPitchMin, ViewPitchMax 들이 달고 있는 UPROPERTY의 인자를 보면 메타 데이터로 
+	여러값을 설정할 수 있는데 카메라에서 기본적으로 설정할 min max 값들을 설정한것입니다. 
+
+	실제 초기화 값을 LcCameraMode 의 생성자에서 초기화 할겁니다. 
+		
+	ULcCameraMode::ULcCameraMode(const FObjectInitializer& ObjectInitializer)
+		: Super(ObjectInitializer)
+	{
+		// Constructor body
+		FieldOfView = LC_CAMERA_DEFAULT_FOV;		// 80.0f
+		ViewPitchMin = LC_CAMERA_DEFAULT_PITCH_MIN;	//-89.0f
+		ViewPitchMax = LC_CAMERA_DEFAULT_PITCH_MAX;	// 89.0f
+
+		BlendTime = 0.0f;
+		BlendAlpha = 1.0f;
+		BlendWeight = 1.0f;
+	}
+
+	추가된 멤버 변수를 초기화 했으니 다음은 원래 하려던 UpdateView, UpdateBlending 을 구현할 차례입니다. 
+		
+	void ULcCameraMode::UpdateView(float DeltaTime)
+	{
+		// CameraMode를 가지고 있는 CameraComponent의 Owner인 Character(Pawn)을 활용하여, PivotLocation/Rotation을 반환함
+		FVector PivotLocation = GetPivotLocation();
+		FRotator PivotRotation = GetPivotRotation();
+
+		// Pitch 값에 대해 Min/Max를 Clamp시킴
+		PivotRotation.Pitch = FMath::ClampAngle(PivotRotation.Pitch, ViewPitchMin, ViewPitchMax);
+
+		// FHakCameraModeView에 PivotLocation/Rotation 설정
+		View.Location = PivotLocation;
+		View.Rotation = PivotRotation;
+
+		// PivotRotation을 똑같이 ControlRotation으로 활용
+		View.ControlRotation = View.Rotation;
+		View.FieldOfView = FieldOfView;
+
+		// 정리하면, Character의 Location과 ControlRotation을 활용하여, View를 업데이트함
+	}
+	UpdateView 에서는 PivotLocation 과 PivotRotation 을 가져오고 있습니다. 
+	두 함수 모두 언리얼에서 사용하는 수학적 구조체 입니다. Location은 FVector를 가져오고 Rotation은 FRotator를 가져옵니다. 
+	그 중 PivotRotation 의 Pitch 를 아까 초기화 했던 ViewPitchMin, ViewPitchMax 값으로 Clamp 하고 있습니다. 
+	Clamp 한다는것은 최소 최대값을 제한 한다는것입니다. 
+
+	그리고나서 PivotLocation, PivotRotation 두 값 모두 역시 방금 만들었던 FLcCameraModeView 타입의 멤버 변수
+	View 의 값으로 저장합니다. 
+	다시 밑에서 역시 View 의 멤버 변수들인 ControlRotation, FieldOfView 도 값을 저장하고 있습니다. 
+
+	그러면 이 UpdateView 함수에서 중요한 부분은 PivotLocation, PivotRotation 입니다. 
+	두 값을 가져오는 GetPivotLocation, GetPivotRotation 함수를 정의 하겠습니다. 
+
+	FVector ULcCameraMode::GetPivotLocation() const
+	{
+		const AActor* TargetActor = GetTargetActor();
+		check(TargetActor);
+
+		if (const APawn* TargetPawn = Cast<APawn>(TargetActor))
+		{
+			// BaseEyeHeight를 고려하여, ViewLocation을 반환함
+			return TargetPawn->GetPawnViewLocation();
+		}
+
+		return TargetActor->GetActorLocation();
+	}
+
+	FRotator ULcCameraMode::GetPivotRotation() const
+	{
+		const AActor* TargetActor = GetTargetActor();
+		check(TargetActor);
+
+		if (const APawn* TargetPawn = Cast<APawn>(TargetActor))
+		{
+			// GetViewRoation() 확인, 보통 Pawn의 ControlRotation을 반환
+			return TargetPawn->GetViewRotation();
+		}
+
+		return TargetActor->GetActorRotation();
+	}
+
+	이렇게 두가지 함수입니다. 여기서도 GetTargetActor라는 함수가 걸리는데 나중에 알아보고 
+	두 함수의 코드가 비슷한데 타겟 액터를 APawn으로 캐스팅하고 그 타겟 폰의 GetPawnViewLocation 이나 GetViewRoation 을 
+	리턴하거나 아니면 GetActorLocation, GetActorRotation 을 리턴하는 코드입니다. 
+	
+	조건문으로 Pawn 으로 캐스팅하는게 성공여부를 거는데 타겟 액터가 Pawn 이라면 Pawn의 시야 높이같은것까지 고려해서 
+	반환하는 함수값을 리턴하는것입니다. 
+
+	이쯤에서 이제 Pivot 이라는게 도대체 무엇인지를 알아야 합니다. 
+	Pivot 은 간단하게 생각하면 기존 언리얼 엔진의 스프링 암입니다. 
+	기존 언리얼 카메라는 캐릭터의 로컬 좌표나 매쉬의 어떤 점을 기준으로 해당 좌표로부터 상대적 거리를 유지하고 따라다니는 방식이었습니다. 
+	이런 상대 거리를 스프링암 이라는 컴포넌트를 통해 사용했습니다. 
+	이 스프링암이 곧 Pivot이라고 생각하면되겠습니다. 
+
+	스프링암이나 Pivot 은 자신이 속해있는 Pawn, Character 를 기준으로 존재하기때문에 위의 두 함수 GetPivotLocation, GetPivotRotation 
+	의 코드가 액터를 중심으로 그 값을 가져오고 있는것입니다. 
+
+	그런데 이 피벗 값들을 가져오는 함수들은 CameraMode의 멤버 함수들입니다. 
+	카메라 모드는 하지만 피벗값들을 가져올 캐릭터와 카메라 컴포넌트와는 거리가 있습니다. 
+	카메라 컴포넌트는 캐릭터에 속해있고 카메라 컴포넌트가 GetCameraView 를 통해 렌더링할 그 시야를 카메라 모드 스택으로 넘겨주고
+	카메라 모드 스택이 카메라 모드들을 관리하는 중입니다. 
+	
+	그렇기 때문에 카메라 모드와 카메라 컴포넌트는 카메라 모드 스택을 사이에 두고 동작하고 있습니다. 
+
+	GetTargetActor 는 그럼 어떻게 카메라 컴포넌트가 속한 액터를 가져올 수 있을까요 
+			
+	AActor* ULcCameraMode::GetTargetActor() const
+	{
+		ULcCameraComponent* CameraComponent = GetLcCameraComponent();
+		return CameraComponent->GetTargetActor();
+	}
+	코드가 단순히 GetLcCameraComponent 라는 함수를 통해 카메라 컴포넌트를 가져오고 GetOwner를 하고 있습니다. 
+	그럼 다시 GetLcCameraComponent 함수를 봐야합니다. 
+		
+	ULcCameraComponent* ULcCameraMode::GetLcCameraComponent() const
+	{
+		// 우리가 앞서 ULcCameraMode를 생성하는 곳은 ULcCameraModeStack이었다:
+		// - 해당 코드를 보면, GetOuter()를 LcCameraMode로 LcCameraComponent로 설정하였다
+		// - ULcCameraModeStack::GetCameraModeInstance() 확인
+		return CastChecked<ULcCameraComponent>(GetOuter());
+	}
+	이 함수도 아주 간단합니다. 
+	GetOuter 라는 함수의 리턴값을 LcCameraComponent 로 캐스팅해 리턴하고 있습니다. 
+
+	지금 카메라쪽 코드에서 카메라 모드를 만드는건 LcCameraModeStack::GetCameraModeInstance 에서 카메라 모드의 서브클래스를 받아 
+	NewObject 로 생성했습니다. 
+	그렇다면 카메라 모드는 카메라 모드 스택이 주인일텐데 
+	카메라 모드의 GetOuter의 값이 카메라 컴포넌트입니다. 
+
+	왜 그런지 다시 GetCameraModeInstance의 NewObject 하던 코드를 보겠습니다. 
+
+	ULcCameraMode* NewCameraMode = NewObject<ULcCameraMode>(GetOuter(), CameraModeClass, NAME_None, RF_NoFlags);
+
+	첫번째 인자로 카메라 모드 스택의 GetOuter를 넣어주고 있습니다. 첫번째 인자는 언리얼엔진에서 자신의 부모클래스나 소유자를 뜻한다고 합니다.
+	카메라 모드 스택의 Outer는 카메라 컴포넌트 입니다. 왜냐면 ULcCameraComponent::OnRegister 에서 카메라 모드 스택을 생성하고 있습니다. 
+	이런 이유로 카메라 모드의 아우터는 카메라 컴포넌트가 됩니다. 
+
+	이렇게 해서 카메라 모드가 카메라 컴포넌트에 접근할 수 있게 됩니다. 
+
+	카메라 컴포넌트에서도 이제 GetTargetActor 는 이렇게 될겁니다. 
+	// CameraComponent 추가 멤버 함수 
+	AActor* GetTargetActor() const { return GetOwner(); }
 }

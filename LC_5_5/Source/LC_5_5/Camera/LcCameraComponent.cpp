@@ -18,7 +18,7 @@ void ULcCameraComponent::UpdateCameraModes()
 	{
 		if (TSubclassOf<ULcCameraMode> CameraMode = DetermineCameraModeDelegate.Execute())
 		{
-			//CameraModeStack->PushCameraMode(CameraMode);
+			CameraModeStack->PushCameraMode(CameraMode);
 		}
 	}
 }
@@ -39,4 +39,9 @@ void ULcCameraComponent::GetCameraView(float DeltaTime, FMinimalViewInfo& Desire
 	Super::GetCameraView(DeltaTime, DesiredView);
 
 	UpdateCameraModes();
+
+	// EvaluateStack은 CameraModeStack에 있는 CameraMode를 업데이트(+블랜딩)하고 CameraModeStack을 Bottom-Top까지 업데이트된 CameraMode들을 Lerp를 진행해준다.
+	// - 이에 대한 결과는 CameraModeView에 캐싱된다
+	FLcCameraModeView CameraModeView;
+	CameraModeStack->EvaluateStack(DeltaTime, CameraModeView);
 }
