@@ -15,8 +15,75 @@ LC_5_5_API UClass* Z_Construct_UClass_ULcCameraMode();
 LC_5_5_API UClass* Z_Construct_UClass_ULcCameraMode_NoRegister();
 LC_5_5_API UClass* Z_Construct_UClass_ULcCameraModeStack();
 LC_5_5_API UClass* Z_Construct_UClass_ULcCameraModeStack_NoRegister();
+LC_5_5_API UEnum* Z_Construct_UEnum_LC_5_5_ELcCameraModeBlendFunction();
 UPackage* Z_Construct_UPackage__Script_LC_5_5();
 // End Cross Module References
+
+// Begin Enum ELcCameraModeBlendFunction
+static FEnumRegistrationInfo Z_Registration_Info_UEnum_ELcCameraModeBlendFunction;
+static UEnum* ELcCameraModeBlendFunction_StaticEnum()
+{
+	if (!Z_Registration_Info_UEnum_ELcCameraModeBlendFunction.OuterSingleton)
+	{
+		Z_Registration_Info_UEnum_ELcCameraModeBlendFunction.OuterSingleton = GetStaticEnum(Z_Construct_UEnum_LC_5_5_ELcCameraModeBlendFunction, (UObject*)Z_Construct_UPackage__Script_LC_5_5(), TEXT("ELcCameraModeBlendFunction"));
+	}
+	return Z_Registration_Info_UEnum_ELcCameraModeBlendFunction.OuterSingleton;
+}
+template<> LC_5_5_API UEnum* StaticEnum<ELcCameraModeBlendFunction>()
+{
+	return ELcCameraModeBlendFunction_StaticEnum();
+}
+struct Z_Construct_UEnum_LC_5_5_ELcCameraModeBlendFunction_Statics
+{
+#if WITH_METADATA
+	static constexpr UECodeGen_Private::FMetaDataPairParam Enum_MetaDataParams[] = {
+		{ "BlueprintType", "true" },
+#if !UE_BUILD_SHIPPING
+		{ "Comment", "/**\n * [0,1]\xef\xbf\xbd\xef\xbf\xbd BlendFunction\xef\xbf\xbd\xef\xbf\xbd \xef\xbf\xbd\xc2\xb0\xef\xbf\xbd \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd \xc5\xb8\xef\xbf\xbd\xef\xbf\xbd\n */" },
+#endif
+		{ "COUNT.Name", "ELcCameraModeBlendFunction::COUNT" },
+		{ "EaseIn.Comment", "/**\n\x09 * EaseIn/Out\xef\xbf\xbd\xef\xbf\xbd exponent \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xc8\xb4\xef\xbf\xbd:\n\x09 */" },
+		{ "EaseIn.Name", "ELcCameraModeBlendFunction::EaseIn" },
+		{ "EaseIn.ToolTip", "EaseIn/Out\xef\xbf\xbd\xef\xbf\xbd exponent \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xc8\xb4\xef\xbf\xbd:" },
+		{ "EaseInOut.Name", "ELcCameraModeBlendFunction::EaseInOut" },
+		{ "EaseOut.Name", "ELcCameraModeBlendFunction::EaseOut" },
+		{ "Linear.Name", "ELcCameraModeBlendFunction::Linear" },
+		{ "ModuleRelativePath", "Camera/LcCameraMode.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "[0,1]\xef\xbf\xbd\xef\xbf\xbd BlendFunction\xef\xbf\xbd\xef\xbf\xbd \xef\xbf\xbd\xc2\xb0\xef\xbf\xbd \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd \xc5\xb8\xef\xbf\xbd\xef\xbf\xbd" },
+#endif
+	};
+#endif // WITH_METADATA
+	static constexpr UECodeGen_Private::FEnumeratorParam Enumerators[] = {
+		{ "ELcCameraModeBlendFunction::Linear", (int64)ELcCameraModeBlendFunction::Linear },
+		{ "ELcCameraModeBlendFunction::EaseIn", (int64)ELcCameraModeBlendFunction::EaseIn },
+		{ "ELcCameraModeBlendFunction::EaseOut", (int64)ELcCameraModeBlendFunction::EaseOut },
+		{ "ELcCameraModeBlendFunction::EaseInOut", (int64)ELcCameraModeBlendFunction::EaseInOut },
+		{ "ELcCameraModeBlendFunction::COUNT", (int64)ELcCameraModeBlendFunction::COUNT },
+	};
+	static const UECodeGen_Private::FEnumParams EnumParams;
+};
+const UECodeGen_Private::FEnumParams Z_Construct_UEnum_LC_5_5_ELcCameraModeBlendFunction_Statics::EnumParams = {
+	(UObject*(*)())Z_Construct_UPackage__Script_LC_5_5,
+	nullptr,
+	"ELcCameraModeBlendFunction",
+	"ELcCameraModeBlendFunction",
+	Z_Construct_UEnum_LC_5_5_ELcCameraModeBlendFunction_Statics::Enumerators,
+	RF_Public|RF_Transient|RF_MarkAsNative,
+	UE_ARRAY_COUNT(Z_Construct_UEnum_LC_5_5_ELcCameraModeBlendFunction_Statics::Enumerators),
+	EEnumFlags::None,
+	(uint8)UEnum::ECppForm::EnumClass,
+	METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UEnum_LC_5_5_ELcCameraModeBlendFunction_Statics::Enum_MetaDataParams), Z_Construct_UEnum_LC_5_5_ELcCameraModeBlendFunction_Statics::Enum_MetaDataParams)
+};
+UEnum* Z_Construct_UEnum_LC_5_5_ELcCameraModeBlendFunction()
+{
+	if (!Z_Registration_Info_UEnum_ELcCameraModeBlendFunction.InnerSingleton)
+	{
+		UECodeGen_Private::ConstructUEnum(Z_Registration_Info_UEnum_ELcCameraModeBlendFunction.InnerSingleton, Z_Construct_UEnum_LC_5_5_ELcCameraModeBlendFunction_Statics::EnumParams);
+	}
+	return Z_Registration_Info_UEnum_ELcCameraModeBlendFunction.InnerSingleton;
+}
+// End Enum ELcCameraModeBlendFunction
 
 // Begin Class ULcCameraMode
 void ULcCameraMode::StaticRegisterNativesULcCameraMode()
@@ -87,11 +154,22 @@ struct Z_Construct_UClass_ULcCameraMode_Statics
 		{ "ToolTip", "\xef\xbf\xbd\xf3\xb8\xb6\xb5\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd Blend\xef\xbf\xbd\xef\xbf\xbd \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd \xef\xbf\xbd\xc3\xb0\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd \xef\xbf\xbd\xc7\xb9\xef\xbf\xbd" },
 #endif
 	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_BlendExponent_MetaData[] = {
+		{ "Category", "Blending" },
+#if !UE_BUILD_SHIPPING
+		{ "Comment", "/**\n\x09* EaseIn/Out\xef\xbf\xbd\xef\xbf\xbd \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd Exponent\n\x09 */" },
+#endif
+		{ "ModuleRelativePath", "Camera/LcCameraMode.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "EaseIn/Out\xef\xbf\xbd\xef\xbf\xbd \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd Exponent" },
+#endif
+	};
 #endif // WITH_METADATA
 	static const UECodeGen_Private::FFloatPropertyParams NewProp_FieldOfView;
 	static const UECodeGen_Private::FFloatPropertyParams NewProp_ViewPitchMin;
 	static const UECodeGen_Private::FFloatPropertyParams NewProp_ViewPitchMax;
 	static const UECodeGen_Private::FFloatPropertyParams NewProp_BlendTime;
+	static const UECodeGen_Private::FFloatPropertyParams NewProp_BlendExponent;
 	static const UECodeGen_Private::FPropertyParamsBase* const PropPointers[];
 	static UObject* (*const DependentSingletons[])();
 	static constexpr FCppClassTypeInfoStatic StaticCppClassTypeInfo = {
@@ -103,11 +181,13 @@ const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_ULcCameraMode_S
 const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_ULcCameraMode_Statics::NewProp_ViewPitchMin = { "ViewPitchMin", nullptr, (EPropertyFlags)0x0010000000010001, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(ULcCameraMode, ViewPitchMin), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ViewPitchMin_MetaData), NewProp_ViewPitchMin_MetaData) };
 const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_ULcCameraMode_Statics::NewProp_ViewPitchMax = { "ViewPitchMax", nullptr, (EPropertyFlags)0x0010000000010001, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(ULcCameraMode, ViewPitchMax), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ViewPitchMax_MetaData), NewProp_ViewPitchMax_MetaData) };
 const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_ULcCameraMode_Statics::NewProp_BlendTime = { "BlendTime", nullptr, (EPropertyFlags)0x0010000000010001, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(ULcCameraMode, BlendTime), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_BlendTime_MetaData), NewProp_BlendTime_MetaData) };
+const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_ULcCameraMode_Statics::NewProp_BlendExponent = { "BlendExponent", nullptr, (EPropertyFlags)0x0010000000010001, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(ULcCameraMode, BlendExponent), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_BlendExponent_MetaData), NewProp_BlendExponent_MetaData) };
 const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UClass_ULcCameraMode_Statics::PropPointers[] = {
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_ULcCameraMode_Statics::NewProp_FieldOfView,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_ULcCameraMode_Statics::NewProp_ViewPitchMin,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_ULcCameraMode_Statics::NewProp_ViewPitchMax,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_ULcCameraMode_Statics::NewProp_BlendTime,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_ULcCameraMode_Statics::NewProp_BlendExponent,
 };
 static_assert(UE_ARRAY_COUNT(Z_Construct_UClass_ULcCameraMode_Statics::PropPointers) < 2048);
 UObject* (*const Z_Construct_UClass_ULcCameraMode_Statics::DependentSingletons[])() = {
@@ -249,14 +329,17 @@ ULcCameraModeStack::~ULcCameraModeStack() {}
 // Begin Registration
 struct Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Camera_LcCameraMode_h_Statics
 {
+	static constexpr FEnumRegisterCompiledInInfo EnumInfo[] = {
+		{ ELcCameraModeBlendFunction_StaticEnum, TEXT("ELcCameraModeBlendFunction"), &Z_Registration_Info_UEnum_ELcCameraModeBlendFunction, CONSTRUCT_RELOAD_VERSION_INFO(FEnumReloadVersionInfo, 3882138945U) },
+	};
 	static constexpr FClassRegisterCompiledInInfo ClassInfo[] = {
-		{ Z_Construct_UClass_ULcCameraMode, ULcCameraMode::StaticClass, TEXT("ULcCameraMode"), &Z_Registration_Info_UClass_ULcCameraMode, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(ULcCameraMode), 116353564U) },
+		{ Z_Construct_UClass_ULcCameraMode, ULcCameraMode::StaticClass, TEXT("ULcCameraMode"), &Z_Registration_Info_UClass_ULcCameraMode, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(ULcCameraMode), 215646343U) },
 		{ Z_Construct_UClass_ULcCameraModeStack, ULcCameraModeStack::StaticClass, TEXT("ULcCameraModeStack"), &Z_Registration_Info_UClass_ULcCameraModeStack, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(ULcCameraModeStack), 3471300103U) },
 	};
 };
-static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Camera_LcCameraMode_h_368954494(TEXT("/Script/LC_5_5"),
+static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Camera_LcCameraMode_h_3024932628(TEXT("/Script/LC_5_5"),
 	Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Camera_LcCameraMode_h_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Camera_LcCameraMode_h_Statics::ClassInfo),
 	nullptr, 0,
-	nullptr, 0);
+	Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Camera_LcCameraMode_h_Statics::EnumInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_CPP_Game_Portfolio_LC_5_5_Source_LC_5_5_Camera_LcCameraMode_h_Statics::EnumInfo));
 // End Registration
 PRAGMA_ENABLE_DEPRECATION_WARNINGS

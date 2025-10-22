@@ -6,6 +6,8 @@
 #include "Camera/LcCameraMode.h"
 #include "LcCameraMode_ThirdPerson.generated.h"
 
+class UCurveVector;
+
 /**
  * 
  */
@@ -16,4 +18,14 @@ class LC_5_5_API ULcCameraMode_ThirdPerson : public ULcCameraMode
 public:
 	ULcCameraMode_ThirdPerson(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	
+	/*
+		ULcCameraMode's interface
+	*/
+	virtual void UpdateView(float DeltaTime) override;
+
+	/**
+	* member variables
+	*/
+	UPROPERTY(EditDefaultsOnly, Category = "Third Person")
+	TObjectPtr<const UCurveVector> TargetOffsetCurve;
 };
