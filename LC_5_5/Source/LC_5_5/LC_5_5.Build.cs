@@ -18,6 +18,9 @@ public class LC_5_5 : ModuleRules
             // Game Features
             "ModularGameplay",
             "GameFeatures",
+            // Input
+            "InputCore",
+            "EnhancedInput",
         });
 
         PrivateDependencyModuleNames.AddRange(new string[] {  });

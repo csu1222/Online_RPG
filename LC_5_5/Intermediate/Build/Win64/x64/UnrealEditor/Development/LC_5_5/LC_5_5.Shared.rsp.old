@@ -4,6 +4,7 @@
 /I "D:\CPP_Game\Portfolio\LC_5_5\Source\LC_5_5\Character"
 /I "D:\CPP_Game\Portfolio\LC_5_5\Source\LC_5_5\Player"
 /I "D:\CPP_Game\Portfolio\LC_5_5\Source\LC_5_5\GameModes"
+/I "D:\CPP_Game\Portfolio\LC_5_5\Source\LC_5_5\Camera"
 /I "..\Intermediate\Build\Win64\UnrealEditor\Inc\Engine\UHT"
 /I "Runtime\Engine\Classes"
 /I "Runtime\Engine\Public"

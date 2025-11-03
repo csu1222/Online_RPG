@@ -536,6 +536,7 @@ Lyra 는 에픽게임즈에서 공식으로 배포하는 게임 프로젝트로 
 	SpawnActor 에 넘겨주면 됩니다. 
 }
 
+
 # 7 Experience Load
 {
 	맵을 만들고 Experience 의 뼈대를 만들어 그 포탈을 스폰하는 것까지는 했습니다. 
@@ -1342,6 +1343,7 @@ Lyra 는 에픽게임즈에서 공식으로 배포하는 게임 프로젝트로 
 	마지막으로 PlayerStart 를 배치해놓으면 그 위치에서 DefaultPlayer가 스폰되는데 그것만 배치하겠습니다. 
 }
 
+
 # 8 PrimaryAssetData [심화 강의]
 {
 	언리얼 에디터에서 만든 파일들을 보면 LcUserFacingExperience 을 상속받은 파일은 DataAsset 타입이고 LcExperienceDefinition 을 상속받은 파일은 블루프린트입니다. 
@@ -1408,6 +1410,7 @@ Lyra 는 에픽게임즈에서 공식으로 배포하는 게임 프로젝트로 
 	그리고 SimplePawnData, DA_ExamplePlaylist 는 DataAsset 으로 만들었고 B_LcDefaultExperience 는 블루프린트로 만들었던 이유가 스캔해서 로딩할때 사용할 ExperienceDefinition은 
 	블루프린트로 만들어야 GetPrimaryAssetId 를 할때 PrimaryAssetType을 찾을 수 있을것이기 때문입니다. 
 }
+
 
 # 9 InitState
 {
@@ -1586,6 +1589,7 @@ Lyra 는 에픽게임즈에서 공식으로 배포하는 게임 프로젝트로 
 
 	테스트를 해보려면 먼저 프로젝트 세팅에서 사용할 GameInstance를 지금 새로 만든 LcGameInstance 로 설정해주어야합니다. 
 }
+
 
 # 10 PawnExtension
 {
@@ -2634,6 +2638,7 @@ Lyra 는 에픽게임즈에서 공식으로 배포하는 게임 프로젝트로 
 	입력과 카메라중 카메라를 먼저 다뤄 볼건데 
 	라이라 프로젝트에서 사용하는 카메라에 대해 알아보는건 다음 단원에서 하겠습니다. 
 }
+
 
 # 11 Camera
 {
@@ -3921,4 +3926,182 @@ Lyra 는 에픽게임즈에서 공식으로 배포하는 게임 프로젝트로 
 	
 	스프링 암은 고정적으로 붙어 있는 형태인 반면에 라이라의 카메라는 다양한 상황에서 더 자연스러운 카메라 움직임을 만들 수 있었습니다. 
 	
+}
+
+
+# 12 Input
+{
+	# 1 
+
+	LcHeroComponent 의 역할을 다시 떠올려보면 HandleChangeInitState 에서 Input과 Camera에 대한 핸들링을 한다고 했었습니다. 
+	이중에 Camera를 구현했으니 이제 Input을 구현할것입니다. 
+
+	라이라의 Input 방식이 많이 독특하다고 합니다. 하드코딩적인 요소를 거의 없앤 방식입니다.
+
+	먼저 FLcGameplayTags 클래스에서 인풋 태그를 새로 추가할겁니다. 
+	
+	// FLcGameplayTags 에 새로 추가할 태그들
+	/*
+		Enhance Input Tags
+	*/
+	FGameplayTag InputTag_Move;
+	FGameplayTag InputTag_Look_Mouse;
+
+	태그들의 이름으로 어떤 역할일지 예상이 될겁니다. InputTag_Move 는 움직이는 입력에 관련된 태그이고 
+	InputTag_Look_Mouse는 마우스를 통해 시야각을 움직이는 태그일것입니다. 
+
+	태그를 멤버 변수로 추가하면 끝이 아니라 설정도 해줘야 했었습니다. 
+
+	// FLcGameplayTags::AddAllTags 의 함수 내부 추가될 코드 
+	/**
+	 * Enhance Input Tags
+	 */
+	AddTag(InputTag_Move, "InputTag.Move", "Input action tag for moving the character");
+	AddTag(InputTag_Look_Mouse, "InputTag.Look.Mouse", "Input action tag for looking around with the mouse");
+
+	이후 언리얼엔진을 실행해 에디터에서 추가해줄 것들이 있습니다. 
+	콘텐츠 브라우저에 새로 폴더를 만듭니다. Input 폴더와 Input 폴더 내부로 Actions 폴더를 또 만듭니다. 
+	Input/Actions 에 InputAction 파일을 추가합니다. IA_Lock_Mouse, IA_Move 두개를 추가합니다. 
+
+	InputAction 이라는 것이 언리얼 5.1 버전 이후 추가된 Inhanced Input 시스템에서 사용하는 기능입니다. 
+	
+	InputAction 을 먼저 설명하겠습니다. 
+	이 파일 하나에는 어떤 역할을 가지고 있습니다. 인풋액션 파일을 열어보면 ValueType 으로 Digital, Float, Vector2D, Vector 라는 값을 
+	고를 수 있습니다. 
+	예를 들어 방금 만든 IA_Move 라는 인풋액션 파일이 발동이 되면 선택해 뒀던 값타입의 값을 뱉도록 되어있습니다. 
+	그런데 IA_Move 는 캐릭터가 움직이는 입력일겁니다. 그러면 앞과 옆이 있을겁니다. Vector2D 값을 뱉는것입니다. 
+	왜 전후좌우인데 Vector2D 인가 하면 앞뒤, 좌우는 값의 양수값 음수값으로 표현할 수 있습니다. 
+	IA_Lock_Mouse 도 마찬가지로 앞과 옆을 반환할것이니 Vector2D 값 타입을 설정합니다. 
+
+	여기까지 해서 발동되면 Vecot2D를 반환하는 인풋액션 두개만 만들었습니다. 이 인풋액션들이 어떤 입력을 받았을때 
+	발동되는지는 만든적이 없는데 
+
+	이때 Input 폴더 아래로 새 폴더 Mappings 를 추가합니다. 이 안에 Input Mapping Context 를 추가할겁니다. 
+	이름은 IMC_Default_KBM 입니다. 
+	
+	언리얼엔진 4버전까지만 해도 입력은 프로젝트세팅의 입력옵션에서 관리하고 있었습니다.
+	축매핑 액션매핑등을 나누어 어떤 입력에 어떤 반응을 할지를 설정해주었었는데 
+	이 기능을 Input Mapping Context 에서 대신 하게됩니다. 
+
+	기존 축매핑, 액션매핑은 어떤 입력을 할지를 등록하고 나중에 각 블루프린트에서 해당 입력과 동작을 연결해 사용하는 방식이었는데 
+
+	Inhanced Input 은 인풋 액션을 IMC에 등록합니다. 지금 만든 파일로 예시를 들면 
+	IMC_Default_KBM 에 IA_Move, IA_Lock_Mouse 등을 등록합니다. 
+
+	IA_Move 로 예시를 들어보겠습니다. 
+	IA_Move를 IMC_Default_KBM 에 등록하고 이 인풋액션이 어떤 키에 매핑될지를 정할 수 있는데 
+	하나만 매핑하는게 아니라 임의로 추가해 여러 키와 매핑이 가능합니다. 
+	IA_Move는 W, S, A, D 네가지 키와 매핑을 할것입니다. 
+
+	여기까지만 보면 기존 언리얼엔진4 시절 입력 시스템과 대동소이해 보이는데 왜 일부러 따로 나눠 놨냐면 
+	기존 입력 시스템은 프로젝트 세팅내에 한개만 존재 할 수 있지만 Inhanced Input 시스템의 Input Mapping Context는 
+	여러 파일을 둘 수 있습니다. 
+
+	그러면서 생긴 이점은 여러 게임 모드마다 입력받는 것들이 달라지는데 기존방식으로는 각 게임모드마다 조건문을 달아 관리해야 했다면 
+	지금 Inhanced Input 에서는 여러 Input Mapping Context 를 두어 각 모드에 적용하는것으로 관리할 수 있게 됩니다. 
+
+	다시 IA_Move를 보면 값 타입이 Vector2D 였습니다. Vecotr2D는 float 나 Double 두개를 가진 좌표같은 (0, 0) 처럼 표현되는 구조체입니다. 
+	그래서 IA_Move 에서 W 를 눌렀을때 (1, 0) 이 반환될겁니다. 이 것을 직접 수정할 수 있습니다. 
+	라이라 프로젝트에서는 W 반환값을 (0, 1) 라고 합니다. 
+
+	어떻게 이 반환 값을 수정하냐면 
+	IMC_Default_KBM 에서 IA_Move 매핑을 화살표를 클릭해 열고 Modifier 를 추가해 Swizzle Input Axis Value로 설정하면 
+	그 아래에 정렬이라는 값을 수정할 수 있습니다. 
+	이 값은 YXZ, XZY 등의 좌표축의 순서를 정할 수 있습니다. 
+	YXZ 정렬로 사용하면 W를 눌렀을때 (0, 1) 이 반환됩니다. 
+	그렇다면 S 를 눌렀을때는 (0, -1) 이 나와야할겁니다. 그러면 Modifier 에 스위즐 입력 축 값과 Nagate 부정 값을 넣어주면 
+	됩니다. 
+	A,D 의 경우에는 x 좌표값으로 왼쪽은 -1, 오른쪽은 1 이 나오면 될것이기 때문에 A에 Nagete 를 주고 D는 그대로 사용하면 되겠습니다. 
+
+	IA_Lock_Mouse의 경우는 키 맵핑을 Mouse XY 2D Axis 로 주면 해결됩니다. 
+
+	이런 방식으로 IMC 에 각 모드마다 입력받는 액션들을 매핑하고 각 액션마다 누르는 키에 따라 반환되는 값들을 
+	수정할 수 있습니다. 
+
+	여기서 끝이 아닙니다. 
+	언리얼 에디터 컨텐츠 브라우저의 Input 폴더 안에 Configs 라는 폴더를 추가합니다. 
+	Configs 안에는 파일 추가 에서 입력쪽에 Player Mappable Input Config 라는 파일을 추가할겁니다. 
+	하지만 뒤에 괄호치고 Deprecated 라고 적혀있습니다. 이후 지원되지 않을 파일 형식이라는건데 
+	그래도 지금은 사용해야하는게 
+	라이라에서는 Input Mapping Context 들을 관리하는 시스템이 GameFeature 라는 프레임워크를 사용하는데 
+	그 진도 까지 입력을 사용하지 않기는 너무 많이 남았습니다. 그래서 임시적으로 Player Mappable Input Config 를 사용하는걸로 하겠습니다. 
+
+	PMI_Default_KBM 이라는 이름으로 추가합니다. 
+	어떻게 사용하냐면 항목중 컨텍스트를 추가해 IMC_Default_KBM 를 등록할 수 있습니다. 
+	그리고 컨텍스트를 여러개 들고 있을 수 있습니다. 각 컨텍스트에 인덱스가 할당되고 각 필요한 상황에 해당 컨텍스트로 
+	교체를 하는식입니다. 
+
+	다시 정리하자면 Player Mappable Input Config 에서 Input Mapping Context 들을 관리하고 
+	Input Mapping Context 에서는 Input Action 들을 관리하게되는겁니다. 
+
+	이제 입력을 위한 소스들을 만들었으니 프로젝트에 구현을 해야합니다. 
+
+	대략적인 흐름은 초기화 단계와 입력 이벤트 활성화 단계로 나눌 수 있는데 
+	그중 초기화 단계에서는 LcHeroComponent의 HandleChangeInitState 에서 현재 초기화가 어떤 단계인지를 확인하고 다음으로 진행시키는데 
+	이 단게를 FLcGameplayTags 로 관리하고 있었습니다. 그 중 InitState_DataAvailable 에서 InitState_DataInitialized 로 가려고 하는 
+	시점에 input Mapping 이라는것을 초기화 하고 Config를 하나하나 순회 하면서 해당 설정값을 적용을 해줍니다. 
+	Config는 PMI_Default_KBM 를 말합니다. Input Mapping Context들을 관리하는 구조체였습니다. 
+	그리고 BindNativeAction 이라는 함수를 통해 액션들을 등록할것입니다. 
+
+	이제 C++ 파일들을 몇가지 추가하면서 구현해보겠습니다. 
+	C++ 파일들이 있는 Source 안에 새 폴더를 만들겁니다. 
+	Input 이라는 이름의 폴더를 추가하고 그 안에 None 을 상속받은 LcMappableConfigPair, UDataAsset을 상속받은 LcInputConfig,
+	UEnhancedInputComponent를 상속받은 LcInputComponent까지 이렇게 세가지 C++클래스를 추가합니다. 
+
+	인풋 시스템을 추가했으면 프로젝트의 빌드 cs 파일에 모듈을 추가해줘야합니다. 
+		
+	// LC_5_5.Build.cs 에 추가 
+
+		PublicDependencyModuleNames.AddRange(new string[]  {
+            "Core",
+            "CoreUObject",
+            "Engine",
+            "InputCore",
+            // GAS
+            "GameplayTags",
+            // Game Features
+            "ModularGameplay",
+            "GameFeatures",
+            // Input
+            "InputCore",
+            "EnhancedInput",
+        });
+
+	LcMappableConfigPair 를 먼저 만들자면 
+
+	#pragma once
+
+	#include "LcMappableConfigPair.generated.h"
+
+	/** forward declaration */
+	class UPlayerMappableInputConfig;
+
+	USTRUCT()
+	struct FLcMappableConfigPair
+	{
+		GENERATED_BODY()
+	public:
+		FLcMappableConfigPair() = default;
+
+		UPROPERTY(EditAnywhere)
+		TSoftObjectPtr<UPlayerMappableInputConfig> Config;
+
+		UPROPERTY(EditAnywhere)
+		bool bShouldActivateAutomatically = true;
+	};
+
+	이렇게 LcMappableConfigPair.h 의 내용이고 cpp 파일은 비워두어도 됩니다. 
+	멤버 변수로 언리얼 에디터에서 추가했던 Player Mappable Input Config 를 들고 있는 구조체인것입니다. 
+
+	Player Mappable Input Config 의 역할은 Input Mapping Context 들을 들고 있으면서 상황에 맞게 사용하기 위한 것이었습니다. 
+
+	그러면 이 Player Mappable Input Config 를 들고 있을만한 클래스를 생각해보면 LcHeroComponent가 들고 있을만 합니다. 
+	그런데 LcHeroComponent 도 FLcMappableConfigPair 을 여러개를 들고 있을겁니다. 
+	
+	// LcHeroComponent 에 추가된 멤버 변수
+	/**
+	* member variables
+	*/
+	UPROPERTY(EditAnywhere)
+	TArray<FLcMappableConfigPair> DefaultInputConfigs;
 }

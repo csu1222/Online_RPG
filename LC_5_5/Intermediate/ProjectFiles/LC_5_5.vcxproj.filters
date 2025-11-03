@@ -138,6 +138,27 @@
     <ClCompile Include="..\..\Source\LC_5_5\GameModes\LcUserFacingExperience.h">
       <Filter>Source\LC_5_5\GameModes</Filter>
     </ClCompile>
+    <Filter Include="Source\LC_5_5\Input">
+      <UniqueIdentifier>{BE03CD4B-CC0E-3B71-976A-EBFE7FAE2B8F}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\LC_5_5\Input\LcInputComponent.cpp">
+      <Filter>Source\LC_5_5\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\Input\LcInputComponent.h">
+      <Filter>Source\LC_5_5\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\Input\LcInputConfig.cpp">
+      <Filter>Source\LC_5_5\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\Input\LcInputConfig.h">
+      <Filter>Source\LC_5_5\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\Input\LcMappableConfigPair.cpp">
+      <Filter>Source\LC_5_5\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LC_5_5\Input\LcMappableConfigPair.h">
+      <Filter>Source\LC_5_5\Input</Filter>
+    </ClCompile>
     <Filter Include="Source\LC_5_5\Player">
       <UniqueIdentifier>{D9F3A3D1-B88C-3F59-9841-67E649765216}</UniqueIdentifier>
     </Filter>

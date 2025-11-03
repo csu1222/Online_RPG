@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/GameFrameworkInitStateInterface.h"
 #include "Components/PawnComponent.h"
+#include "LC_5_5/Input/LcMappableConfigPair.h"
 #include "LcHeroComponent.generated.h"
 
 class ULcCameraMode;
@@ -41,4 +42,10 @@ public:
 	 * member methods
 	 */
 	TSubclassOf<ULcCameraMode> DetermineCameraMode() const;
+
+	/**
+	* member variables
+	*/
+	UPROPERTY(EditAnywhere)
+	TArray<FLcMappableConfigPair> DefaultInputConfigs;
 };
